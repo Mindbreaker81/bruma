@@ -14,14 +14,26 @@
     "unsaved": "Unsaved",
     "untitled": "Untitled"
   },
+  "confirmDirty": {
+    "body": "There are unsaved changes. Save before continuing or discard the changes.",
+    "cancel": "Cancel",
+    "discard": "Discard",
+    "save": "Save",
+    "title": "Unsaved changes"
+  },
   "editor": {
     "label": "Markdown editor",
     "placeholder": "Start writing Markdown..."
   },
   "errors": {
     "openFailed": "The file could not be opened.",
+    "recentMissing": "The recent file is unavailable and was removed from the list.",
     "saveFailed": "The file could not be saved.",
     "unsupportedFile": "Only .md and .markdown files are supported."
+  },
+  "recent": {
+    "empty": "No recent files.",
+    "open": "Recent files"
   },
   "search": {
     "caseSensitive": "Match case",

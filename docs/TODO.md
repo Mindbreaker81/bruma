@@ -163,14 +163,23 @@
 
 ## Sprint 5 — Estado de documento y robustez
 
-- [ ] Confirmación al cerrar con cambios (Guardar / Descartar / Cancelar).
-- [ ] Confirmación al abrir / cambiar archivo con cambios.
-- [ ] Lista de recientes persistida (máx. 10) y submenú "Recientes".
-- [ ] Eliminación / marca de recientes inválidos.
-- [ ] Persistencia de configuración (tema, idioma, vista) en archivo de config del SO.
-- [ ] Migración de config (campo `version`).
-- [ ] Manejo de errores: archivo borrado entre apertura y guardado.
-- [ ] Tests unit: lectura/escritura de config, migraciones.
+- [x] Confirmación al cerrar con cambios (Guardar / Descartar / Cancelar).
+- [x] Confirmación al abrir / cambiar archivo con cambios.
+- [x] Lista de recientes persistida (máx. 10) y submenú "Recientes".
+- [x] Eliminación / marca de recientes inválidos.
+- [x] Persistencia de configuración (tema, idioma, vista) en archivo de config del SO.
+- [x] Migración de config (campo `version`).
+- [x] Manejo de errores: archivo borrado entre apertura y guardado.
+- [x] Tests unit: lectura/escritura de config, migraciones.
+
+### Validación Sprint 5
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
 
 **Cierre del sprint:** la app no pierde datos en escenarios normales y recuerda preferencias.
 

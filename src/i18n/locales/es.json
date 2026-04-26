@@ -14,14 +14,26 @@
     "unsaved": "Sin guardar",
     "untitled": "Sin titulo"
   },
+  "confirmDirty": {
+    "body": "Hay cambios sin guardar. Guarda antes de continuar o descarta los cambios.",
+    "cancel": "Cancelar",
+    "discard": "Descartar",
+    "save": "Guardar",
+    "title": "Cambios sin guardar"
+  },
   "editor": {
     "label": "Editor Markdown",
     "placeholder": "Empieza a escribir Markdown..."
   },
   "errors": {
     "openFailed": "No se pudo abrir el archivo.",
+    "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",
     "unsupportedFile": "Solo se admiten archivos .md y .markdown."
+  },
+  "recent": {
+    "empty": "No hay archivos recientes.",
+    "open": "Archivos recientes"
   },
   "search": {
     "caseSensitive": "Distinguir mayúsculas",

@@ -5,7 +5,9 @@ import { resolve } from 'node:path';
 test('shows the Bruma shell', async ({ page }) => {
   await page.goto('/');
 
-  const editor = page.getByLabel(/Markdown/i);
+  const editor = page.getByRole('textbox', {
+    name: /Editor Markdown|Markdown editor/i,
+  });
   const fixture = readFileSync(resolve('tests/fixtures/search.md'), 'utf8');
 
   await expect(page.getByRole('heading', { name: 'Bruma' })).toBeVisible();
@@ -49,4 +51,27 @@ test('shows the Bruma shell', async ({ page }) => {
   await expect(
     page.getByLabel(/Buscar en el documento|Search document/i)
   ).toBeHidden();
+
+  await editor.fill('# Cambio sin guardar');
+  await expect(page.getByText(/^(Sin guardar|Unsaved)$/i)).toBeVisible();
+
+  await page
+    .getByRole('button', { name: /Nuevo documento|New document/i })
+    .click();
+
+  await expect(
+    page.getByRole('dialog', { name: /Cambios sin guardar|Unsaved changes/i })
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: /Descartar|Discard/i }).click();
+
+  await expect(
+    page.locator('footer').getByText(/Sin titulo|Untitled/i)
+  ).toBeVisible();
+
+  await page
+    .getByRole('button', { name: /Archivos recientes|Recent files/i })
+    .click();
+
+  await expect(page.getByRole('button', { name: 'search.md' })).toBeVisible();
 });

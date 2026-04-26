@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { patchConfig, readConfig } from '../../lib/config';
 import {
   type Document,
   createLoadedDocument,
@@ -7,11 +8,15 @@ import {
   getDocumentDisplayName,
   isDirty,
 } from './document';
+import { addRecentFile, removeRecentFile } from './recent';
 
 type FileState = {
   document: Document;
   isDirty: boolean;
   displayName: string;
+  recentFiles: string[];
+  addRecentFile: (path: string) => void;
+  removeRecentFile: (path: string) => void;
   updateContent: (content: string) => void;
   loadDocument: (input: {
     path: string;
@@ -30,10 +35,26 @@ function deriveDocumentState(document: Document) {
 }
 
 const initialDocument = createUntitledDocument();
+const initialConfig = readConfig();
 
 export const useFileStore = create<FileState>((set) => ({
   document: initialDocument,
+  recentFiles: initialConfig.recentFiles,
   ...deriveDocumentState(initialDocument),
+  addRecentFile: (path) =>
+    set((state) => {
+      const recentFiles = addRecentFile(path, state.recentFiles);
+      patchConfig({ recentFiles });
+
+      return { recentFiles };
+    }),
+  removeRecentFile: (path) =>
+    set((state) => {
+      const recentFiles = removeRecentFile(path, state.recentFiles);
+      patchConfig({ recentFiles });
+
+      return { recentFiles };
+    }),
   updateContent: (content) =>
     set((state) => {
       const document = { ...state.document, content };
@@ -44,11 +65,14 @@ export const useFileStore = create<FileState>((set) => ({
       };
     }),
   loadDocument: (input) =>
-    set(() => {
+    set((state) => {
       const document = createLoadedDocument(input);
+      const recentFiles = addRecentFile(input.path, state.recentFiles);
+      patchConfig({ recentFiles });
 
       return {
         document,
+        recentFiles,
         ...deriveDocumentState(document),
       };
     }),
@@ -69,9 +93,17 @@ export const useFileStore = create<FileState>((set) => ({
         savedContent: state.document.content,
         lastSavedAt: savedAt,
       };
+      const recentFiles = document.path
+        ? addRecentFile(document.path, state.recentFiles)
+        : state.recentFiles;
+
+      if (document.path) {
+        patchConfig({ recentFiles });
+      }
 
       return {
         document,
+        recentFiles,
         ...deriveDocumentState(document),
       };
     }),

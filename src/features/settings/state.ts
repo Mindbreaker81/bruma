@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { patchConfig, readConfig } from '../../lib/config';
 import {
   type ResolvedTheme,
   type ThemePreference,
@@ -7,9 +8,6 @@ import {
   resolveThemePreference,
 } from './theme';
 import { type ViewMode, getNextViewMode } from './view';
-
-const THEME_STORAGE_KEY = 'bruma.theme';
-const VIEW_STORAGE_KEY = 'bruma.view';
 
 type ThemeState = {
   preference: ThemePreference;
@@ -26,23 +24,11 @@ function getSystemPrefersDark(): boolean {
 }
 
 function readStoredPreference(): ThemePreference {
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-
-  if (stored === 'light' || stored === 'dark' || stored === 'system') {
-    return stored;
-  }
-
-  return 'system';
+  return readConfig().theme;
 }
 
 function readStoredViewMode(): ViewMode {
-  const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-
-  if (stored === 'editor' || stored === 'preview' || stored === 'split') {
-    return stored;
-  }
-
-  return 'editor';
+  return readConfig().viewMode;
 }
 
 function applyTheme(preference: ThemePreference): ResolvedTheme {
@@ -54,7 +40,7 @@ function applyTheme(preference: ThemePreference): ResolvedTheme {
   document.documentElement.dataset.theme = resolvedTheme;
   document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
   document.documentElement.style.colorScheme = resolvedTheme;
-  window.localStorage.setItem(THEME_STORAGE_KEY, preference);
+  patchConfig({ theme: preference });
 
   return resolvedTheme;
 }
@@ -81,14 +67,14 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   },
   setViewMode: (viewMode) =>
     set(() => {
-      window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
+      patchConfig({ viewMode });
 
       return { viewMode };
     }),
   cycleViewMode: () => {
     const viewMode = getNextViewMode(get().viewMode);
 
-    window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
+    patchConfig({ viewMode });
     set(() => ({ viewMode }));
   },
 }));

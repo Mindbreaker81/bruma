@@ -1,5 +1,6 @@
 import {
   Columns2,
+  Clock,
   Eye,
   FileInput,
   FileText,
@@ -22,7 +23,13 @@ import {
   type MarkdownEditorHandle,
   MarkdownEditor,
 } from './features/editor/MarkdownEditor';
-import { openFileDialog, saveFile, saveFileDialog } from './features/files/ipc';
+import { ConfirmDirtyDialog } from './features/files/ConfirmDirtyDialog';
+import {
+  openFileDialog,
+  readFile,
+  saveFile,
+  saveFileDialog,
+} from './features/files/ipc';
 import { useFileStore } from './features/files/state';
 import { Preview } from './features/preview/Preview';
 import { SearchPanel } from './features/search/SearchPanel';
@@ -41,6 +48,8 @@ export default function App() {
   const isDirty = useFileStore((state) => state.isDirty);
   const loadDocument = useFileStore((state) => state.loadDocument);
   const markSaved = useFileStore((state) => state.markSaved);
+  const recentFiles = useFileStore((state) => state.recentFiles);
+  const removeRecentFile = useFileStore((state) => state.removeRecentFile);
   const resetUntitled = useFileStore((state) => state.resetUntitled);
   const updateContent = useFileStore((state) => state.updateContent);
   const cycleTheme = useThemeStore((state) => state.cycleTheme);
@@ -65,6 +74,10 @@ export default function App() {
   );
   const setSearchQuery = useSearchStore((state) => state.setQuery);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
+  const [pendingDirtyAction, setPendingDirtyAction] = useState<
+    (() => Promise<void> | void) | null
+  >(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const searchMatches = useMemo(
     () => findSearchMatches(document.content, searchQuery, searchCaseSensitive),
@@ -76,6 +89,28 @@ export default function App() {
     setErrorMessage(message);
     window.setTimeout(() => setErrorMessage(null), 4500);
   }, []);
+
+  const requestDirtyConfirmation = useCallback(
+    (action: () => Promise<void> | void) => {
+      if (!isDirty) {
+        void action();
+        return;
+      }
+
+      setPendingDirtyAction(() => action);
+    },
+    [isDirty]
+  );
+
+  const runPendingDirtyAction = useCallback(async () => {
+    const action = pendingDirtyAction;
+
+    setPendingDirtyAction(null);
+
+    if (action) {
+      await action();
+    }
+  }, [pendingDirtyAction]);
 
   const handleOpenSearch = useCallback(() => {
     if (viewMode === 'preview') {
@@ -102,7 +137,7 @@ export default function App() {
     }
   }, [loadDocument, showError, t]);
 
-  const handleSaveAs = useCallback(async () => {
+  const handleSaveAs = useCallback(async (): Promise<boolean> => {
     try {
       const savedFile = await saveFileDialog({
         content: document.content,
@@ -112,16 +147,18 @@ export default function App() {
 
       if (savedFile) {
         markSaved(savedFile.savedAt, savedFile.path);
+        return true;
       }
     } catch {
       showError(t('errors.saveFailed'));
     }
+
+    return false;
   }, [displayName, document.content, document.eol, markSaved, showError, t]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (): Promise<boolean> => {
     if (!document.path) {
-      await handleSaveAs();
-      return;
+      return handleSaveAs();
     }
 
     try {
@@ -132,8 +169,10 @@ export default function App() {
       });
 
       markSaved(savedFile.savedAt, savedFile.path);
+      return true;
     } catch {
       showError(t('errors.saveFailed'));
+      return false;
     }
   }, [
     document.content,
@@ -144,6 +183,36 @@ export default function App() {
     showError,
     t,
   ]);
+
+  const handleNewDocument = useCallback(() => {
+    requestDirtyConfirmation(() => {
+      resetUntitled();
+      setIsRecentMenuOpen(false);
+    });
+  }, [requestDirtyConfirmation, resetUntitled]);
+
+  const handleOpenWithConfirmation = useCallback(() => {
+    requestDirtyConfirmation(async () => {
+      await handleOpen();
+      setIsRecentMenuOpen(false);
+    });
+  }, [handleOpen, requestDirtyConfirmation]);
+
+  const handleOpenRecent = useCallback(
+    (path: string) => {
+      requestDirtyConfirmation(async () => {
+        try {
+          const openedFile = await readFile(path);
+          loadDocument(openedFile);
+          setIsRecentMenuOpen(false);
+        } catch {
+          removeRecentFile(path);
+          showError(t('errors.recentMissing'));
+        }
+      });
+    },
+    [loadDocument, removeRecentFile, requestDirtyConfirmation, showError, t]
+  );
 
   const handleDrop = useCallback(
     async (event: DragEvent<HTMLElement>) => {
@@ -162,13 +231,15 @@ export default function App() {
 
       const content = await file.text();
 
-      loadDocument({
-        path: file.name,
-        content,
-        eol: content.includes('\r\n') ? 'crlf' : 'lf',
+      requestDirtyConfirmation(() => {
+        loadDocument({
+          path: file.name,
+          content,
+          eol: content.includes('\r\n') ? 'crlf' : 'lf',
+        });
       });
     },
-    [loadDocument, showError, t]
+    [loadDocument, requestDirtyConfirmation, showError, t]
   );
 
   useEffect(() => {
@@ -176,6 +247,21 @@ export default function App() {
 
     void setAppWindowTitle(title);
   }, [displayName, isDirty]);
+
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
 
   useEffect(() => {
     normalizeSearchActiveIndex(searchMatchCount);
@@ -187,7 +273,7 @@ export default function App() {
 
       if (modifier && event.key.toLowerCase() === 'n') {
         event.preventDefault();
-        resetUntitled();
+        handleNewDocument();
       }
 
       if (modifier && event.shiftKey && event.key.toLowerCase() === 's') {
@@ -198,7 +284,7 @@ export default function App() {
 
       if (modifier && event.key.toLowerCase() === 'o') {
         event.preventDefault();
-        void handleOpen();
+        handleOpenWithConfirmation();
       }
 
       if (modifier && event.key.toLowerCase() === 's') {
@@ -228,11 +314,11 @@ export default function App() {
   }, [
     cycleTheme,
     cycleViewMode,
+    handleNewDocument,
+    handleOpenWithConfirmation,
     handleOpenSearch,
-    handleOpen,
     handleSave,
     handleSaveAs,
-    resetUntitled,
   ]);
 
   useEffect(() => {
@@ -240,11 +326,11 @@ export default function App() {
 
     void listenToMenuActions((action) => {
       if (action === 'file_new') {
-        resetUntitled();
+        handleNewDocument();
       }
 
       if (action === 'file_open') {
-        void handleOpen();
+        handleOpenWithConfirmation();
       }
 
       if (action === 'file_save') {
@@ -286,11 +372,11 @@ export default function App() {
   }, [
     cycleTheme,
     cycleViewMode,
-    handleOpen,
+    handleNewDocument,
+    handleOpenWithConfirmation,
     handleOpenSearch,
     handleSave,
     handleSaveAs,
-    resetUntitled,
     setViewMode,
   ]);
 
@@ -320,7 +406,7 @@ export default function App() {
             type="button"
             aria-label={t('actions.newDocument')}
             title={t('actions.newDocument')}
-            onClick={resetUntitled}
+            onClick={handleNewDocument}
           >
             <FileText className="size-4" aria-hidden />
           </button>
@@ -329,10 +415,42 @@ export default function App() {
             type="button"
             aria-label={t('actions.openDocument')}
             title={t('actions.openDocument')}
-            onClick={() => void handleOpen()}
+            onClick={handleOpenWithConfirmation}
           >
             <FileInput className="size-4" aria-hidden />
           </button>
+          <div className="relative">
+            <button
+              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              type="button"
+              aria-expanded={isRecentMenuOpen}
+              aria-label={t('recent.open')}
+              title={t('recent.open')}
+              onClick={() => setIsRecentMenuOpen((isOpen) => !isOpen)}
+            >
+              <Clock className="size-4" aria-hidden />
+            </button>
+            {isRecentMenuOpen ? (
+              <div className="absolute right-0 top-11 z-20 w-72 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg">
+                {recentFiles.length > 0 ? (
+                  recentFiles.map((path) => (
+                    <button
+                      className="block w-full truncate rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))]"
+                      type="button"
+                      key={path}
+                      onClick={() => handleOpenRecent(path)}
+                    >
+                      {path}
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-3 py-2 text-[rgb(var(--color-muted))]">
+                    {t('recent.empty')}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
@@ -442,6 +560,21 @@ export default function App() {
           {errorMessage}
         </div>
       ) : null}
+
+      <ConfirmDirtyDialog
+        open={Boolean(pendingDirtyAction)}
+        onCancel={() => setPendingDirtyAction(null)}
+        onDiscard={() => void runPendingDirtyAction()}
+        onSave={() => {
+          void (async () => {
+            const saved = await handleSave();
+
+            if (saved) {
+              await runPendingDirtyAction();
+            }
+          })();
+        }}
+      />
 
       <footer className="flex h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]">
         <div className="flex min-w-0 items-center gap-2">
