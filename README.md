@@ -1,132 +1,104 @@
 # Bruma
 
-> Editor Markdown de escritorio: ligero, local y simple.
+Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
-**Estado:** MVP v1.0 en preparacion para QA interno en macOS y Windows.
+## Estado actual
 
----
+- Version de app: `1.0.0`
+- Plataformas objetivo MVP: macOS y Windows
+- Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
 
-## Qué es
+## Que incluye v1.0.0
 
-Bruma es un editor Markdown de escritorio enfocado en hacer muy bien lo esencial: abrir, leer, editar, buscar, previsualizar y guardar archivos `.md`. Sin nube, sin telemetría, sin distracciones.
+- Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
+- Editor Markdown (CodeMirror 6)
+- Preview en tiempo real (markdown-it + sanitizacion con DOMPurify)
+- Modos de vista: editor, preview, dividido
+- Busqueda con contador, siguiente/anterior y case-sensitive
+- Proteccion ante cambios sin guardar (confirmacion en acciones de riesgo)
+- Drag and drop de archivos Markdown
+- Recientes persistidos (max 10)
+- Tema claro/oscuro/sistema
+- Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
+- Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
 
-- **Local-first:** tus archivos no salen de tu equipo.
-- **Ligero:** binario pequeño y arranque inmediato (objetivo `< 20 MB`, `< 1 s`).
-- **Simple:** lo justo para escribir Markdown cómodamente.
-- **Multiplataforma:** macOS y Windows en MVP; Linux (Ubuntu, Debian, Fedora) en roadmap v2.0.
+## Seguridad y privacidad
 
-## Funciones del MVP
+- Local-first estricto: sin nube y sin telemetria
+- Sanitizacion de HTML del preview (bloquea scripts y payloads peligrosos)
+- CSP de Tauri endurecida para build de escritorio
 
-- Abrir, crear, guardar y "guardar como" archivos `.md` / `.markdown`.
-- Editor con resaltado de sintaxis Markdown (CodeMirror 6).
-- Vista previa renderizada en tiempo real (CommonMark + GFM acotado).
-- Modos de vista: solo editor / solo preview / dividido.
-- Búsqueda dentro del documento con navegación entre coincidencias.
-- Detección de cambios no guardados con confirmación al cerrar.
-- Drag & drop de archivos sobre la ventana.
-- Lista de archivos recientes.
-- Tema claro / oscuro / del sistema.
-- Interfaz en español e inglés.
+## Descargar builds desde GitHub Actions
 
-Detalle completo en [`docs/PRDv2.md`](docs/PRDv2.md).
+El workflow CI sube bundles sin firmar por plataforma.
 
-## Lo que **no** hace (por diseño)
+1. Ir a `Actions` en GitHub.
+2. Abrir un run exitoso de `CI` (job `Tauri`).
+3. Descargar artifacts con formato:
+   - `bruma-v<version>-macos-latest-unsigned`
+   - `bruma-v<version>-windows-latest-unsigned`
 
-- No sincroniza con la nube.
-- No tiene telemetría ni analítica.
-- No incluye colaboración en tiempo real.
-- No tiene plugins ni sistema de extensiones.
-- No es un IDE Markdown ni un sustituto de Obsidian / Notion.
+El nombre del artifact se genera automaticamente desde `package.json`.
 
-## Stack técnico
+## Desarrollo local
 
-- [Tauri 2.x](https://tauri.app/) (Rust + WebView del SO).
-- [React 18](https://react.dev/) + TypeScript.
-- [CodeMirror 6](https://codemirror.net/) para el editor.
-- [markdown-it](https://github.com/markdown-it/markdown-it) para el render.
-- [DOMPurify](https://github.com/cure53/DOMPurify) para sanitización del HTML.
-- [Vite](https://vitejs.dev/) como bundler.
-- [i18next](https://www.i18next.com/) para internacionalización.
+Requisitos:
 
-Detalle en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-## Documentación
-
-- [`docs/PRDv2.md`](docs/PRDv2.md) — PRD vigente.
-- [`docs/PRDv1.md`](docs/PRDv1.md) — PRD original (referencia histórica).
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arquitectura técnica.
-- [`docs/TODO.md`](docs/TODO.md) — backlog de implementación por fases.
-- [`docs/RELEASE.md`](docs/RELEASE.md) — checklist de release, firma y QA.
-- [`CHANGELOG.md`](CHANGELOG.md) — historial de cambios.
-
-## Roadmap resumido
-
-| Versión | Foco                                                                      |
-| ------- | ------------------------------------------------------------------------- |
-| v1.0    | MVP: edición, preview, búsqueda, recientes, temas, i18n. macOS + Windows. |
-| v1.1    | Reemplazar, exportar HTML/PDF, scroll sincronizado, imágenes locales.     |
-| v1.2    | Pestañas, preferencias avanzadas, modo enfoque, autoguardado.             |
-| v2.0    | Soporte Linux (Ubuntu, Debian, Fedora) con paquetes nativos.              |
-
-## Requisitos previstos para usuarios finales
-
-- **macOS** 12 (Monterey) o superior.
-- **Windows** 10 (build 19041+) o Windows 11.
-- **Linux** (a partir de v2.0): Ubuntu LTS 22.04+, Debian estable, Fedora reciente.
-
-## Desarrollo
-
-Requisitos para contribuir:
-
-- Node.js LTS (≥ 20).
-- pnpm.
-- Rust estable (vía [rustup](https://rustup.rs/)).
-- Toolchain Tauri según plataforma:
-  - macOS: Xcode Command Line Tools.
-  - Windows: Microsoft C++ Build Tools + WebView2 Runtime.
+- Node.js >= 20
+- pnpm
+- Rust estable (`rustup`)
+- Toolchain Tauri por plataforma:
+  - macOS: Xcode Command Line Tools
+  - Windows: Microsoft C++ Build Tools + WebView2 Runtime
 
 Comandos:
 
 ```bash
-pnpm install          # instala dependencias frontend
-pnpm dev              # arranca Vite en modo desarrollo
-pnpm tauri dev        # arranca la app Tauri en modo desarrollo
-pnpm build            # compila el frontend
-pnpm tauri build      # compila la app empaquetada
-pnpm lint             # ESLint
-pnpm format:check     # comprobación Prettier
-pnpm test             # tests unit/component (Vitest)
-pnpm test:e2e         # smoke E2E (Playwright)
+pnpm install
+pnpm dev
+pnpm tauri dev
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm test:e2e
+pnpm build
+pnpm tauri build
 ```
 
-Release interno:
+Nota para entorno Linux de desarrollo: `cargo check/test` y `pnpm tauri build` pueden fallar si faltan librerias GTK/WebKit (`glib-2.0`, `gobject-2.0`, `gio-2.0`, `gdk-3.0`).
+
+## Release interno
+
+El workflow de release se dispara con el tag `v1.0.0`.
 
 ```bash
-pnpm tauri build      # build local sin firmar
-git tag v1.0.0        # dispara release.yml al hacer push del tag
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-## Contribución
+El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 
-Hasta que el repositorio esté abierto al público, las contribuciones se gestionan internamente. Cuando se abra:
+## Calidad y CI
 
-- Issues y PRs vía GitHub.
-- **Convención de commits:** [Conventional Commits 1.0](https://www.conventionalcommits.org/es/v1.0.0/) (`feat:`, `fix:`, `docs:`, etc.). Validación automática con `commitlint`.
-- **Versionado:** [SemVer](https://semver.org/) estricto.
-- **Estilo de código:** Prettier + ESLint para TS/JS, `rustfmt` + `clippy` para Rust.
+- Frontend: lint + format + unit tests + build
+- E2E: smoke Playwright
+- Tauri matrix: macOS + Windows
+- Artifacts versionados automaticos en CI y Release
 
-## Privacidad
+## Roadmap
 
-Bruma es **local-first** estricto. No envía datos a servidores externos. No tiene telemetría. Los enlaces externos solo se abren con acción explícita del usuario y desde el navegador del SO.
+- `v1.1`: reemplazar, exportar HTML/PDF, scroll sincronizado, imagenes locales
+- `v1.2`: pestanas, preferencias avanzadas, modo enfoque, autoguardado
+- `v2.0`: soporte Linux oficial (Ubuntu/Debian/Fedora)
+
+## Documentacion
+
+- `docs/PRDv2.md`: PRD vigente
+- `docs/ARCHITECTURE.md`: arquitectura tecnica
+- `docs/TODO.md`: estado por sprints
+- `docs/RELEASE.md`: checklist de release/firma/QA
+- `CHANGELOG.md`: historial de cambios
 
 ## Licencia
 
-[MIT](LICENSE). Eres libre de usar, modificar y redistribuir conservando el aviso de copyright.
-
----
-
-## English (short)
-
-Bruma is a lightweight, local-first desktop Markdown editor focused on doing the basics well: open, read, edit, search, preview, save. Built with Tauri, React and CodeMirror 6. macOS and Windows for MVP; Linux (Ubuntu, Debian, Fedora) on the v2.0 roadmap. No cloud, no telemetry, no plugins.
-
-See `docs/PRDv2.md` and `docs/ARCHITECTURE.md` for details.
+[MIT](LICENSE)
