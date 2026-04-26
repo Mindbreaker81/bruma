@@ -1,11 +1,13 @@
 import {
   Columns2,
   Clock,
+  Download,
   Eye,
   EyeOff,
   FileInput,
   FileText,
   Languages,
+  Link as LinkIcon,
   List,
   Maximize2,
   Minus,
@@ -33,12 +35,15 @@ import { ConfirmDirtyDialog } from './features/files/ConfirmDirtyDialog';
 import {
   openFileDialog,
   readFile,
+  readImageAsDataUrl,
+  saveExportDialog,
   saveFile,
   saveFileDialog,
   syncRecentFilesMenu,
 } from './features/files/ipc';
 import { useFileStore } from './features/files/state';
 import { Preview } from './features/preview/Preview';
+import { useScrollSyncStore } from './features/preview/scrollSync';
 import { SearchPanel } from './features/search/SearchPanel';
 import { findSearchMatches } from './features/search/search';
 import { useSearchStore } from './features/search/state';
@@ -46,6 +51,7 @@ import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
 import { TableOfContents } from './features/toc/TableOfContents';
 import { APP_VERSION } from './lib/app';
+import { buildExportHtml } from './lib/export';
 import { getTextStats } from './lib/textStats';
 import {
   isTauriRuntime,
@@ -107,6 +113,8 @@ export default function App() {
   const toggleFocusMode = useThemeStore((state) => state.toggleFocusMode);
   const tocOpen = useThemeStore((state) => state.tocOpen);
   const toggleToc = useThemeStore((state) => state.toggleToc);
+  const scrollSyncEnabled = useScrollSyncStore((state) => state.enabled);
+  const toggleScrollSync = useScrollSyncStore((state) => state.toggle);
   const searchActiveIndex = useSearchStore((state) => state.activeIndex);
   const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
   const closeSearch = useSearchStore((state) => state.close);
@@ -125,6 +133,10 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [externalLinkPrompt, setExternalLinkPrompt] = useState<string | null>(
+    null
+  );
   const [pendingDirtyAction, setPendingDirtyAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
@@ -159,6 +171,54 @@ export default function App() {
     setErrorMessage(message);
     window.setTimeout(() => setErrorMessage(null), 4500);
   }, []);
+
+  const handleExportHtml = useCallback(
+    async (includeStyles: boolean) => {
+      try {
+        const html = buildExportHtml(document.content, {
+          title: displayName,
+          includeStyles,
+        });
+        await saveExportDialog({
+          content: html,
+          extension: 'html',
+          label: 'HTML',
+          suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
+        });
+        setIsExportMenuOpen(false);
+      } catch {
+        showError(t('errors.exportFailed'));
+      }
+    },
+    [displayName, document.content, showError, t]
+  );
+
+  const handleExportPdf = useCallback(() => {
+    setIsExportMenuOpen(false);
+    // Best-effort: rely on the print-to-PDF dialog provided by the OS.
+    // CSS in print media restricts to the preview surface only.
+    window.setTimeout(() => window.print(), 100);
+  }, []);
+
+  const handleExternalLinkClick = useCallback((href: string) => {
+    setExternalLinkPrompt(href);
+  }, []);
+
+  const confirmExternalLink = useCallback(() => {
+    const href = externalLinkPrompt;
+    setExternalLinkPrompt(null);
+    if (!href) return;
+    window.open(href, '_blank', 'noopener,noreferrer');
+  }, [externalLinkPrompt]);
+
+  const documentBasePath = document.path ?? null;
+  const handleLocalImageRequest = useCallback(
+    async (relative: string) => {
+      if (!documentBasePath) return null;
+      return readImageAsDataUrl(documentBasePath, relative);
+    },
+    [documentBasePath]
+  );
 
   const requestDirtyConfirmation = useCallback(
     (action: () => Promise<void> | void) => {
@@ -731,6 +791,60 @@ export default function App() {
             )}
           </button>
           <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+            type="button"
+            aria-label={t('scrollSync.toggle')}
+            title={t('scrollSync.toggle')}
+            aria-pressed={scrollSyncEnabled}
+            onClick={toggleScrollSync}
+          >
+            <LinkIcon className="size-4" aria-hidden />
+          </button>
+          <div className="relative">
+            <button
+              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              type="button"
+              aria-expanded={isExportMenuOpen}
+              aria-label={t('export.open')}
+              title={t('export.open')}
+              onClick={() => setIsExportMenuOpen((open) => !open)}
+            >
+              <Download className="size-4" aria-hidden />
+            </button>
+            {isExportMenuOpen ? (
+              <div
+                className="absolute right-0 top-11 z-20 w-56 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
+                role="menu"
+                aria-label={t('export.open')}
+              >
+                <button
+                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void handleExportHtml(true)}
+                >
+                  {t('export.htmlStyled')}
+                </button>
+                <button
+                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void handleExportHtml(false)}
+                >
+                  {t('export.htmlPlain')}
+                </button>
+                <button
+                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                  type="button"
+                  role="menuitem"
+                  onClick={handleExportPdf}
+                >
+                  {t('export.pdf')}
+                </button>
+              </div>
+            ) : null}
+          </div>
+          <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             aria-label={t('search.open')}
@@ -820,7 +934,12 @@ export default function App() {
               />
             ) : null}
             {viewMode !== 'editor' ? (
-              <Preview content={document.content} />
+              <Preview
+                content={document.content}
+                documentPath={document.path ?? null}
+                onExternalLinkClick={handleExternalLinkClick}
+                onLocalImageRequest={handleLocalImageRequest}
+              />
             ) : null}
           </div>
         </div>
@@ -874,6 +993,43 @@ export default function App() {
                 onClick={() => setIsAboutOpen(false)}
               >
                 {t('about.close')}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {externalLinkPrompt ? (
+        <div className="fixed inset-0 z-30 grid place-items-center bg-black/35 px-4">
+          <section
+            className="w-full max-w-md rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-5 shadow-lg"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="external-link-title"
+          >
+            <h2 className="text-base font-semibold" id="external-link-title">
+              {t('externalLink.title')}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[rgb(var(--color-muted))]">
+              {t('externalLink.body')}
+            </p>
+            <p className="mt-2 break-all rounded bg-[rgb(var(--color-panel))] px-2 py-1 font-mono text-xs">
+              {externalLinkPrompt}
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                type="button"
+                onClick={() => setExternalLinkPrompt(null)}
+              >
+                {t('externalLink.cancel')}
+              </button>
+              <button
+                className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                type="button"
+                onClick={confirmExternalLink}
+              >
+                {t('externalLink.confirm')}
               </button>
             </div>
           </section>

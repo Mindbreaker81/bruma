@@ -181,3 +181,22 @@ textarea {
   align-items: center;
   gap: 0.45rem;
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .bruma-preview,
+  .bruma-preview * {
+    visibility: visible !important;
+  }
+  .bruma-preview {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 1rem !important;
+  }
+}

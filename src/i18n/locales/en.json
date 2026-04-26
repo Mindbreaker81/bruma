@@ -32,10 +32,26 @@
     "placeholder": "Start writing Markdown..."
   },
   "errors": {
+    "exportFailed": "The document could not be exported.",
     "openFailed": "The file could not be opened.",
     "recentMissing": "The recent file is unavailable and was removed from the list.",
     "saveFailed": "The file could not be saved.",
     "unsupportedFile": "Only .md and .markdown files are supported."
+  },
+  "export": {
+    "open": "Export",
+    "htmlStyled": "Styled HTML",
+    "htmlPlain": "Plain HTML",
+    "pdf": "PDF (print)"
+  },
+  "externalLink": {
+    "body": "You're about to open an external link in your browser. Continue?",
+    "cancel": "Cancel",
+    "confirm": "Open",
+    "title": "Open external link"
+  },
+  "scrollSync": {
+    "toggle": "Sync editor and preview scrolling"
   },
   "recent": {
     "empty": "No recent files.",

@@ -17,6 +17,7 @@ import {
 } from 'react';
 
 import type { SearchMatch } from '../search/search';
+import { useScrollSyncStore } from '../preview/scrollSync';
 
 type MarkdownEditorProps = {
   value: string;
@@ -84,6 +85,7 @@ export const MarkdownEditor = forwardRef<
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<number | null>(null);
+  const ignoreNextScrollRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
@@ -157,6 +159,20 @@ export const MarkdownEditor = forwardRef<
               onChangeRef.current(nextValue);
             }, CHANGE_DEBOUNCE_MS);
           }),
+          EditorView.domEventHandlers({
+            scroll(_event, view) {
+              if (ignoreNextScrollRef.current) {
+                ignoreNextScrollRef.current = false;
+                return false;
+              }
+              const scroller = view.scrollDOM;
+              const max = scroller.scrollHeight - scroller.clientHeight;
+              if (max <= 0) return false;
+              const ratio = scroller.scrollTop / max;
+              useScrollSyncStore.getState().emit('editor', ratio);
+              return false;
+            },
+          }),
         ],
       }),
     });
@@ -218,6 +234,20 @@ export const MarkdownEditor = forwardRef<
       effects: searchCompartmentRef.current.reconfigure(searchExtension),
     });
   }, [searchExtension]);
+
+  useEffect(() => {
+    return useScrollSyncStore.subscribe((state, prev) => {
+      if (state.source !== 'preview') return;
+      if (state === prev) return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      const scroller = editor.scrollDOM;
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      if (max <= 0) return;
+      ignoreNextScrollRef.current = true;
+      scroller.scrollTop = state.ratio * max;
+    });
+  }, []);
 
   useEffect(() => {
     const editor = editorRef.current;

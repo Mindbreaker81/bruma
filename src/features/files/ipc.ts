@@ -54,6 +54,30 @@ export async function saveFileDialog(args: {
   return invoke<SavedFile | null>('save_file_dialog', args);
 }
 
+export async function readImageAsDataUrl(
+  base: string,
+  relative: string
+): Promise<string | null> {
+  if (!isTauriRuntime()) return null;
+  try {
+    return await invoke<string>('read_image_as_data_url', { base, relative });
+  } catch {
+    return null;
+  }
+}
+
+export async function saveExportDialog(args: {
+  content: string;
+  suggested?: string;
+  extension: string;
+  label?: string;
+}): Promise<SavedFile | null> {
+  if (!isTauriRuntime()) {
+    throw new Error('fileDialogUnavailable');
+  }
+  return invoke<SavedFile | null>('save_export_dialog', args);
+}
+
 export async function syncRecentFilesMenu(paths: string[]): Promise<void> {
   if (!isTauriRuntime()) {
     return;
