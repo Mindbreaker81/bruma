@@ -61,6 +61,11 @@ jobs:
           node-version: 20
           cache: pnpm
 
+      - name: Read app version
+        id: app_version
+        shell: bash
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -77,7 +82,7 @@ jobs:
       - name: Upload unsigned bundles
         uses: actions/upload-artifact@v4
         with:
-          name: bruma-${{ matrix.platform }}-unsigned
+          name: bruma-v${{ steps.app_version.outputs.value }}-${{ matrix.platform }}-unsigned
           path: |
             src-tauri/target/release/bundle/**/*.dmg
             src-tauri/target/release/bundle/**/*.app.tar.gz
