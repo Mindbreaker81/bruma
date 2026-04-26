@@ -11,13 +11,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
         &[
             &MenuItem::with_id(app, "file_new", "Nuevo", true, Some("CmdOrCtrl+N"))?,
             &MenuItem::with_id(app, "file_open", "Abrir...", true, Some("CmdOrCtrl+O"))?,
-            &MenuItem::with_id(
-                app,
-                "file_recent",
-                "Abrir recientes",
-                true,
-                None::<&str>,
-            )?,
+            &MenuItem::with_id(app, "file_recent", "Abrir recientes", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, "file_save", "Guardar", true, Some("CmdOrCtrl+S"))?,
             &MenuItem::with_id(
