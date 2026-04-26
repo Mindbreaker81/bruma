@@ -297,7 +297,13 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(result.path, target.to_string_lossy());
+        let expected = target
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+
+        assert_eq!(result.path, expected);
         assert_eq!(fs::read_to_string(&target).unwrap(), "# Bruma");
 
         fs::remove_file(&target).unwrap();
