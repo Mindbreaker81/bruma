@@ -1,7 +1,7 @@
 # Arquitectura — Bruma
 
 - **Versión:** 0.1 (inicial, pre-implementación)
-- **Estado:** Borrador para iniciar implementación
+- **Estado:** Documento vivo alineado con la implementación MVP actual
 - **Documento padre:** `PRDv2.md`
 
 Este documento describe la arquitectura técnica propuesta para Bruma. Su objetivo es dar suficiente contexto para iniciar la implementación del MVP sin tomar decisiones críticas en caliente. Cualquier desviación durante la implementación debe reflejarse aquí.
@@ -17,7 +17,7 @@ Derivados del PRD:
 - **Local-first:** sin red en MVP salvo apertura externa explícita.
 - **Multiplataforma real:** mismo código y mismo comportamiento en macOS y Windows; Linux post-MVP sin reescrituras.
 - **Mantenible:** lógica de dominio aislada del framework de UI y del shell desktop.
-- **Seguro:** sanitización del HTML del preview, capacidades del shell restringidas.
+- **Seguro:** sanitización del HTML del preview, capacidades del shell restringidas y acceso FS acotado al home del usuario.
 
 ---
 
@@ -198,7 +198,7 @@ type SavedFile = {
 
 Configurar `tauri.conf.json` con permisos mínimos:
 
-- `fs`: solo lectura/escritura sobre rutas seleccionadas por diálogos del usuario (no acceso global).
+- `fs`: solo lectura/escritura de Markdown dentro del home del usuario tras canonicalización y validación del path final.
 - `dialog`: open / save.
 - `shell`: solo `open` para URLs en allowlist (`http`, `https`, `mailto`).
 - `path`: para resolver rutas de configuración.
@@ -370,14 +370,13 @@ Dos opciones; decidir en sprint 0:
 ## 17. CI / CD
 
 - **CI (`ci.yml`)** en cada PR:
-  - Job `lint`: ESLint, Prettier check, `cargo fmt --check`, `cargo clippy`.
-  - Job `test-frontend`: Vitest.
-  - Job `test-rust`: `cargo test`.
-  - Job `build`: matriz `[macos-latest, windows-latest]`, build de Tauri (sin firmar).
+  - Job `frontend`: ESLint, Prettier check, Vitest y build Vite.
+  - Job `tauri`: matriz `[macos-latest, windows-latest]` con `cargo test` y build Tauri (sin firmar).
+  - Publicación de artifacts versionados `bruma-vX.Y.Z-<platform>-unsigned`.
 - **Release (`release.yml`)** disparado por tag `vX.Y.Z`:
-  - Build firmado (cuando se disponga de credenciales).
-  - Subida de artefactos a GitHub Releases.
-  - Generación de notas a partir de `CHANGELOG.md`.
+  - Build sin firmar para QA interno en macOS y Windows.
+  - Publicación de artifacts versionados desde el workflow.
+  - Firma/notarización pendiente de credenciales de plataforma.
 
 ---
 
@@ -411,7 +410,7 @@ Para que el cambio sea barato cuando llegue:
 | RF-13..RF-16.1     | `src/features/search/*`                                            |
 | RF-17..RF-19       | `src/features/files/state.ts`, `src/app/dialogs/*`                 |
 | RF-20              | `src/features/settings/*`                                          |
-| RNF-05 / Seguridad | `src/lib/sanitize.ts`, `src-tauri/tauri.conf.json` (CSP, allowlist)|
+| RNF-05 / Seguridad | `src/lib/sanitize.ts`, `src-tauri/tauri.conf.json`, `src-tauri/src/commands/fs.rs`, `docs/SECURITY.md`|
 | RNF-09 / i18n      | `src/i18n/*`                                                       |
 
 ---

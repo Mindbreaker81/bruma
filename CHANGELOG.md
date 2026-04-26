@@ -6,7 +6,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
-Sin cambios sin publicar.
+### Fixed
+
+- Se estabilizaron los listeners del menu nativo para evitar acciones duplicadas como abrir y guardar como.
+
+### Security
+
+- Los comandos Tauri de filesystem ahora canonicalizan paths y restringen lectura/escritura Markdown al home del usuario.
+- Se añadieron tests Rust para rechazo de path traversal y validacion de paths permitidos.
+
+### Docs
+
+- Documentacion actualizada para reflejar artifacts versionados, validacion Rust en Linux y el hardening de seguridad.
 
 ## [1.0.0] - 2026-04-26
 

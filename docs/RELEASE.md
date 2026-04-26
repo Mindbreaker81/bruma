@@ -8,7 +8,7 @@ Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el c
 
 1. Crear el tag `v1.0.0`.
 2. Ejecutar el workflow `Release`.
-3. Descargar artefactos `bruma-macos-latest-unsigned` y `bruma-windows-latest-unsigned`.
+3. Descargar artefactos `bruma-v1.0.0-macos-latest-unsigned` y `bruma-v1.0.0-windows-latest-unsigned`.
 4. Probar los bundles en maquinas reales antes de publicar.
 
 ## Firma macOS
@@ -26,6 +26,8 @@ Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el c
 
 ## Checklist MVP
 
+- Build y tests CI en macOS y Windows en verde.
+- `cargo test` validado en Linux tras instalar dependencias GTK/WebKit requeridas.
 - Abrir `.md` y `.markdown`.
 - Crear, editar, guardar y guardar como.
 - Preview actualizada tras editar.
@@ -37,6 +39,7 @@ Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el c
 - Recientes persistidos.
 - Interfaz en espanol e ingles.
 - Sanitizacion del preview sin ejecucion de scripts.
+- Restriccion de lectura/escritura Markdown al home del usuario.
 - Pruebas manuales sobre 20+ documentos reales.
 - Pruebas macOS 12+ Apple Silicon e Intel.
 - Pruebas Windows 10/11 x64.

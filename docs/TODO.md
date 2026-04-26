@@ -1,6 +1,6 @@
 # TODO — Bruma
 
-- **Estado:** MVP v1.0 preparado para QA interno macOS/Windows; validacion manual de plataforma pendiente.
+- **Estado:** MVP v1.0 preparado para QA interno macOS/Windows; validacion manual de plataforma pendiente y hardening de filesystem aplicado.
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
@@ -55,7 +55,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo test` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
+- [x] Ejecutar `cargo test` en `src-tauri` (validado posteriormente en Ubuntu 24.04 con dependencias nativas instaladas).
 - [~] Ejecutar `pnpm tauri build`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
 
 ---
@@ -220,6 +220,7 @@
 - [x] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
 - [x] Plan de firma Windows: certificado Authenticode (deseable).
 - [x] Workflow `release.yml` con tag `v1.0.0`.
+- [x] Artifacts CI/Release versionados automaticamente desde `package.json`.
 - [x] Notas de release en `CHANGELOG.md`.
 - [~] Verificación de criterios de aceptación del MVP (`PRDv2.md` §14): cobertura automatizada lista; tiempos/binario y QA manual pendientes en macOS/Windows.
 - [ ] Pruebas manuales sobre 20+ archivos `.md` reales.
@@ -233,10 +234,21 @@
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
 - [x] Ejecutar `cargo fmt --check` en `src-tauri`.
-- [~] Ejecutar `cargo check` / `cargo test` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
+- [x] Ejecutar `cargo test` en `src-tauri` (validado en Ubuntu 24.04 con `libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev` y `libwebkit2gtk-4.1-dev`).
+- [~] Ejecutar `cargo check` en `src-tauri`: sigue dependiendo de un entorno Linux con librerias nativas GTK/WebKit disponibles.
 - [~] Ejecutar `pnpm tauri build`: frontend compila; bundle Tauri bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
 
 **Cierre del sprint:** release v1.0.0 disponible.
+
+---
+
+## Hardening — Seguridad FS
+
+- [x] Restringir `read_file` y `save_file` al home del usuario tras canonicalizacion.
+- [x] Resolver symlinks y rechazar traversal fuera del alcance permitido.
+- [x] Añadir tests Rust de lectura/escritura valida y rechazo de paths del sistema.
+- [x] Documentar la decision en `docs/SECURITY.md`.
+- [x] Verificar `cargo test` con dependencias nativas instaladas en Ubuntu 24.04.
 
 ---
 

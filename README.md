@@ -7,6 +7,7 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Version de app: `1.0.0`
 - Plataformas objetivo MVP: macOS y Windows
 - Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
+- Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
 ## Que incluye v1.0.0
 
@@ -27,6 +28,7 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Local-first estricto: sin nube y sin telemetria
 - Sanitizacion de HTML del preview (bloquea scripts y payloads peligrosos)
 - CSP de Tauri endurecida para build de escritorio
+- Lectura/escritura Markdown del backend restringida al home del usuario tras canonicalizacion de paths
 
 ## Descargar builds desde GitHub Actions
 
@@ -67,6 +69,13 @@ pnpm tauri build
 
 Nota para entorno Linux de desarrollo: `cargo check/test` y `pnpm tauri build` pueden fallar si faltan librerias GTK/WebKit (`glib-2.0`, `gobject-2.0`, `gio-2.0`, `gdk-3.0`).
 
+En Ubuntu 24.04, `cargo test` ya fue verificado correctamente tras instalar:
+
+- `libglib2.0-dev`
+- `libgtk-3-dev`
+- `libsoup-3.0-dev`
+- `libwebkit2gtk-4.1-dev`
+
 ## Release interno
 
 El workflow de release se dispara con el tag `v1.0.0`.
@@ -83,6 +92,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 - Frontend: lint + format + unit tests + build
 - E2E: smoke Playwright
 - Tauri matrix: macOS + Windows
+- Rust backend: tests validados tambien en Linux con dependencias nativas instaladas
 - Artifacts versionados automaticos en CI y Release
 
 ## Roadmap
@@ -95,6 +105,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 
 - `docs/PRDv2.md`: PRD vigente
 - `docs/ARCHITECTURE.md`: arquitectura tecnica
+- `docs/SECURITY.md`: decisiones y controles de seguridad
 - `docs/TODO.md`: estado por sprints
 - `docs/RELEASE.md`: checklist de release/firma/QA
 - `CHANGELOG.md`: historial de cambios
