@@ -42,6 +42,37 @@ El workflow CI sube bundles sin firmar por plataforma.
 
 El nombre del artifact se genera automaticamente desde `package.json`.
 
+## Ejecutar builds en macOS y Windows
+
+### macOS
+
+1. Descargar el artifact de macOS desde `Actions`.
+2. Extraer el archivo descargado.
+3. Abrir el `.dmg` y mover `Bruma.app` a `Applications`.
+4. Si macOS indica que la app esta danada o bloqueada, quitar la cuarentena:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Bruma.app"
+open "/Applications/Bruma.app"
+```
+
+5. Si Gatekeeper sigue bloqueando la app, abrirla una vez con clic derecho sobre `Bruma.app` y luego `Open`, o autorizarla en `System Settings > Privacy & Security`.
+
+### Windows
+
+1. Descargar el artifact de Windows desde `Actions`.
+2. Extraer el archivo descargado.
+3. Ejecutar el `.msi` o `.exe`.
+4. Si Windows SmartScreen muestra una advertencia por app no firmada:
+   - Pulsar `More info`.
+   - Pulsar `Run anyway`.
+5. Si el sistema bloquea el archivo por descarga:
+   - Abrir `Properties` del `.exe` o `.msi`.
+   - Marcar `Unblock` si aparece esa opcion.
+   - Aplicar cambios y volver a ejecutar.
+
+Las builds actuales de CI son internas y sin firma/notarizacion, por eso ambos sistemas pueden mostrar avisos de seguridad incluso cuando el bundle es valido.
+
 ## Desarrollo local
 
 Requisitos:
