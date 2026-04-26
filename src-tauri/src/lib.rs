@@ -15,7 +15,7 @@ pub fn run() {
             Ok(())
         })
         .on_menu_event(|app, event| {
-            menu::handle_event(app, event.id().as_ref());
+            menu::handle_event(app, event.id());
         })
         .run(tauri::generate_context!())
         .expect("error while running Bruma");
