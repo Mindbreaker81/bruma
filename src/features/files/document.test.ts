@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createUntitledDocument,
   getDocumentDisplayName,
+  isMarkdownPath,
   isDirty,
 } from './document';
 
@@ -33,5 +34,11 @@ describe('document model', () => {
     };
 
     expect(getDocumentDisplayName(document)).toBe('bruma.md');
+  });
+
+  it('accepts markdown file extensions', () => {
+    expect(isMarkdownPath('/tmp/note.md')).toBe(true);
+    expect(isMarkdownPath('/tmp/note.markdown')).toBe(true);
+    expect(isMarkdownPath('/tmp/note.txt')).toBe(false);
   });
 });

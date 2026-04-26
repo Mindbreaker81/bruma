@@ -5,7 +5,8 @@
   },
   "actions": {
     "markSaved": "Marcar como guardado",
-    "newDocument": "Nuevo documento"
+    "newDocument": "Nuevo documento",
+    "openDocument": "Abrir documento"
   },
   "document": {
     "dirtyMark": "(sin guardar)",
@@ -16,6 +17,11 @@
   "editor": {
     "label": "Editor Markdown",
     "placeholder": "Empieza a escribir Markdown..."
+  },
+  "errors": {
+    "openFailed": "No se pudo abrir el archivo.",
+    "saveFailed": "No se pudo guardar el archivo.",
+    "unsupportedFile": "Solo se admiten archivos .md y .markdown."
   },
   "theme": {
     "toggle": "Cambiar tema",

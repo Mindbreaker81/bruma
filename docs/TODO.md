@@ -87,17 +87,26 @@
 
 ## Sprint 2 — Editor + apertura/guardado básicos
 
-- [ ] Integrar CodeMirror 6 con `@codemirror/lang-markdown`.
-- [ ] Wrapper React `<MarkdownEditor />` con `value` / `onChange` debounced.
-- [ ] Comandos Rust: `open_file_dialog`, `read_file`, `save_file`, `save_file_dialog`.
-- [ ] Lectura UTF-8 con detección de BOM y de EOL (LF/CRLF).
-- [ ] Escritura UTF-8 sin BOM preservando EOL detectado.
-- [ ] Atajos: `Cmd/Ctrl + O`, `Cmd/Ctrl + S`, `Cmd/Ctrl + Shift + S`, `Cmd/Ctrl + N`.
-- [ ] Drag & drop de archivos `.md` / `.markdown` sobre la ventana.
-- [ ] Mostrar nombre de archivo en barra inferior.
-- [ ] Manejo de errores I/O con toast no bloqueante.
+- [x] Integrar CodeMirror 6 con `@codemirror/lang-markdown`.
+- [x] Wrapper React `<MarkdownEditor />` con `value` / `onChange` debounced.
+- [x] Comandos Rust: `open_file_dialog`, `read_file`, `save_file`, `save_file_dialog`.
+- [x] Lectura UTF-8 con detección de BOM y de EOL (LF/CRLF).
+- [x] Escritura UTF-8 sin BOM preservando EOL detectado.
+- [x] Atajos: `Cmd/Ctrl + O`, `Cmd/Ctrl + S`, `Cmd/Ctrl + Shift + S`, `Cmd/Ctrl + N`.
+- [x] Drag & drop de archivos `.md` / `.markdown` sobre la ventana.
+- [x] Mostrar nombre de archivo en barra inferior.
+- [x] Manejo de errores I/O con toast no bloqueante.
 - [ ] Tests unit del wrapper de markdown-it (placeholder).
-- [ ] Test E2E: abrir archivo de fixture y verificar contenido en editor.
+- [~] Test E2E: abrir archivo de fixture y verificar contenido en editor. Smoke actual cubre edición CodeMirror en Chromium; apertura nativa queda pendiente para harness Tauri.
+
+### Validación Sprint 2
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
 
 **Cierre del sprint:** se puede abrir, editar y guardar un `.md` end-to-end en macOS y Windows.
 

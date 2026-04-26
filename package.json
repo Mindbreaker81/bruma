@@ -18,6 +18,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",

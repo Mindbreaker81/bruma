@@ -12,6 +12,12 @@ export type Document = {
 
 export const UNTITLED_DOCUMENT_NAME = 'Sin titulo';
 
+type LoadedDocumentInput = {
+  path: string;
+  content: string;
+  eol: DocumentEol;
+};
+
 export function createUntitledDocument(): Document {
   return {
     id: crypto.randomUUID(),
@@ -21,6 +27,18 @@ export function createUntitledDocument(): Document {
     encoding: 'utf-8',
     eol: 'lf',
     lastSavedAt: null,
+  };
+}
+
+export function createLoadedDocument(input: LoadedDocumentInput): Document {
+  return {
+    id: crypto.randomUUID(),
+    path: input.path,
+    content: input.content,
+    savedContent: input.content,
+    encoding: 'utf-8',
+    eol: input.eol,
+    lastSavedAt: Date.now(),
   };
 }
 
@@ -34,4 +52,8 @@ export function getDocumentDisplayName(document: Document): string {
   }
 
   return document.path.split(/[\\/]/).pop() || UNTITLED_DOCUMENT_NAME;
+}
+
+export function isMarkdownPath(path: string): boolean {
+  return /\.(md|markdown)$/i.test(path);
 }

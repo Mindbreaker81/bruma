@@ -1,5 +1,4 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import App from './App';
@@ -15,21 +14,16 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Bruma' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: /Markdown/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/Markdown/i)).toBeInTheDocument();
     expect(screen.getByText(/Guardado|Saved/i)).toBeInTheDocument();
   });
 
   it('marks the document as dirty when edited', async () => {
-    const user = userEvent.setup();
-
     render(<App />);
 
-    await user.type(
-      screen.getByRole('textbox', { name: /Markdown/i }),
-      '# Nota'
-    );
+    act(() => {
+      useFileStore.getState().updateContent('# Nota');
+    });
 
     expect(screen.getAllByText(/Sin guardar|Unsaved/i).length).toBeGreaterThan(
       0

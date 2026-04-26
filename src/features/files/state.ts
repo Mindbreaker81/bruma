@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import {
   type Document,
+  createLoadedDocument,
   createUntitledDocument,
   getDocumentDisplayName,
   isDirty,
@@ -12,8 +13,13 @@ type FileState = {
   isDirty: boolean;
   displayName: string;
   updateContent: (content: string) => void;
+  loadDocument: (input: {
+    path: string;
+    content: string;
+    eol: Document['eol'];
+  }) => void;
   resetUntitled: () => void;
-  markSaved: (savedAt?: number) => void;
+  markSaved: (savedAt?: number, path?: string) => void;
 };
 
 function deriveDocumentState(document: Document) {
@@ -37,6 +43,15 @@ export const useFileStore = create<FileState>((set) => ({
         ...deriveDocumentState(document),
       };
     }),
+  loadDocument: (input) =>
+    set(() => {
+      const document = createLoadedDocument(input);
+
+      return {
+        document,
+        ...deriveDocumentState(document),
+      };
+    }),
   resetUntitled: () =>
     set(() => {
       const document = createUntitledDocument();
@@ -46,10 +61,11 @@ export const useFileStore = create<FileState>((set) => ({
         ...deriveDocumentState(document),
       };
     }),
-  markSaved: (savedAt = Date.now()) =>
+  markSaved: (savedAt = Date.now(), path) =>
     set((state) => {
       const document = {
         ...state.document,
+        path: path ?? state.document.path,
         savedContent: state.document.content,
         lastSavedAt: savedAt,
       };

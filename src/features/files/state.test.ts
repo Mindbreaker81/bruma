@@ -19,4 +19,15 @@ describe('file store', () => {
     expect(useFileStore.getState().document.savedContent).toBe('# Bruma');
     expect(useFileStore.getState().document.lastSavedAt).toBe(123);
   });
+
+  it('loads a document as clean state', () => {
+    useFileStore.getState().loadDocument({
+      path: '/tmp/bruma.md',
+      content: '# Bruma',
+      eol: 'lf',
+    });
+
+    expect(useFileStore.getState().displayName).toBe('bruma.md');
+    expect(useFileStore.getState().isDirty).toBe(false);
+  });
 });

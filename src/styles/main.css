@@ -42,3 +42,34 @@ button,
 textarea {
   font: inherit;
 }
+
+.bruma-editor .cm-editor {
+  height: 100%;
+  background: rgb(var(--color-editor));
+  color: rgb(var(--color-text));
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    monospace;
+  font-size: 0.875rem;
+}
+
+.bruma-editor .cm-focused {
+  outline: none;
+}
+
+.bruma-editor .cm-scroller {
+  line-height: 1.5rem;
+}
+
+.bruma-editor .cm-content {
+  min-height: 100%;
+  padding: 1rem 1.25rem;
+}
+
+.bruma-editor .cm-line {
+  padding: 0;
+}
+
+.bruma-editor .cm-gutters {
+  display: none;
+}

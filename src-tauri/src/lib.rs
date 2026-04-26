@@ -1,8 +1,15 @@
+mod commands;
 mod menu;
 
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![
+            commands::fs::open_file_dialog,
+            commands::fs::read_file,
+            commands::fs::save_file,
+            commands::fs::save_file_dialog
+        ])
         .setup(|app| {
             menu::install(app)?;
             Ok(())

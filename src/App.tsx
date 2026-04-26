@@ -1,7 +1,9 @@
-import { FileText, Moon, RotateCcw, Save } from 'lucide-react';
-import { useEffect } from 'react';
+import { FileInput, FileText, Moon, RotateCcw, Save } from 'lucide-react';
+import { type DragEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { MarkdownEditor } from './features/editor/MarkdownEditor';
+import { openFileDialog, saveFile, saveFileDialog } from './features/files/ipc';
 import { useFileStore } from './features/files/state';
 import { useThemeStore } from './features/settings/state';
 import { listenToMenuActions, setAppWindowTitle } from './lib/tauri';
@@ -11,12 +13,100 @@ export default function App() {
   const document = useFileStore((state) => state.document);
   const displayName = useFileStore((state) => state.displayName);
   const isDirty = useFileStore((state) => state.isDirty);
+  const loadDocument = useFileStore((state) => state.loadDocument);
   const markSaved = useFileStore((state) => state.markSaved);
   const resetUntitled = useFileStore((state) => state.resetUntitled);
   const updateContent = useFileStore((state) => state.updateContent);
   const cycleTheme = useThemeStore((state) => state.cycleTheme);
   const themePreference = useThemeStore((state) => state.preference);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const showError = useCallback((message: string) => {
+    setErrorMessage(message);
+    window.setTimeout(() => setErrorMessage(null), 4500);
+  }, []);
+
+  const handleOpen = useCallback(async () => {
+    try {
+      const openedFile = await openFileDialog();
+
+      if (openedFile) {
+        loadDocument(openedFile);
+      }
+    } catch {
+      showError(t('errors.openFailed'));
+    }
+  }, [loadDocument, showError, t]);
+
+  const handleSaveAs = useCallback(async () => {
+    try {
+      const savedFile = await saveFileDialog({
+        content: document.content,
+        eol: document.eol,
+        suggested: displayName,
+      });
+
+      if (savedFile) {
+        markSaved(savedFile.savedAt, savedFile.path);
+      }
+    } catch {
+      showError(t('errors.saveFailed'));
+    }
+  }, [displayName, document.content, document.eol, markSaved, showError, t]);
+
+  const handleSave = useCallback(async () => {
+    if (!document.path) {
+      await handleSaveAs();
+      return;
+    }
+
+    try {
+      const savedFile = await saveFile({
+        path: document.path,
+        content: document.content,
+        eol: document.eol,
+      });
+
+      markSaved(savedFile.savedAt, savedFile.path);
+    } catch {
+      showError(t('errors.saveFailed'));
+    }
+  }, [
+    document.content,
+    document.eol,
+    document.path,
+    handleSaveAs,
+    markSaved,
+    showError,
+    t,
+  ]);
+
+  const handleDrop = useCallback(
+    async (event: DragEvent<HTMLElement>) => {
+      event.preventDefault();
+
+      const [file] = Array.from(event.dataTransfer.files);
+
+      if (!file) {
+        return;
+      }
+
+      if (!/\.(md|markdown)$/i.test(file.name)) {
+        showError(t('errors.unsupportedFile'));
+        return;
+      }
+
+      const content = await file.text();
+
+      loadDocument({
+        path: file.name,
+        content,
+        eol: content.includes('\r\n') ? 'crlf' : 'lf',
+      });
+    },
+    [loadDocument, showError, t]
+  );
 
   useEffect(() => {
     const title = `${isDirty ? '*' : ''}${displayName} - Bruma`;
@@ -33,9 +123,20 @@ export default function App() {
         resetUntitled();
       }
 
+      if (modifier && event.shiftKey && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        void handleSaveAs();
+        return;
+      }
+
+      if (modifier && event.key.toLowerCase() === 'o') {
+        event.preventDefault();
+        void handleOpen();
+      }
+
       if (modifier && event.key.toLowerCase() === 's') {
         event.preventDefault();
-        markSaved();
+        void handleSave();
       }
 
       if (modifier && event.shiftKey && event.key.toLowerCase() === 't') {
@@ -47,7 +148,7 @@ export default function App() {
     window.addEventListener('keydown', onKeyDown);
 
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cycleTheme, markSaved, resetUntitled]);
+  }, [cycleTheme, handleOpen, handleSave, handleSaveAs, resetUntitled]);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -57,8 +158,16 @@ export default function App() {
         resetUntitled();
       }
 
+      if (action === 'file_open') {
+        void handleOpen();
+      }
+
       if (action === 'file_save') {
-        markSaved();
+        void handleSave();
+      }
+
+      if (action === 'file_save_as') {
+        void handleSaveAs();
       }
 
       if (action === 'view_toggle_theme') {
@@ -69,10 +178,14 @@ export default function App() {
     });
 
     return () => cleanup?.();
-  }, [cycleTheme, markSaved, resetUntitled]);
+  }, [cycleTheme, handleOpen, handleSave, handleSaveAs, resetUntitled]);
 
   return (
-    <main className="flex h-screen min-h-0 flex-col bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text))] antialiased">
+    <main
+      className="flex h-screen min-h-0 flex-col bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text))] antialiased"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={handleDrop}
+    >
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
@@ -100,9 +213,18 @@ export default function App() {
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
+            aria-label={t('actions.openDocument')}
+            title={t('actions.openDocument')}
+            onClick={() => void handleOpen()}
+          >
+            <FileInput className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
             aria-label={t('actions.markSaved')}
             title={t('actions.markSaved')}
-            onClick={() => markSaved()}
+            onClick={() => void handleSave()}
           >
             <Save className="size-4" aria-hidden />
           </button>
@@ -124,15 +246,22 @@ export default function App() {
           <span>{t(`theme.preference.${themePreference}`)}</span>
         </div>
 
-        <textarea
-          className="h-full min-h-0 w-full resize-none bg-[rgb(var(--color-editor))] px-5 py-4 font-mono text-sm leading-6 text-[rgb(var(--color-text))] outline-none placeholder:text-[rgb(var(--color-muted))]"
-          aria-label={t('editor.label')}
+        <MarkdownEditor
+          ariaLabel={t('editor.label')}
           placeholder={t('editor.placeholder')}
-          spellCheck={false}
           value={document.content}
-          onChange={(event) => updateContent(event.target.value)}
+          onChange={updateContent}
         />
       </section>
+
+      {errorMessage ? (
+        <div
+          className="fixed bottom-12 right-4 max-w-sm rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900 dark:bg-red-950 dark:text-red-100"
+          role="status"
+        >
+          {errorMessage}
+        </div>
+      ) : null}
 
       <footer className="flex h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]">
         <div className="flex min-w-0 items-center gap-2">

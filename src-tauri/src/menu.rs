@@ -66,12 +66,24 @@ pub fn install(app: &App) -> tauri::Result<()> {
         app,
         "Ayuda",
         true,
-        &[&MenuItem::with_id(app, "help_about", "Acerca de Bruma", true, None::<&str>)?],
+        &[&MenuItem::with_id(
+            app,
+            "help_about",
+            "Acerca de Bruma",
+            true,
+            None::<&str>,
+        )?],
     )?;
 
     let menu = Menu::with_items(
         app,
-        &[&file_menu, &edit_menu, &view_menu, &language_menu, &help_menu],
+        &[
+            &file_menu,
+            &edit_menu,
+            &view_menu,
+            &language_menu,
+            &help_menu,
+        ],
     )?;
 
     app.set_menu(menu)?;

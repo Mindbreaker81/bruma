@@ -5,7 +5,8 @@
   },
   "actions": {
     "markSaved": "Mark as saved",
-    "newDocument": "New document"
+    "newDocument": "New document",
+    "openDocument": "Open document"
   },
   "document": {
     "dirtyMark": "(unsaved)",
@@ -16,6 +17,11 @@
   "editor": {
     "label": "Markdown editor",
     "placeholder": "Start writing Markdown..."
+  },
+  "errors": {
+    "openFailed": "The file could not be opened.",
+    "saveFailed": "The file could not be saved.",
+    "unsupportedFile": "Only .md and .markdown files are supported."
   },
   "theme": {
     "toggle": "Change theme",
