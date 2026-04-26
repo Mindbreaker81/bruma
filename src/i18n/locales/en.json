@@ -3,6 +3,12 @@
     "name": "Bruma",
     "tagline": "A lightweight, local-first desktop Markdown editor."
   },
+  "about": {
+    "body": "A lightweight, local-first desktop Markdown editor.",
+    "close": "Close",
+    "title": "About Bruma",
+    "version": "Version {{version}}"
+  },
   "actions": {
     "markSaved": "Mark as saved",
     "newDocument": "New document",

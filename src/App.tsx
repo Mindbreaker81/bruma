@@ -38,7 +38,11 @@ import { findSearchMatches } from './features/search/search';
 import { useSearchStore } from './features/search/state';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
-import { listenToMenuActions, setAppWindowTitle } from './lib/tauri';
+import {
+  isTauriRuntime,
+  listenToMenuActions,
+  setAppWindowTitle,
+} from './lib/tauri';
 
 const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
 
@@ -79,11 +83,28 @@ export default function App() {
   );
   const setSearchQuery = useSearchStore((state) => state.setQuery);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
   const [pendingDirtyAction, setPendingDirtyAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
+  const menuHandlersRef = useRef({
+    cycleTheme: () => undefined,
+    cycleViewMode: () => undefined,
+    handleNewDocument: () => undefined,
+    handleOpenSearch: () => undefined,
+    handleOpenWithConfirmation: () => undefined,
+    handleSave: () => Promise.resolve(false),
+    handleSaveAs: () => Promise.resolve(false),
+    openAbout: () => undefined,
+    setLanguage: (language: 'es' | 'en') => {
+      void language;
+    },
+    setViewMode: (nextViewMode: ViewMode) => {
+      void nextViewMode;
+    },
+  });
   const searchMatches = useMemo(
     () => findSearchMatches(document.content, searchQuery, searchCaseSensitive),
     [document.content, searchCaseSensitive, searchQuery]
@@ -277,10 +298,39 @@ export default function App() {
   }, [isDirty]);
 
   useEffect(() => {
+    menuHandlersRef.current = {
+      cycleTheme,
+      cycleViewMode,
+      handleNewDocument,
+      handleOpenSearch,
+      handleOpenWithConfirmation,
+      handleSave,
+      handleSaveAs,
+      openAbout: () => setIsAboutOpen(true),
+      setLanguage: (language) => setLanguage(language),
+      setViewMode: (nextViewMode) => setViewMode(nextViewMode),
+    };
+  }, [
+    cycleTheme,
+    cycleViewMode,
+    handleNewDocument,
+    handleOpenSearch,
+    handleOpenWithConfirmation,
+    handleSave,
+    handleSaveAs,
+    setLanguage,
+    setViewMode,
+  ]);
+
+  useEffect(() => {
     normalizeSearchActiveIndex(searchMatchCount);
   }, [normalizeSearchActiveIndex, searchMatchCount]);
 
   useEffect(() => {
+    if (isTauriRuntime()) {
+      return;
+    }
+
     const onKeyDown = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey;
 
@@ -336,71 +386,80 @@ export default function App() {
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
+    let isDisposed = false;
 
     void listenToMenuActions((action) => {
+      const handlers = menuHandlersRef.current;
+
       if (action === 'file_new') {
-        handleNewDocument();
+        handlers.handleNewDocument();
       }
 
       if (action === 'file_open') {
-        handleOpenWithConfirmation();
+        handlers.handleOpenWithConfirmation();
+      }
+
+      if (action === 'file_recent') {
+        setIsRecentMenuOpen(true);
       }
 
       if (action === 'file_save') {
-        void handleSave();
+        void handlers.handleSave();
       }
 
       if (action === 'file_save_as') {
-        void handleSaveAs();
+        void handlers.handleSaveAs();
       }
 
       if (action === 'edit_find') {
-        handleOpenSearch();
+        handlers.handleOpenSearch();
       }
 
       if (action === 'view_toggle_theme') {
-        cycleTheme();
+        handlers.cycleTheme();
       }
 
       if (action === 'view_editor') {
-        setViewMode('editor');
+        handlers.setViewMode('editor');
       }
 
       if (action === 'view_preview') {
-        setViewMode('preview');
+        handlers.setViewMode('preview');
       }
 
       if (action === 'view_split') {
-        setViewMode('split');
+        handlers.setViewMode('split');
       }
 
       if (action === 'view_toggle_mode') {
-        cycleViewMode();
+        handlers.cycleViewMode();
       }
 
       if (action === 'language_es') {
-        setLanguage('es');
+        handlers.setLanguage('es');
       }
 
       if (action === 'language_en') {
-        setLanguage('en');
+        handlers.setLanguage('en');
+      }
+
+      if (action === 'help_about') {
+        handlers.openAbout();
       }
     }).then((unlisten) => {
+      if (isDisposed) {
+        unlisten();
+        return;
+      }
+
       cleanup = unlisten;
     });
 
-    return () => cleanup?.();
-  }, [
-    cycleTheme,
-    cycleViewMode,
-    handleNewDocument,
-    handleOpenWithConfirmation,
-    handleOpenSearch,
-    handleSave,
-    handleSaveAs,
-    setLanguage,
-    setViewMode,
-  ]);
+    return () => {
+      isDisposed = true;
+      cleanup?.();
+    };
+  }, []);
 
   return (
     <main
@@ -618,6 +677,36 @@ export default function App() {
           })();
         }}
       />
+
+      {isAboutOpen ? (
+        <div className="fixed inset-0 z-20 grid place-items-center bg-black/35 px-4">
+          <section
+            className="w-full max-w-md rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-5 shadow-lg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="about-dialog-title"
+          >
+            <h2 className="text-base font-semibold" id="about-dialog-title">
+              {t('about.title')}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[rgb(var(--color-muted))]">
+              {t('about.body')}
+            </p>
+            <p className="mt-1 text-sm leading-6 text-[rgb(var(--color-muted))]">
+              {t('about.version', { version: '1.0.0' })}
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                type="button"
+                onClick={() => setIsAboutOpen(false)}
+              >
+                {t('about.close')}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       <footer className="flex h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]">
         <div className="flex min-w-0 items-center gap-2">

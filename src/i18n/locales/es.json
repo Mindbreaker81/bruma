@@ -3,6 +3,12 @@
     "name": "Bruma",
     "tagline": "Editor Markdown de escritorio, local y ligero."
   },
+  "about": {
+    "body": "Editor Markdown de escritorio, local y ligero.",
+    "close": "Cerrar",
+    "title": "Acerca de Bruma",
+    "version": "Version {{version}}"
+  },
   "actions": {
     "markSaved": "Marcar como guardado",
     "newDocument": "Nuevo documento",
