@@ -1,0 +1,218 @@
+# TODO — Bruma
+
+- **Estado:** Backlog inicial post-PRDv2.
+- **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
+- **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
+
+> Cada tarea P0 debe terminar con: criterios de aceptación cumplidos, tests donde aplique, validación manual en macOS y Windows.
+
+---
+
+## Sprint 0 — Decisiones y andamiaje (sin código de producto aún)
+
+### Decisiones cerradas
+
+- [x] Nombre del producto: **Bruma**.
+- [x] Licencia: **MIT** (`LICENSE` creado; revisar copyright holder antes de publicar).
+- [x] Estilos: **Tailwind CSS**.
+- [x] Resaltado de código del preview en MVP: **highlight.js**.
+- [x] Panel de búsqueda: **propio en React** (delega comandos a CM6).
+- [x] Persistencia de configuración: **tauri-plugin-store**.
+- [x] Gestor de paquetes JS: **pnpm**.
+- [x] Versionado: **SemVer** estricto.
+- [x] Convención de commits: **Conventional Commits** + `commitlint`.
+
+### Pendientes (no bloqueantes para arrancar)
+
+- [ ] Decidir librería de primitivas accesibles (Radix UI / Headless UI / propios) cuando aparezca el primer componente que lo requiera.
+
+### Andamiaje
+
+- [ ] Reemplazar `Bruma contributors` en `LICENSE` por el titular real del copyright antes de publicar.
+- [ ] Inicializar repositorio Git (`git init`, primer commit con docs y `LICENSE`).
+- [ ] Configurar `.gitignore`, `.editorconfig`, `.prettierrc`, `.eslintrc.cjs`.
+- [ ] Configurar `rustfmt.toml` y `clippy` settings (`Cargo.toml` lints).
+- [ ] Crear estructura de carpetas según `ARCHITECTURE.md` §3.
+- [ ] Inicializar Tauri 2.x (`pnpm create tauri-app` con plantilla React + TS).
+- [ ] Añadir Tailwind CSS al frontend (`tailwindcss`, `postcss`, `autoprefixer`, `tailwind.config.ts`).
+- [ ] Añadir dependencias clave: `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `@codemirror/search`, `markdown-it`, `dompurify`, `highlight.js`, `i18next`, `react-i18next`, `lucide-react`, `zustand` (si se decide usarlo).
+- [ ] Añadir `tauri-plugin-store` (Rust crate + JS bindings).
+- [ ] Configurar Vite y `tsconfig.json` estricto.
+- [ ] Configurar i18next con `es` y `en` (solo keys mínimas iniciales).
+- [ ] Configurar Vitest + React Testing Library.
+- [ ] Configurar Playwright (smoke test sobre dev server).
+- [ ] Configurar Husky + commitlint (hook `commit-msg` con `@commitlint/config-conventional`).
+- [ ] (Opcional) Configurar `lint-staged` para Prettier/ESLint en pre-commit.
+- [ ] Crear workflow `ci.yml` (lint + test + build matriz macOS/Windows).
+- [ ] Documentar comandos básicos en `README.md`.
+
+---
+
+## Sprint 1 — Cimientos de UI y modelo de documento
+
+- [ ] Layout de la app: header (placeholder), área principal, barra inferior.
+- [ ] Tema claro/oscuro/sistema con variables CSS.
+- [ ] Toggle de tema accesible por menú y atajo.
+- [ ] Menú nativo Tauri (esqueleto: Archivo, Editar, Ver, Idioma, Ayuda).
+- [ ] Cableado de eventos de menú nativo → frontend.
+- [ ] Modelo `Document` y store (`src/features/files/state.ts`).
+- [ ] Buffer "Sin título" al arrancar.
+- [ ] Indicador `isDirty` en barra inferior y título de ventana.
+- [ ] Tests unit: lógica `isDirty`, transiciones de estado.
+
+**Cierre del sprint:** la app abre, muestra layout, tema funciona, hay un documento vacío editable (sin persistencia aún).
+
+---
+
+## Sprint 2 — Editor + apertura/guardado básicos
+
+- [ ] Integrar CodeMirror 6 con `@codemirror/lang-markdown`.
+- [ ] Wrapper React `<MarkdownEditor />` con `value` / `onChange` debounced.
+- [ ] Comandos Rust: `open_file_dialog`, `read_file`, `save_file`, `save_file_dialog`.
+- [ ] Lectura UTF-8 con detección de BOM y de EOL (LF/CRLF).
+- [ ] Escritura UTF-8 sin BOM preservando EOL detectado.
+- [ ] Atajos: `Cmd/Ctrl + O`, `Cmd/Ctrl + S`, `Cmd/Ctrl + Shift + S`, `Cmd/Ctrl + N`.
+- [ ] Drag & drop de archivos `.md` / `.markdown` sobre la ventana.
+- [ ] Mostrar nombre de archivo en barra inferior.
+- [ ] Manejo de errores I/O con toast no bloqueante.
+- [ ] Tests unit del wrapper de markdown-it (placeholder).
+- [ ] Test E2E: abrir archivo de fixture y verificar contenido en editor.
+
+**Cierre del sprint:** se puede abrir, editar y guardar un `.md` end-to-end en macOS y Windows.
+
+---
+
+## Sprint 3 — Preview y modos de vista
+
+- [ ] Wrapper de markdown-it (`src/lib/markdown.ts`) con plugins GFM mínimos.
+- [ ] Sanitización con DOMPurify y allowlist documentada (`ARCHITECTURE.md` §6).
+- [ ] Componente `<Preview />` con `dangerouslySetInnerHTML` controlado.
+- [ ] Modos de vista: solo editor / solo preview / dividido. Persistencia.
+- [ ] Debounce de render (~150 ms).
+- [ ] Estilos del preview (tipografía, espacios, código, tablas, citas).
+- [ ] Tests unit: render Markdown determinista sobre fixtures.
+- [ ] Tests unit: sanitización bloquea `<script>`, handlers `on*`, `javascript:`.
+- [ ] Test E2E: editar y ver actualización del preview.
+
+**Cierre del sprint:** preview en tiempo real funcional y seguro, con tres modos de vista.
+
+---
+
+## Sprint 4 — Búsqueda
+
+- [ ] Diseño del panel de búsqueda (no modal, sobre el editor).
+- [ ] Implementación: contador de coincidencias, navegación siguiente/anterior.
+- [ ] Resaltado de coincidencias y de la activa.
+- [ ] Toggle case-sensitive.
+- [ ] Cierre con `Esc`, foco vuelve al editor.
+- [ ] Atajo `Cmd/Ctrl + F`.
+- [ ] Tests unit / component del estado de búsqueda.
+- [ ] Test E2E: abrir archivo, buscar término, navegar entre resultados.
+
+**Cierre del sprint:** búsqueda P0 completa.
+
+---
+
+## Sprint 5 — Estado de documento y robustez
+
+- [ ] Confirmación al cerrar con cambios (Guardar / Descartar / Cancelar).
+- [ ] Confirmación al abrir / cambiar archivo con cambios.
+- [ ] Lista de recientes persistida (máx. 10) y submenú "Recientes".
+- [ ] Eliminación / marca de recientes inválidos.
+- [ ] Persistencia de configuración (tema, idioma, vista) en archivo de config del SO.
+- [ ] Migración de config (campo `version`).
+- [ ] Manejo de errores: archivo borrado entre apertura y guardado.
+- [ ] Tests unit: lectura/escritura de config, migraciones.
+
+**Cierre del sprint:** la app no pierde datos en escenarios normales y recuerda preferencias.
+
+---
+
+## Sprint 6 — i18n, accesibilidad y pulido
+
+- [ ] Auditoría de strings: todos los textos visibles a través de `t()`.
+- [ ] Catálogos `es.json` y `en.json` completos.
+- [ ] Toggle de idioma en menú "Idioma".
+- [ ] Detección inicial de idioma del SO.
+- [ ] Auditoría de accesibilidad: navegación por teclado, roles ARIA, contraste AA.
+- [ ] Iconos con `aria-label` o `<title>`.
+- [ ] Foco visible y orden lógico de tabulación.
+- [ ] Pruebas con lector de pantalla (VoiceOver en macOS, Narrator en Windows) — al menos flujo principal.
+
+**Cierre del sprint:** app bilingüe y accesible en flujos críticos.
+
+---
+
+## Sprint 7 — Empaquetado y release v1.0
+
+- [ ] Iconos finales (macOS `.icns`, Windows `.ico`).
+- [ ] Metadata de la app (nombre, identificador, versión, descripción) en `tauri.conf.json`.
+- [ ] CSP estricta verificada.
+- [ ] Builds de release sin firmar para QA interno (macOS + Windows).
+- [ ] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
+- [ ] Plan de firma Windows: certificado Authenticode (deseable).
+- [ ] Workflow `release.yml` con tag `v1.0.0`.
+- [ ] Notas de release en `CHANGELOG.md`.
+- [ ] Verificación de criterios de aceptación del MVP (`PRDv2.md` §14).
+- [ ] Pruebas manuales sobre 20+ archivos `.md` reales.
+- [ ] Pruebas en macOS 12+ (Apple Silicon e Intel) y Windows 10/11.
+
+**Cierre del sprint:** release v1.0.0 disponible.
+
+---
+
+## Backlog — V1.1 (productividad)
+
+- [ ] Reemplazar texto (panel extendido de búsqueda).
+- [ ] Índice de encabezados navegable.
+- [ ] Exportar a HTML (con estilos opcionales).
+- [ ] Exportar a PDF (vía impresión a PDF del SO o renderer dedicado).
+- [ ] Scroll sincronizado entre editor y preview.
+- [ ] Apertura de enlaces externos con confirmación.
+- [ ] Soporte de imágenes locales por ruta relativa.
+- [ ] Conteo de palabras y caracteres en barra inferior.
+- [ ] Zoom de tipografía (atajo `Cmd/Ctrl +/-`).
+
+---
+
+## Backlog — V1.2 (pulido)
+
+- [ ] Pestañas múltiples.
+- [ ] Modo enfoque.
+- [ ] Preferencias avanzadas (fuente, tema personalizado, atajos).
+- [ ] Atajos configurables.
+- [ ] Autoguardado opcional.
+- [ ] Recuperación de sesión.
+- [ ] Frontmatter YAML básico (mostrar/ocultar, parseo).
+- [ ] Plantillas de documentos.
+
+---
+
+## Backlog — V2.0 (Linux)
+
+- [ ] CI con job Linux desde V1.x para detectar regresiones.
+- [ ] Verificación de fuentes y assets multiplataforma con fallbacks.
+- [ ] Empaquetado AppImage.
+- [ ] Empaquetado `.deb` (Debian / Ubuntu).
+- [ ] Empaquetado `.rpm` (Fedora).
+- [ ] Investigación Flatpak.
+- [ ] Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente.
+- [ ] Documentación específica de instalación por distro.
+
+---
+
+## Tareas transversales / continuas
+
+- [ ] Mantener `CHANGELOG.md` actualizado en cada PR significativo.
+- [ ] Mantener `ARCHITECTURE.md` cuando cambien decisiones técnicas.
+- [ ] Revisión periódica de dependencias (Renovate / Dependabot).
+- [ ] Auditoría de seguridad de dependencias (`npm audit`, `cargo audit`).
+- [ ] Revisión de bundle size en cada release.
+
+---
+
+## Notas
+
+- Cualquier tarea que afecte al alcance del MVP debe pasar por revisión de PRD.
+- Las tareas de Linux **no** consumen capacidad antes de v1.0.
+- Las dependencias deben fijarse a versiones mayor + minor; las menores se actualizan con PR dedicada.
