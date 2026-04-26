@@ -6,14 +6,28 @@ import {
   Moon,
   RotateCcw,
   Save,
+  Search,
 } from 'lucide-react';
-import { type DragEvent, useCallback, useEffect, useState } from 'react';
+import {
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { MarkdownEditor } from './features/editor/MarkdownEditor';
+import {
+  type MarkdownEditorHandle,
+  MarkdownEditor,
+} from './features/editor/MarkdownEditor';
 import { openFileDialog, saveFile, saveFileDialog } from './features/files/ipc';
 import { useFileStore } from './features/files/state';
 import { Preview } from './features/preview/Preview';
+import { SearchPanel } from './features/search/SearchPanel';
+import { findSearchMatches } from './features/search/search';
+import { useSearchStore } from './features/search/state';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
 import { listenToMenuActions, setAppWindowTitle } from './lib/tauri';
@@ -35,12 +49,46 @@ export default function App() {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const setViewMode = useThemeStore((state) => state.setViewMode);
   const viewMode = useThemeStore((state) => state.viewMode);
+  const searchActiveIndex = useSearchStore((state) => state.activeIndex);
+  const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
+  const closeSearch = useSearchStore((state) => state.close);
+  const goNextSearch = useSearchStore((state) => state.goNext);
+  const goPreviousSearch = useSearchStore((state) => state.goPrevious);
+  const isSearchOpen = useSearchStore((state) => state.isOpen);
+  const normalizeSearchActiveIndex = useSearchStore(
+    (state) => state.normalizeActiveIndex
+  );
+  const openSearch = useSearchStore((state) => state.open);
+  const searchQuery = useSearchStore((state) => state.query);
+  const setSearchCaseSensitive = useSearchStore(
+    (state) => state.setCaseSensitive
+  );
+  const setSearchQuery = useSearchStore((state) => state.setQuery);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const editorRef = useRef<MarkdownEditorHandle | null>(null);
+  const searchMatches = useMemo(
+    () => findSearchMatches(document.content, searchQuery, searchCaseSensitive),
+    [document.content, searchCaseSensitive, searchQuery]
+  );
+  const searchMatchCount = searchMatches.length;
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
     window.setTimeout(() => setErrorMessage(null), 4500);
   }, []);
+
+  const handleOpenSearch = useCallback(() => {
+    if (viewMode === 'preview') {
+      setViewMode('split');
+    }
+
+    openSearch();
+  }, [openSearch, setViewMode, viewMode]);
+
+  const handleCloseSearch = useCallback(() => {
+    closeSearch();
+    editorRef.current?.focus();
+  }, [closeSearch]);
 
   const handleOpen = useCallback(async () => {
     try {
@@ -130,6 +178,10 @@ export default function App() {
   }, [displayName, isDirty]);
 
   useEffect(() => {
+    normalizeSearchActiveIndex(searchMatchCount);
+  }, [normalizeSearchActiveIndex, searchMatchCount]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey;
 
@@ -154,6 +206,11 @@ export default function App() {
         void handleSave();
       }
 
+      if (modifier && event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        handleOpenSearch();
+      }
+
       if (modifier && event.shiftKey && event.key.toLowerCase() === 't') {
         event.preventDefault();
         cycleTheme();
@@ -171,6 +228,7 @@ export default function App() {
   }, [
     cycleTheme,
     cycleViewMode,
+    handleOpenSearch,
     handleOpen,
     handleSave,
     handleSaveAs,
@@ -195,6 +253,10 @@ export default function App() {
 
       if (action === 'file_save_as') {
         void handleSaveAs();
+      }
+
+      if (action === 'edit_find') {
+        handleOpenSearch();
       }
 
       if (action === 'view_toggle_theme') {
@@ -225,6 +287,7 @@ export default function App() {
     cycleTheme,
     cycleViewMode,
     handleOpen,
+    handleOpenSearch,
     handleSave,
     handleSaveAs,
     resetUntitled,
@@ -291,6 +354,15 @@ export default function App() {
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
+            aria-label={t('search.open')}
+            title={t('search.open')}
+            onClick={handleOpenSearch}
+          >
+            <Search className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
             aria-label={t('view.toggle')}
             title={t('view.toggle')}
             onClick={cycleViewMode}
@@ -328,14 +400,30 @@ export default function App() {
         <div
           className={
             viewMode === 'split'
-              ? 'grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
-              : 'min-h-0'
+              ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
+              : 'relative min-h-0'
           }
         >
+          {isSearchOpen ? (
+            <SearchPanel
+              activeIndex={searchActiveIndex}
+              caseSensitive={searchCaseSensitive}
+              matchCount={searchMatchCount}
+              query={searchQuery}
+              onCaseSensitiveChange={setSearchCaseSensitive}
+              onClose={handleCloseSearch}
+              onNext={() => goNextSearch(searchMatchCount)}
+              onPrevious={() => goPreviousSearch(searchMatchCount)}
+              onQueryChange={setSearchQuery}
+            />
+          ) : null}
           {viewMode !== 'preview' ? (
             <MarkdownEditor
+              ref={editorRef}
+              activeSearchIndex={searchActiveIndex}
               ariaLabel={t('editor.label')}
               placeholder={t('editor.placeholder')}
+              searchMatches={searchMatches}
               value={document.content}
               onChange={updateContent}
             />

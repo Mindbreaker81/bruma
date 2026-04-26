@@ -23,6 +23,16 @@
     "saveFailed": "No se pudo guardar el archivo.",
     "unsupportedFile": "Solo se admiten archivos .md y .markdown."
   },
+  "search": {
+    "caseSensitive": "Distinguir mayúsculas",
+    "close": "Cerrar búsqueda",
+    "label": "Buscar en el documento",
+    "next": "Siguiente coincidencia",
+    "noMatches": "0/0",
+    "open": "Buscar",
+    "placeholder": "Buscar",
+    "previous": "Coincidencia anterior"
+  },
   "theme": {
     "toggle": "Cambiar tema",
     "preference": {

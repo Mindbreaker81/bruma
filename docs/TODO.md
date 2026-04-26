@@ -139,14 +139,23 @@
 
 ## Sprint 4 — Búsqueda
 
-- [ ] Diseño del panel de búsqueda (no modal, sobre el editor).
-- [ ] Implementación: contador de coincidencias, navegación siguiente/anterior.
-- [ ] Resaltado de coincidencias y de la activa.
-- [ ] Toggle case-sensitive.
-- [ ] Cierre con `Esc`, foco vuelve al editor.
-- [ ] Atajo `Cmd/Ctrl + F`.
-- [ ] Tests unit / component del estado de búsqueda.
-- [ ] Test E2E: abrir archivo, buscar término, navegar entre resultados.
+- [x] Diseño del panel de búsqueda (no modal, sobre el editor).
+- [x] Implementación: contador de coincidencias, navegación siguiente/anterior.
+- [x] Resaltado de coincidencias y de la activa.
+- [x] Toggle case-sensitive.
+- [x] Cierre con `Esc`, foco vuelve al editor.
+- [x] Atajo `Cmd/Ctrl + F`.
+- [x] Tests unit / component del estado de búsqueda.
+- [x] Test E2E: abrir archivo, buscar término, navegar entre resultados.
+
+### Validación Sprint 4
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
 
 **Cierre del sprint:** búsqueda P0 completa.
 

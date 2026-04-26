@@ -23,6 +23,16 @@
     "saveFailed": "The file could not be saved.",
     "unsupportedFile": "Only .md and .markdown files are supported."
   },
+  "search": {
+    "caseSensitive": "Match case",
+    "close": "Close search",
+    "label": "Search document",
+    "next": "Next match",
+    "noMatches": "0/0",
+    "open": "Search",
+    "placeholder": "Search",
+    "previous": "Previous match"
+  },
   "theme": {
     "toggle": "Change theme",
     "preference": {

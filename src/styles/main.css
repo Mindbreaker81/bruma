@@ -76,6 +76,16 @@ textarea {
   display: none;
 }
 
+.bruma-editor .cm-search-match {
+  border-radius: 3px;
+  background: rgb(253 224 71 / 0.5);
+}
+
+.bruma-editor .cm-search-match-active {
+  background: rgb(16 185 129 / 0.35);
+  outline: 1px solid rgb(5 150 105);
+}
+
 .bruma-preview {
   color: rgb(var(--color-text));
 }
