@@ -31,6 +31,7 @@ const CHANGE_DEBOUNCE_MS = 120;
 
 export type MarkdownEditorHandle = {
   focus: () => void;
+  scrollToLine: (line: number) => void;
 };
 
 function buildSearchDecorations(
@@ -96,6 +97,18 @@ export const MarkdownEditor = forwardRef<
 
   useImperativeHandle(ref, () => ({
     focus: () => editorRef.current?.focus(),
+    scrollToLine: (line: number) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const totalLines = editor.state.doc.lines;
+      const target = Math.min(Math.max(line + 1, 1), totalLines);
+      const { from } = editor.state.doc.line(target);
+      editor.dispatch({
+        selection: { anchor: from, head: from },
+        scrollIntoView: true,
+      });
+      editor.focus();
+    },
   }));
 
   useEffect(() => {

@@ -71,6 +71,26 @@
       "light": "Claro"
     }
   },
+  "stats": {
+    "characters": "Caracteres",
+    "charactersValue": "{{count}} car.",
+    "words": "Palabras",
+    "wordsValue_one": "{{count}} palabra",
+    "wordsValue_other": "{{count}} palabras"
+  },
+  "toc": {
+    "empty": "No hay encabezados.",
+    "title": "Indice",
+    "toggle": "Mostrar u ocultar indice"
+  },
+  "zoom": {
+    "decrease": "Reducir tipografia",
+    "increase": "Aumentar tipografia",
+    "reset": "Restablecer tipografia"
+  },
+  "focusMode": {
+    "toggle": "Activar o desactivar modo enfoque"
+  },
   "view": {
     "editor": "Editor",
     "selectMode": "Seleccionar vista: {{mode}}",

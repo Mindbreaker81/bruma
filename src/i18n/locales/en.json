@@ -71,6 +71,26 @@
       "light": "Light"
     }
   },
+  "stats": {
+    "characters": "Characters",
+    "charactersValue": "{{count}} chars",
+    "words": "Words",
+    "wordsValue_one": "{{count}} word",
+    "wordsValue_other": "{{count}} words"
+  },
+  "toc": {
+    "empty": "No headings yet.",
+    "title": "Outline",
+    "toggle": "Toggle outline"
+  },
+  "zoom": {
+    "decrease": "Decrease font size",
+    "increase": "Increase font size",
+    "reset": "Reset font size"
+  },
+  "focusMode": {
+    "toggle": "Toggle focus mode"
+  },
   "view": {
     "editor": "Editor",
     "selectMode": "Select view: {{mode}}",

@@ -1,8 +1,9 @@
 import type { LanguagePreference } from '../features/settings/language';
 import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
+import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
 
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 3;
 const CONFIG_STORAGE_KEY = 'bruma.config';
 
 export type AppConfig = {
@@ -11,6 +12,9 @@ export type AppConfig = {
   language: LanguagePreference;
   viewMode: ViewMode;
   recentFiles: string[];
+  fontScale: number;
+  focusMode: boolean;
+  tocOpen: boolean;
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -19,6 +23,9 @@ export const DEFAULT_CONFIG: AppConfig = {
   language: 'system',
   viewMode: 'editor',
   recentFiles: [],
+  fontScale: FONT_SCALE_DEFAULT,
+  focusMode: false,
+  tocOpen: false,
 };
 
 type PartialConfig = Partial<AppConfig> & {
@@ -54,6 +61,18 @@ export function migrateConfig(input: unknown): AppConfig {
         (path): path is string => typeof path === 'string'
       )
     : DEFAULT_CONFIG.recentFiles;
+  const fontScale =
+    typeof config.fontScale === 'number'
+      ? clampFontScale(config.fontScale)
+      : DEFAULT_CONFIG.fontScale;
+  const focusMode =
+    typeof config.focusMode === 'boolean'
+      ? config.focusMode
+      : DEFAULT_CONFIG.focusMode;
+  const tocOpen =
+    typeof config.tocOpen === 'boolean'
+      ? config.tocOpen
+      : DEFAULT_CONFIG.tocOpen;
 
   return {
     version: CONFIG_VERSION,
@@ -61,6 +80,9 @@ export function migrateConfig(input: unknown): AppConfig {
     language,
     viewMode,
     recentFiles: recentFiles.slice(0, 10),
+    fontScale,
+    focusMode,
+    tocOpen,
   };
 }
 

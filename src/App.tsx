@@ -2,10 +2,15 @@ import {
   Columns2,
   Clock,
   Eye,
+  EyeOff,
   FileInput,
   FileText,
   Languages,
+  List,
+  Maximize2,
+  Minus,
   Moon,
+  Plus,
   RotateCcw,
   Save,
   Search,
@@ -39,7 +44,9 @@ import { findSearchMatches } from './features/search/search';
 import { useSearchStore } from './features/search/state';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
+import { TableOfContents } from './features/toc/TableOfContents';
 import { APP_VERSION } from './lib/app';
+import { getTextStats } from './lib/textStats';
 import {
   isTauriRuntime,
   listenToMenuActions,
@@ -88,6 +95,18 @@ export default function App() {
   const setLanguage = useThemeStore((state) => state.setLanguage);
   const setViewMode = useThemeStore((state) => state.setViewMode);
   const viewMode = useThemeStore((state) => state.viewMode);
+  const fontScale = useThemeStore((state) => state.fontScale);
+  const increaseFontScaleStore = useThemeStore(
+    (state) => state.increaseFontScale
+  );
+  const decreaseFontScaleStore = useThemeStore(
+    (state) => state.decreaseFontScale
+  );
+  const resetFontScaleStore = useThemeStore((state) => state.resetFontScale);
+  const focusMode = useThemeStore((state) => state.focusMode);
+  const toggleFocusMode = useThemeStore((state) => state.toggleFocusMode);
+  const tocOpen = useThemeStore((state) => state.tocOpen);
+  const toggleToc = useThemeStore((state) => state.toggleToc);
   const searchActiveIndex = useSearchStore((state) => state.activeIndex);
   const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
   const closeSearch = useSearchStore((state) => state.close);
@@ -127,6 +146,14 @@ export default function App() {
     [document.content, searchCaseSensitive, searchQuery]
   );
   const searchMatchCount = searchMatches.length;
+  const textStats = useMemo(
+    () => getTextStats(document.content),
+    [document.content]
+  );
+
+  const handleSelectHeading = useCallback((line: number) => {
+    editorRef.current?.scrollToLine(line);
+  }, []);
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -410,6 +437,39 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const modifier = event.metaKey || event.ctrlKey;
+      if (!modifier) return;
+
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        increaseFontScaleStore();
+      } else if (event.key === '-' || event.key === '_') {
+        event.preventDefault();
+        decreaseFontScaleStore();
+      } else if (event.key === '0') {
+        event.preventDefault();
+        resetFontScaleStore();
+      } else if (event.shiftKey && event.key.toLowerCase() === 'm') {
+        event.preventDefault();
+        toggleFocusMode();
+      } else if (event.shiftKey && event.key.toLowerCase() === 'h') {
+        event.preventDefault();
+        toggleToc();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    decreaseFontScaleStore,
+    increaseFontScaleStore,
+    resetFontScaleStore,
+    toggleFocusMode,
+    toggleToc,
+  ]);
+
+  useEffect(() => {
     let cleanup: (() => void) | undefined;
     let isDisposed = false;
 
@@ -509,7 +569,9 @@ export default function App() {
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
     >
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4">
+      <header
+        className={`${focusMode ? 'hidden' : 'flex'} h-14 shrink-0 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4`}
+      >
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
             B
@@ -618,6 +680,57 @@ export default function App() {
             <Languages className="size-4" aria-hidden />
           </button>
           <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+            type="button"
+            aria-label={t('toc.toggle')}
+            title={t('toc.toggle')}
+            aria-pressed={tocOpen}
+            onClick={toggleToc}
+          >
+            <List className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
+            aria-label={t('zoom.decrease')}
+            title={t('zoom.decrease')}
+            onClick={decreaseFontScaleStore}
+          >
+            <Minus className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex h-9 min-w-12 items-center justify-center rounded-md px-2 text-xs text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
+            aria-label={t('zoom.reset')}
+            title={t('zoom.reset')}
+            onClick={resetFontScaleStore}
+          >
+            {Math.round(fontScale * 100)}%
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
+            aria-label={t('zoom.increase')}
+            title={t('zoom.increase')}
+            onClick={increaseFontScaleStore}
+          >
+            <Plus className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+            type="button"
+            aria-label={t('focusMode.toggle')}
+            title={t('focusMode.toggle')}
+            aria-pressed={focusMode}
+            onClick={toggleFocusMode}
+          >
+            {focusMode ? (
+              <Maximize2 className="size-4" aria-hidden />
+            ) : (
+              <EyeOff className="size-4" aria-hidden />
+            )}
+          </button>
+          <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             aria-label={t('search.open')}
@@ -642,64 +755,74 @@ export default function App() {
         </div>
       </header>
 
-      <section className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
-        <div className="flex h-10 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-panel))] px-4 text-xs text-[rgb(var(--color-muted))]">
-          <div className="flex items-center gap-1">
-            {VIEW_MODES.map((mode) => (
-              <button
-                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
-                type="button"
-                aria-pressed={viewMode === mode}
-                aria-label={t('view.selectMode', {
-                  mode: t(`view.mode.${mode}`),
-                })}
-                key={mode}
-                onClick={() => setViewMode(mode)}
-              >
-                {t(`view.mode.${mode}`)}
-              </button>
-            ))}
+      <section className="flex min-h-0 flex-1">
+        {tocOpen ? (
+          <TableOfContents
+            content={document.content}
+            onSelect={handleSelectHeading}
+          />
+        ) : null}
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
+          <div
+            className={`${focusMode ? 'hidden' : 'flex'} h-10 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-panel))] px-4 text-xs text-[rgb(var(--color-muted))]`}
+          >
+            <div className="flex items-center gap-1">
+              {VIEW_MODES.map((mode) => (
+                <button
+                  className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                  type="button"
+                  aria-pressed={viewMode === mode}
+                  aria-label={t('view.selectMode', {
+                    mode: t(`view.mode.${mode}`),
+                  })}
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                >
+                  {t(`view.mode.${mode}`)}
+                </button>
+              ))}
+            </div>
+            <span>
+              {t(`theme.preference.${themePreference}`)} ·{' '}
+              {t(`view.mode.${viewMode}`)}
+            </span>
           </div>
-          <span>
-            {t(`theme.preference.${themePreference}`)} ·{' '}
-            {t(`view.mode.${viewMode}`)}
-          </span>
-        </div>
 
-        <div
-          className={
-            viewMode === 'split'
-              ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
-              : 'relative min-h-0'
-          }
-        >
-          {isSearchOpen ? (
-            <SearchPanel
-              activeIndex={searchActiveIndex}
-              caseSensitive={searchCaseSensitive}
-              matchCount={searchMatchCount}
-              query={searchQuery}
-              onCaseSensitiveChange={setSearchCaseSensitive}
-              onClose={handleCloseSearch}
-              onNext={() => goNextSearch(searchMatchCount)}
-              onPrevious={() => goPreviousSearch(searchMatchCount)}
-              onQueryChange={setSearchQuery}
-            />
-          ) : null}
-          {viewMode !== 'preview' ? (
-            <MarkdownEditor
-              ref={editorRef}
-              activeSearchIndex={searchActiveIndex}
-              ariaLabel={t('editor.label')}
-              placeholder={t('editor.placeholder')}
-              searchMatches={searchMatches}
-              value={document.content}
-              onChange={updateContent}
-            />
-          ) : null}
-          {viewMode !== 'editor' ? (
-            <Preview content={document.content} />
-          ) : null}
+          <div
+            className={
+              viewMode === 'split'
+                ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
+                : 'relative min-h-0'
+            }
+          >
+            {isSearchOpen ? (
+              <SearchPanel
+                activeIndex={searchActiveIndex}
+                caseSensitive={searchCaseSensitive}
+                matchCount={searchMatchCount}
+                query={searchQuery}
+                onCaseSensitiveChange={setSearchCaseSensitive}
+                onClose={handleCloseSearch}
+                onNext={() => goNextSearch(searchMatchCount)}
+                onPrevious={() => goPreviousSearch(searchMatchCount)}
+                onQueryChange={setSearchQuery}
+              />
+            ) : null}
+            {viewMode !== 'preview' ? (
+              <MarkdownEditor
+                ref={editorRef}
+                activeSearchIndex={searchActiveIndex}
+                ariaLabel={t('editor.label')}
+                placeholder={t('editor.placeholder')}
+                searchMatches={searchMatches}
+                value={document.content}
+                onChange={updateContent}
+              />
+            ) : null}
+            {viewMode !== 'editor' ? (
+              <Preview content={document.content} />
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -757,7 +880,9 @@ export default function App() {
         </div>
       ) : null}
 
-      <footer className="flex h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]">
+      <footer
+        className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]`}
+      >
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate">{displayName}</span>
           {isDirty ? (
@@ -770,6 +895,15 @@ export default function App() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <span aria-label={t('stats.words')} title={t('stats.words')}>
+            {t('stats.wordsValue', { count: textStats.words })}
+          </span>
+          <span
+            aria-label={t('stats.characters')}
+            title={t('stats.characters')}
+          >
+            {t('stats.charactersValue', { count: textStats.characters })}
+          </span>
           <span>{document.encoding.toUpperCase()}</span>
           <span>{document.eol.toUpperCase()}</span>
           <span>{t(`language.preference.${languagePreference}`)}</span>
