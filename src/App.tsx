@@ -46,6 +46,19 @@ import {
 
 const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
 
+type MenuHandlers = {
+  cycleTheme: () => void;
+  cycleViewMode: () => void;
+  handleNewDocument: () => void;
+  handleOpenSearch: () => void;
+  handleOpenWithConfirmation: () => void;
+  handleSave: () => Promise<boolean>;
+  handleSaveAs: () => Promise<boolean>;
+  openAbout: () => void;
+  setLanguage: (language: 'es' | 'en') => void;
+  setViewMode: (nextViewMode: ViewMode) => void;
+};
+
 export default function App() {
   const { i18n, t } = useTranslation();
   const document = useFileStore((state) => state.document);
@@ -89,21 +102,17 @@ export default function App() {
     (() => Promise<void> | void) | null
   >(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
-  const menuHandlersRef = useRef({
-    cycleTheme: () => undefined,
-    cycleViewMode: () => undefined,
-    handleNewDocument: () => undefined,
-    handleOpenSearch: () => undefined,
-    handleOpenWithConfirmation: () => undefined,
+  const menuHandlersRef = useRef<MenuHandlers>({
+    cycleTheme: () => {},
+    cycleViewMode: () => {},
+    handleNewDocument: () => {},
+    handleOpenSearch: () => {},
+    handleOpenWithConfirmation: () => {},
     handleSave: () => Promise.resolve(false),
     handleSaveAs: () => Promise.resolve(false),
-    openAbout: () => undefined,
-    setLanguage: (language: 'es' | 'en') => {
-      void language;
-    },
-    setViewMode: (nextViewMode: ViewMode) => {
-      void nextViewMode;
-    },
+    openAbout: () => {},
+    setLanguage: () => {},
+    setViewMode: () => {},
   });
   const searchMatches = useMemo(
     () => findSearchMatches(document.content, searchQuery, searchCaseSensitive),
