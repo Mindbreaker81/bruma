@@ -1,6 +1,6 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
-    App, Emitter,
+    App, AppHandle, Emitter, Runtime,
 };
 
 pub fn install(app: &App) -> tauri::Result<()> {
@@ -102,6 +102,6 @@ pub fn install(app: &App) -> tauri::Result<()> {
     Ok(())
 }
 
-pub fn handle_event(app: &App, id: &str) {
+pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &str) {
     let _ = app.emit("menu://action", id);
 }
