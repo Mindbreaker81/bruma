@@ -3,22 +3,29 @@
     "name": "Bruma",
     "tagline": "Editor Markdown de escritorio, local y ligero."
   },
-  "capabilities": {
-    "local": {
-      "title": "Local-first",
-      "body": "El MVP trabajará con archivos locales y sin telemetría."
-    },
-    "search": {
-      "title": "Búsqueda preparada",
-      "body": "La base queda lista para integrar navegación por coincidencias."
-    },
-    "theme": {
-      "title": "Tema configurable",
-      "body": "La arquitectura reserva preferencias de tema claro, oscuro y sistema."
-    },
-    "i18n": {
-      "title": "Español e inglés",
-      "body": "Los catálogos iniciales ya están conectados con i18next."
+  "actions": {
+    "markSaved": "Marcar como guardado",
+    "newDocument": "Nuevo documento"
+  },
+  "document": {
+    "dirtyMark": "(sin guardar)",
+    "saved": "Guardado",
+    "unsaved": "Sin guardar",
+    "untitled": "Sin titulo"
+  },
+  "editor": {
+    "label": "Editor Markdown",
+    "placeholder": "Empieza a escribir Markdown..."
+  },
+  "theme": {
+    "toggle": "Cambiar tema",
+    "preference": {
+      "dark": "Tema oscuro",
+      "light": "Tema claro",
+      "system": "Tema del sistema"
     }
+  },
+  "view": {
+    "editor": "Editor"
   }
 }

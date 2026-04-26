@@ -28,37 +28,58 @@
 
 ### Andamiaje
 
-- [ ] Reemplazar `Bruma contributors` en `LICENSE` por el titular real del copyright antes de publicar.
-- [ ] Inicializar repositorio Git (`git init`, primer commit con docs y `LICENSE`).
-- [ ] Configurar `.gitignore`, `.editorconfig`, `.prettierrc`, `.eslintrc.cjs`.
-- [ ] Configurar `rustfmt.toml` y `clippy` settings (`Cargo.toml` lints).
-- [ ] Crear estructura de carpetas según `ARCHITECTURE.md` §3.
-- [ ] Inicializar Tauri 2.x (`pnpm create tauri-app` con plantilla React + TS).
-- [ ] Añadir Tailwind CSS al frontend (`tailwindcss`, `postcss`, `autoprefixer`, `tailwind.config.ts`).
-- [ ] Añadir dependencias clave: `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `@codemirror/search`, `markdown-it`, `dompurify`, `highlight.js`, `i18next`, `react-i18next`, `lucide-react`, `zustand` (si se decide usarlo).
-- [ ] Añadir `tauri-plugin-store` (Rust crate + JS bindings).
-- [ ] Configurar Vite y `tsconfig.json` estricto.
-- [ ] Configurar i18next con `es` y `en` (solo keys mínimas iniciales).
-- [ ] Configurar Vitest + React Testing Library.
-- [ ] Configurar Playwright (smoke test sobre dev server).
-- [ ] Configurar Husky + commitlint (hook `commit-msg` con `@commitlint/config-conventional`).
-- [ ] (Opcional) Configurar `lint-staged` para Prettier/ESLint en pre-commit.
-- [ ] Crear workflow `ci.yml` (lint + test + build matriz macOS/Windows).
-- [ ] Documentar comandos básicos en `README.md`.
+- [x] Reemplazar `Bruma contributors` en `LICENSE` por el titular real del copyright antes de publicar.
+- [x] Inicializar repositorio Git (`git init`, primer commit con docs y `LICENSE`).
+- [x] Configurar `.gitignore`, `.editorconfig`, `.prettierrc`, `.eslintrc.cjs`.
+- [x] Configurar `rustfmt.toml` y `clippy` settings (`Cargo.toml` lints).
+- [x] Crear estructura de carpetas según `ARCHITECTURE.md` §3.
+- [x] Inicializar Tauri 2.x (`pnpm create tauri-app` con plantilla React + TS).
+- [x] Añadir Tailwind CSS al frontend (`tailwindcss`, `postcss`, `autoprefixer`, `tailwind.config.ts`).
+- [x] Añadir dependencias clave: `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `@codemirror/search`, `markdown-it`, `dompurify`, `highlight.js`, `i18next`, `react-i18next`, `lucide-react`, `zustand` (si se decide usarlo).
+- [x] Añadir `tauri-plugin-store` (Rust crate + JS bindings).
+- [x] Configurar Vite y `tsconfig.json` estricto.
+- [x] Configurar i18next con `es` y `en` (solo keys mínimas iniciales).
+- [x] Configurar Vitest + React Testing Library.
+- [x] Configurar Playwright (smoke test sobre dev server).
+- [x] Configurar Husky + commitlint (hook `commit-msg` con `@commitlint/config-conventional`).
+- [x] (Opcional) Configurar `lint-staged` para Prettier/ESLint en pre-commit.
+- [x] Crear workflow `ci.yml` (lint + test + build matriz macOS/Windows).
+- [x] Documentar comandos básicos en `README.md`.
+
+### Validación Sprint 0
+
+- [x] Verificar prerequisitos: Node.js, pnpm, Rust estable y Cargo.
+- [x] Ejecutar `pnpm install`.
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo test` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
+- [~] Ejecutar `pnpm tauri build`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
 
 ---
 
 ## Sprint 1 — Cimientos de UI y modelo de documento
 
-- [ ] Layout de la app: header (placeholder), área principal, barra inferior.
-- [ ] Tema claro/oscuro/sistema con variables CSS.
-- [ ] Toggle de tema accesible por menú y atajo.
-- [ ] Menú nativo Tauri (esqueleto: Archivo, Editar, Ver, Idioma, Ayuda).
-- [ ] Cableado de eventos de menú nativo → frontend.
-- [ ] Modelo `Document` y store (`src/features/files/state.ts`).
-- [ ] Buffer "Sin título" al arrancar.
-- [ ] Indicador `isDirty` en barra inferior y título de ventana.
-- [ ] Tests unit: lógica `isDirty`, transiciones de estado.
+- [x] Layout de la app: header (placeholder), área principal, barra inferior.
+- [x] Tema claro/oscuro/sistema con variables CSS.
+- [x] Toggle de tema accesible por menú y atajo.
+- [x] Menú nativo Tauri (esqueleto: Archivo, Editar, Ver, Idioma, Ayuda).
+- [x] Cableado de eventos de menú nativo → frontend.
+- [x] Modelo `Document` y store (`src/features/files/state.ts`).
+- [x] Buffer "Sin título" al arrancar.
+- [x] Indicador `isDirty` en barra inferior y título de ventana.
+- [x] Tests unit: lógica `isDirty`, transiciones de estado.
+
+### Validación Sprint 1
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
 
 **Cierre del sprint:** la app abre, muestra layout, tema funciona, hay un documento vacío editable (sin persistencia aún).
 
