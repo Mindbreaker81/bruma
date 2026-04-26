@@ -2,7 +2,7 @@
 
 > Editor Markdown de escritorio: ligero, local y simple.
 
-**Estado:** Pre-alfa · Sprint 0. Existe andamiaje técnico mínimo, sin editor funcional todavía.
+**Estado:** MVP v1.0 en preparacion para QA interno en macOS y Windows.
 
 ---
 
@@ -56,6 +56,7 @@ Detalle en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - [`docs/PRDv1.md`](docs/PRDv1.md) — PRD original (referencia histórica).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arquitectura técnica.
 - [`docs/TODO.md`](docs/TODO.md) — backlog de implementación por fases.
+- [`docs/RELEASE.md`](docs/RELEASE.md) — checklist de release, firma y QA.
 - [`CHANGELOG.md`](CHANGELOG.md) — historial de cambios.
 
 ## Roadmap resumido
@@ -96,6 +97,13 @@ pnpm lint             # ESLint
 pnpm format:check     # comprobación Prettier
 pnpm test             # tests unit/component (Vitest)
 pnpm test:e2e         # smoke E2E (Playwright)
+```
+
+Release interno:
+
+```bash
+pnpm tauri build      # build local sin firmar
+git tag v1.0.0        # dispara release.yml al hacer push del tag
 ```
 
 ## Contribución

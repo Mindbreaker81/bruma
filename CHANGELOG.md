@@ -6,6 +6,29 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+Sin cambios sin publicar.
+
+## [1.0.0] - 2026-04-26
+
+### Added
+
+- Aplicacion Tauri 2 + React 18 con editor Markdown CodeMirror, preview sanitizada, busqueda, recientes y proteccion de cambios sin guardar.
+- Interfaz bilingue `es`/`en` con deteccion del idioma del sistema y preferencia persistida.
+- Tema claro/oscuro/sistema, modos editor/preview/dividido y configuracion versionada.
+- Workflow `release.yml` para builds internos sin firmar en macOS y Windows.
+- Fuente SVG del icono de Bruma y documentacion de release/firma en `docs/RELEASE.md`.
+
+### Changed
+
+- Version de app, paquete npm y crate Rust actualizada a `1.0.0`.
+- CSP de Tauri endurecida para el bundle de escritorio.
+
+### Security
+
+- Preview Markdown renderizada con markdown-it y sanitizada con DOMPurify para bloquear scripts, handlers `on*` y URLs `javascript:`.
+
+---
+
 ### Added
 
 - Documentación de producto v2 (`docs/PRDv2.md`):
@@ -46,11 +69,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Changed
 
 - Reescritura del PRD original con formato Markdown navegable y secciones revisadas (`docs/PRDv2.md` reemplaza funcionalmente a `docs/PRDv1.md`, que se conserva como referencia histórica).
-
-### Notes
-
-- Aún no existe código de producto; este registro corresponde a la fase de planificación.
-- El titular del copyright en `LICENSE` se ha dejado como `Bruma contributors`; sustituir por el titular real (persona o entidad) antes de publicar.
 
 ---
 

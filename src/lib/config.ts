@@ -1,12 +1,14 @@
+import type { LanguagePreference } from '../features/settings/language';
 import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
 
-export const CONFIG_VERSION = 1;
+export const CONFIG_VERSION = 2;
 const CONFIG_STORAGE_KEY = 'bruma.config';
 
 export type AppConfig = {
   version: number;
   theme: ThemePreference;
+  language: LanguagePreference;
   viewMode: ViewMode;
   recentFiles: string[];
 };
@@ -14,6 +16,7 @@ export type AppConfig = {
 export const DEFAULT_CONFIG: AppConfig = {
   version: CONFIG_VERSION,
   theme: 'system',
+  language: 'system',
   viewMode: 'editor',
   recentFiles: [],
 };
@@ -40,6 +43,12 @@ export function migrateConfig(input: unknown): AppConfig {
     config.viewMode === 'split'
       ? config.viewMode
       : DEFAULT_CONFIG.viewMode;
+  const language =
+    config.language === 'system' ||
+    config.language === 'es' ||
+    config.language === 'en'
+      ? config.language
+      : DEFAULT_CONFIG.language;
   const recentFiles = Array.isArray(config.recentFiles)
     ? config.recentFiles.filter(
         (path): path is string => typeof path === 'string'
@@ -49,6 +58,7 @@ export function migrateConfig(input: unknown): AppConfig {
   return {
     version: CONFIG_VERSION,
     theme,
+    language,
     viewMode,
     recentFiles: recentFiles.slice(0, 10),
   };

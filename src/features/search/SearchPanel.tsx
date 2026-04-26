@@ -68,7 +68,7 @@ export function SearchPanel({
         {counter}
       </span>
       <button
-        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         type="button"
         aria-label={t('search.previous')}
         onClick={onPrevious}
@@ -76,14 +76,14 @@ export function SearchPanel({
         <ChevronUp className="size-4" aria-hidden />
       </button>
       <button
-        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         type="submit"
         aria-label={t('search.next')}
       >
         <ChevronDown className="size-4" aria-hidden />
       </button>
       <button
-        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
         type="button"
         aria-label={t('search.caseSensitive')}
         aria-pressed={caseSensitive}
@@ -92,7 +92,7 @@ export function SearchPanel({
         <CaseSensitive className="size-4" aria-hidden />
       </button>
       <button
-        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+        className="inline-flex size-8 items-center justify-center rounded text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         type="button"
         aria-label={t('search.close')}
         onClick={onClose}

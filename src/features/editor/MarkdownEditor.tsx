@@ -83,6 +83,7 @@ export const MarkdownEditor = forwardRef<
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<number | null>(null);
+  const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
     searchMatches.length > 0
@@ -120,11 +121,13 @@ export const MarkdownEditor = forwardRef<
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
           EditorView.lineWrapping,
           searchCompartmentRef.current.of(searchDecorationExtension([], 0)),
-          EditorView.contentAttributes.of({
-            'aria-label': ariaLabel,
-            'data-placeholder': placeholder,
-            role: 'textbox',
-          }),
+          contentAttributesCompartmentRef.current.of(
+            EditorView.contentAttributes.of({
+              'aria-label': ariaLabel,
+              'data-placeholder': placeholder,
+              role: 'textbox',
+            })
+          ),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) {
               return;
@@ -155,6 +158,24 @@ export const MarkdownEditor = forwardRef<
       editor.destroy();
       editorRef.current = null;
     };
+  }, [ariaLabel, placeholder]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+
+    if (!editor) {
+      return;
+    }
+
+    editor.dispatch({
+      effects: contentAttributesCompartmentRef.current.reconfigure(
+        EditorView.contentAttributes.of({
+          'aria-label': ariaLabel,
+          'data-placeholder': placeholder,
+          role: 'textbox',
+        })
+      ),
+    });
   }, [ariaLabel, placeholder]);
 
   useEffect(() => {

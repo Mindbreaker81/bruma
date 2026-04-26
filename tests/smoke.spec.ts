@@ -13,6 +13,12 @@ test('shows the Bruma shell', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Bruma' })).toBeVisible();
   await expect(editor).toBeVisible();
 
+  await page.getByRole('button', { name: /language|idioma/i }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+  await expect(
+    page.getByRole('button', { name: /Cambiar idioma/i })
+  ).toBeVisible();
+
   const dataTransfer = await page.evaluateHandle((content) => {
     const data = new DataTransfer();
     data.items.add(
@@ -73,5 +79,5 @@ test('shows the Bruma shell', async ({ page }) => {
     .getByRole('button', { name: /Archivos recientes|Recent files/i })
     .click();
 
-  await expect(page.getByRole('button', { name: 'search.md' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'search.md' })).toBeVisible();
 });

@@ -4,6 +4,7 @@ import {
   Eye,
   FileInput,
   FileText,
+  Languages,
   Moon,
   RotateCcw,
   Save,
@@ -42,7 +43,7 @@ import { listenToMenuActions, setAppWindowTitle } from './lib/tauri';
 const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
 
 export default function App() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const document = useFileStore((state) => state.document);
   const displayName = useFileStore((state) => state.displayName);
   const isDirty = useFileStore((state) => state.isDirty);
@@ -53,9 +54,13 @@ export default function App() {
   const resetUntitled = useFileStore((state) => state.resetUntitled);
   const updateContent = useFileStore((state) => state.updateContent);
   const cycleTheme = useThemeStore((state) => state.cycleTheme);
+  const cycleLanguage = useThemeStore((state) => state.cycleLanguage);
   const cycleViewMode = useThemeStore((state) => state.cycleViewMode);
+  const languagePreference = useThemeStore((state) => state.languagePreference);
+  const resolvedLanguage = useThemeStore((state) => state.resolvedLanguage);
   const themePreference = useThemeStore((state) => state.preference);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const setLanguage = useThemeStore((state) => state.setLanguage);
   const setViewMode = useThemeStore((state) => state.setViewMode);
   const viewMode = useThemeStore((state) => state.viewMode);
   const searchActiveIndex = useSearchStore((state) => state.activeIndex);
@@ -249,6 +254,14 @@ export default function App() {
   }, [displayName, isDirty]);
 
   useEffect(() => {
+    window.document.documentElement.lang = resolvedLanguage;
+
+    if (i18n.language !== resolvedLanguage) {
+      void i18n.changeLanguage(resolvedLanguage);
+    }
+  }, [i18n, resolvedLanguage]);
+
+  useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!isDirty) {
         return;
@@ -364,6 +377,14 @@ export default function App() {
       if (action === 'view_toggle_mode') {
         cycleViewMode();
       }
+
+      if (action === 'language_es') {
+        setLanguage('es');
+      }
+
+      if (action === 'language_en') {
+        setLanguage('en');
+      }
     }).then((unlisten) => {
       cleanup = unlisten;
     });
@@ -377,6 +398,7 @@ export default function App() {
     handleOpenSearch,
     handleSave,
     handleSaveAs,
+    setLanguage,
     setViewMode,
   ]);
 
@@ -431,12 +453,17 @@ export default function App() {
               <Clock className="size-4" aria-hidden />
             </button>
             {isRecentMenuOpen ? (
-              <div className="absolute right-0 top-11 z-20 w-72 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg">
+              <div
+                className="absolute right-0 top-11 z-20 w-72 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
+                role="menu"
+                aria-label={t('recent.open')}
+              >
                 {recentFiles.length > 0 ? (
                   recentFiles.map((path) => (
                     <button
-                      className="block w-full truncate rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))]"
+                      className="block w-full truncate rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                       type="button"
+                      role="menuitem"
                       key={path}
                       onClick={() => handleOpenRecent(path)}
                     >
@@ -472,6 +499,19 @@ export default function App() {
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
+            aria-label={t('language.toggle', {
+              language: t(`language.preference.${languagePreference}`),
+            })}
+            title={t('language.toggle', {
+              language: t(`language.preference.${languagePreference}`),
+            })}
+            onClick={cycleLanguage}
+          >
+            <Languages className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
             aria-label={t('search.open')}
             title={t('search.open')}
             onClick={handleOpenSearch}
@@ -499,9 +539,12 @@ export default function App() {
           <div className="flex items-center gap-1">
             {VIEW_MODES.map((mode) => (
               <button
-                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
                 type="button"
                 aria-pressed={viewMode === mode}
+                aria-label={t('view.selectMode', {
+                  mode: t(`view.mode.${mode}`),
+                })}
                 key={mode}
                 onClick={() => setViewMode(mode)}
               >
@@ -591,7 +634,8 @@ export default function App() {
         <div className="flex items-center gap-3">
           <span>{document.encoding.toUpperCase()}</span>
           <span>{document.eol.toUpperCase()}</span>
-          <span>{resolvedTheme}</span>
+          <span>{t(`language.preference.${languagePreference}`)}</span>
+          <span>{t(`theme.resolved.${resolvedTheme}`)}</span>
         </div>
       </footer>
     </main>

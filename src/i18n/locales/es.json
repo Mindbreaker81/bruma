@@ -35,6 +35,14 @@
     "empty": "No hay archivos recientes.",
     "open": "Archivos recientes"
   },
+  "language": {
+    "toggle": "Cambiar idioma: {{language}}",
+    "preference": {
+      "en": "Ingles",
+      "es": "Espanol",
+      "system": "Idioma del sistema"
+    }
+  },
   "search": {
     "caseSensitive": "Distinguir mayúsculas",
     "close": "Cerrar búsqueda",
@@ -51,10 +59,15 @@
       "dark": "Tema oscuro",
       "light": "Tema claro",
       "system": "Tema del sistema"
+    },
+    "resolved": {
+      "dark": "Oscuro",
+      "light": "Claro"
     }
   },
   "view": {
     "editor": "Editor",
+    "selectMode": "Seleccionar vista: {{mode}}",
     "toggle": "Cambiar modo de vista",
     "mode": {
       "editor": "Editor",

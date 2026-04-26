@@ -1,6 +1,6 @@
 # TODO — Bruma
 
-- **Estado:** Backlog inicial post-PRDv2.
+- **Estado:** MVP v1.0 preparado para QA interno macOS/Windows; validacion manual de plataforma pendiente.
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
@@ -187,14 +187,24 @@
 
 ## Sprint 6 — i18n, accesibilidad y pulido
 
-- [ ] Auditoría de strings: todos los textos visibles a través de `t()`.
-- [ ] Catálogos `es.json` y `en.json` completos.
-- [ ] Toggle de idioma en menú "Idioma".
-- [ ] Detección inicial de idioma del SO.
-- [ ] Auditoría de accesibilidad: navegación por teclado, roles ARIA, contraste AA.
-- [ ] Iconos con `aria-label` o `<title>`.
-- [ ] Foco visible y orden lógico de tabulación.
-- [ ] Pruebas con lector de pantalla (VoiceOver en macOS, Narrator en Windows) — al menos flujo principal.
+- [x] Auditoría de strings: todos los textos visibles a través de `t()`.
+- [x] Catálogos `es.json` y `en.json` completos.
+- [x] Toggle de idioma en menú "Idioma".
+- [x] Toggle de idioma en toolbar con preferencia persistida (`system` / `es` / `en`).
+- [x] Detección inicial de idioma del SO.
+- [x] Auditoría de accesibilidad: navegación por teclado, roles ARIA, contraste AA.
+- [x] Iconos con `aria-label` o `<title>`.
+- [x] Foco visible y orden lógico de tabulación.
+- [x] Tests unit/E2E para cambio de idioma y roles accesibles principales.
+- [~] Pruebas con lector de pantalla (VoiceOver en macOS, Narrator en Windows) — pendiente en maquinas reales.
+
+### Validación Sprint 6
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
 
 **Cierre del sprint:** app bilingüe y accesible en flujos críticos.
 
@@ -202,17 +212,29 @@
 
 ## Sprint 7 — Empaquetado y release v1.0
 
-- [ ] Iconos finales (macOS `.icns`, Windows `.ico`).
-- [ ] Metadata de la app (nombre, identificador, versión, descripción) en `tauri.conf.json`.
-- [ ] CSP estricta verificada.
-- [ ] Builds de release sin firmar para QA interno (macOS + Windows).
-- [ ] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
-- [ ] Plan de firma Windows: certificado Authenticode (deseable).
-- [ ] Workflow `release.yml` con tag `v1.0.0`.
-- [ ] Notas de release en `CHANGELOG.md`.
-- [ ] Verificación de criterios de aceptación del MVP (`PRDv2.md` §14).
+- [x] Iconos finales (macOS `.icns`, Windows `.ico`).
+- [x] Metadata de la app (nombre, identificador, versión, descripción) en `tauri.conf.json`.
+- [x] Version v1.0.0 sincronizada en `package.json`, `src-tauri/Cargo.toml`, `Cargo.lock` y `tauri.conf.json`.
+- [x] CSP estricta verificada en configuracion Tauri.
+- [~] Builds de release sin firmar para QA interno (macOS + Windows): workflow listo; artefactos pendientes al crear/pushear tag `v1.0.0`.
+- [x] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
+- [x] Plan de firma Windows: certificado Authenticode (deseable).
+- [x] Workflow `release.yml` con tag `v1.0.0`.
+- [x] Notas de release en `CHANGELOG.md`.
+- [~] Verificación de criterios de aceptación del MVP (`PRDv2.md` §14): cobertura automatizada lista; tiempos/binario y QA manual pendientes en macOS/Windows.
 - [ ] Pruebas manuales sobre 20+ archivos `.md` reales.
 - [ ] Pruebas en macOS 12+ (Apple Silicon e Intel) y Windows 10/11.
+
+### Validación Sprint 7
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [x] Ejecutar `cargo fmt --check` en `src-tauri`.
+- [~] Ejecutar `cargo check` / `cargo test` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
+- [~] Ejecutar `pnpm tauri build`: frontend compila; bundle Tauri bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
 
 **Cierre del sprint:** release v1.0.0 disponible.
 

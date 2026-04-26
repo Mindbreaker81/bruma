@@ -35,21 +35,21 @@ export function ConfirmDirtyDialog({
         </p>
         <div className="mt-5 flex justify-end gap-2">
           <button
-            className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+            className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             onClick={onCancel}
           >
             {t('confirmDirty.cancel')}
           </button>
           <button
-            className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+            className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             onClick={onDiscard}
           >
             {t('confirmDirty.discard')}
           </button>
           <button
-            className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+            className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             onClick={onSave}
           >

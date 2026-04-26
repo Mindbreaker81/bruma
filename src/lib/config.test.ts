@@ -14,6 +14,7 @@ describe('app config', () => {
     expect(migrateConfig({ version: 0, theme: 'invalid' })).toMatchObject({
       version: CONFIG_VERSION,
       theme: 'system',
+      language: 'system',
       viewMode: 'editor',
     });
   });
@@ -29,11 +30,18 @@ describe('app config', () => {
   it('reads and patches config from storage', () => {
     const storage = new MapStorage();
 
-    patchConfig({ theme: 'dark', viewMode: 'split' }, storage);
+    patchConfig({ theme: 'dark', language: 'es', viewMode: 'split' }, storage);
 
     expect(readConfig(storage)).toMatchObject({
       theme: 'dark',
+      language: 'es',
       viewMode: 'split',
+    });
+  });
+
+  it('rejects unsupported language preferences', () => {
+    expect(migrateConfig({ language: 'fr' })).toMatchObject({
+      language: 'system',
     });
   });
 });

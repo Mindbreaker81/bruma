@@ -35,6 +35,14 @@
     "empty": "No recent files.",
     "open": "Recent files"
   },
+  "language": {
+    "toggle": "Change language: {{language}}",
+    "preference": {
+      "en": "English",
+      "es": "Spanish",
+      "system": "System language"
+    }
+  },
   "search": {
     "caseSensitive": "Match case",
     "close": "Close search",
@@ -51,10 +59,15 @@
       "dark": "Dark theme",
       "light": "Light theme",
       "system": "System theme"
+    },
+    "resolved": {
+      "dark": "Dark",
+      "light": "Light"
     }
   },
   "view": {
     "editor": "Editor",
+    "selectMode": "Select view: {{mode}}",
     "toggle": "Change view mode",
     "mode": {
       "editor": "Editor",
