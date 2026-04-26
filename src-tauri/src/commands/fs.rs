@@ -258,7 +258,11 @@ mod tests {
 
         assert_eq!(
             result.path,
-            file_path.canonicalize().unwrap().to_string_lossy()
+            file_path
+                .canonicalize()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
         );
 
         fs::remove_file(&file_path).unwrap();
