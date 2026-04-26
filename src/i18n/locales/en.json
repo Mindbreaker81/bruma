@@ -1,0 +1,24 @@
+{
+  "app": {
+    "name": "Bruma",
+    "tagline": "A lightweight, local-first desktop Markdown editor."
+  },
+  "capabilities": {
+    "local": {
+      "title": "Local-first",
+      "body": "The MVP will work with local files and no telemetry."
+    },
+    "search": {
+      "title": "Search-ready",
+      "body": "The base is ready for match navigation in upcoming sprints."
+    },
+    "theme": {
+      "title": "Configurable theme",
+      "body": "The architecture reserves light, dark and system theme preferences."
+    },
+    "i18n": {
+      "title": "Spanish and English",
+      "body": "The initial catalogs are already wired through i18next."
+    }
+  }
+}

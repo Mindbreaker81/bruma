@@ -2,7 +2,7 @@
 
 > Editor Markdown de escritorio: ligero, local y simple.
 
-**Estado:** Pre-alfa · planificación. Aún no existe código de producto, solo documentación.
+**Estado:** Pre-alfa · Sprint 0. Existe andamiaje técnico mínimo, sin editor funcional todavía.
 
 ---
 
@@ -60,12 +60,12 @@ Detalle en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Roadmap resumido
 
-| Versión | Foco                                                             |
-| ------- | ---------------------------------------------------------------- |
+| Versión | Foco                                                                      |
+| ------- | ------------------------------------------------------------------------- |
 | v1.0    | MVP: edición, preview, búsqueda, recientes, temas, i18n. macOS + Windows. |
-| v1.1    | Reemplazar, exportar HTML/PDF, scroll sincronizado, imágenes locales. |
-| v1.2    | Pestañas, preferencias avanzadas, modo enfoque, autoguardado.    |
-| v2.0    | Soporte Linux (Ubuntu, Debian, Fedora) con paquetes nativos.     |
+| v1.1    | Reemplazar, exportar HTML/PDF, scroll sincronizado, imágenes locales.     |
+| v1.2    | Pestañas, preferencias avanzadas, modo enfoque, autoguardado.             |
+| v2.0    | Soporte Linux (Ubuntu, Debian, Fedora) con paquetes nativos.              |
 
 ## Requisitos previstos para usuarios finales
 
@@ -75,25 +75,27 @@ Detalle en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Desarrollo
 
-> El código aún no está iniciado. Esta sección se actualizará en cuanto exista andamiaje (ver `docs/TODO.md` · Sprint 0).
-
-Requisitos previstos para contribuir:
+Requisitos para contribuir:
 
 - Node.js LTS (≥ 20).
-- pnpm (recomendado) o npm.
+- pnpm.
 - Rust estable (vía [rustup](https://rustup.rs/)).
 - Toolchain Tauri según plataforma:
   - macOS: Xcode Command Line Tools.
   - Windows: Microsoft C++ Build Tools + WebView2 Runtime.
 
-Comandos previstos (placeholders):
+Comandos:
 
 ```bash
-pnpm install            # instala dependencias frontend
-pnpm tauri dev          # arranca la app en modo desarrollo
-pnpm tauri build        # compila la app empaquetada
-pnpm test               # tests unit/component (Vitest)
-pnpm test:e2e           # tests E2E (Playwright)
+pnpm install          # instala dependencias frontend
+pnpm dev              # arranca Vite en modo desarrollo
+pnpm tauri dev        # arranca la app Tauri en modo desarrollo
+pnpm build            # compila el frontend
+pnpm tauri build      # compila la app empaquetada
+pnpm lint             # ESLint
+pnpm format:check     # comprobación Prettier
+pnpm test             # tests unit/component (Vitest)
+pnpm test:e2e         # smoke E2E (Playwright)
 ```
 
 ## Contribución
