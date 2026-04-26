@@ -44,6 +44,9 @@ type ThemeState = {
   setFocusMode: (focusMode: boolean) => void;
   toggleToc: () => void;
   setTocOpen: (open: boolean) => void;
+  showFrontmatter: boolean;
+  toggleShowFrontmatter: () => void;
+  setShowFrontmatter: (show: boolean) => void;
 };
 
 function getSystemPrefersDark(): boolean {
@@ -111,6 +114,11 @@ function applyFocusMode(active: boolean): boolean {
 function applyTocOpen(open: boolean): boolean {
   patchConfig({ tocOpen: open });
   return open;
+}
+
+function applyShowFrontmatter(show: boolean): boolean {
+  patchConfig({ showFrontmatter: show });
+  return show;
 }
 
 const initialConfig = readConfig();
@@ -184,4 +192,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set(() => ({ focusMode: applyFocusMode(focusMode) })),
   toggleToc: () => set(() => ({ tocOpen: applyTocOpen(!get().tocOpen) })),
   setTocOpen: (open) => set(() => ({ tocOpen: applyTocOpen(open) })),
+  showFrontmatter: applyShowFrontmatter(initialConfig.showFrontmatter ?? true),
+  toggleShowFrontmatter: () =>
+    set(() => ({
+      showFrontmatter: applyShowFrontmatter(!get().showFrontmatter),
+    })),
+  setShowFrontmatter: (show) =>
+    set(() => ({ showFrontmatter: applyShowFrontmatter(show) })),
 }));

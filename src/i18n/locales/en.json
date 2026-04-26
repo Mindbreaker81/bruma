@@ -73,7 +73,14 @@
     "noMatches": "0/0",
     "open": "Search",
     "placeholder": "Search",
-    "previous": "Previous match"
+    "previous": "Previous match",
+    "replaceAll": "Replace all matches",
+    "replaceAllShort": "All",
+    "replaceLabel": "Replace with",
+    "replaceOne": "Replace current match",
+    "replaceOneShort": "One",
+    "replacePlaceholder": "Replace",
+    "toggleReplace": "Toggle replace"
   },
   "theme": {
     "toggle": "Change theme",
@@ -106,6 +113,11 @@
   },
   "focusMode": {
     "toggle": "Toggle focus mode"
+  },
+  "frontmatter": {
+    "hidden": "Frontmatter hidden",
+    "shown": "Frontmatter visible",
+    "toggle": "Toggle frontmatter visibility"
   },
   "view": {
     "editor": "Editor",

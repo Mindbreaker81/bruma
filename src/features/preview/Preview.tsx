@@ -1,11 +1,13 @@
 import { type MouseEvent, useEffect, useRef, useState } from 'react';
 
+import { stripFrontmatter } from '../../lib/frontmatter';
 import { renderSafeMarkdown } from '../../lib/markdown';
 import { useScrollSyncStore } from './scrollSync';
 
 type PreviewProps = {
   content: string;
   documentPath?: string | null;
+  hideFrontmatter?: boolean;
   onExternalLinkClick?: (href: string) => void;
   onLocalImageRequest?: (relativeSrc: string) => Promise<string | null>;
 };
@@ -19,20 +21,22 @@ function isAbsoluteUrl(value: string): boolean {
 export function Preview({
   content,
   documentPath = null,
+  hideFrontmatter = false,
   onExternalLinkClick,
   onLocalImageRequest,
 }: PreviewProps) {
-  const [html, setHtml] = useState(() => renderSafeMarkdown(content));
+  const sourceForRender = hideFrontmatter ? stripFrontmatter(content) : content;
+  const [html, setHtml] = useState(() => renderSafeMarkdown(sourceForRender));
   const containerRef = useRef<HTMLElement | null>(null);
   const ignoreNextScrollRef = useRef(false);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setHtml(renderSafeMarkdown(content));
+      setHtml(renderSafeMarkdown(sourceForRender));
     }, RENDER_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [content]);
+  }, [sourceForRender]);
 
   // Resolve local images to data URLs after each render.
   useEffect(() => {

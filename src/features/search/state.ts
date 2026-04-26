@@ -11,6 +11,8 @@ type SearchState = {
   caseSensitive: boolean;
   isOpen: boolean;
   query: string;
+  replaceQuery: string;
+  replaceMode: boolean;
   close: () => void;
   goNext: (matchCount: number) => void;
   goPrevious: (matchCount: number) => void;
@@ -18,6 +20,9 @@ type SearchState = {
   open: () => void;
   setCaseSensitive: (caseSensitive: boolean) => void;
   setQuery: (query: string) => void;
+  setReplaceQuery: (query: string) => void;
+  setReplaceMode: (replaceMode: boolean) => void;
+  toggleReplaceMode: () => void;
 };
 
 export const useSearchStore = create<SearchState>((set, get) => ({
@@ -25,7 +30,9 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   caseSensitive: false,
   isOpen: false,
   query: '',
-  close: () => set({ isOpen: false }),
+  replaceQuery: '',
+  replaceMode: false,
+  close: () => set({ isOpen: false, replaceMode: false }),
   goNext: (matchCount) =>
     set((state) => ({
       activeIndex: getNextSearchIndex(state.activeIndex, matchCount),
@@ -54,4 +61,11 @@ export const useSearchStore = create<SearchState>((set, get) => ({
       query,
     });
   },
+  setReplaceQuery: (replaceQuery) => set({ replaceQuery }),
+  setReplaceMode: (replaceMode) => set({ replaceMode }),
+  toggleReplaceMode: () =>
+    set((state) => ({
+      replaceMode: !state.replaceMode,
+      isOpen: state.isOpen || !state.replaceMode,
+    })),
 }));

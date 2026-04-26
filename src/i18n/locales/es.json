@@ -73,7 +73,14 @@
     "noMatches": "0/0",
     "open": "Buscar",
     "placeholder": "Buscar",
-    "previous": "Coincidencia anterior"
+    "previous": "Coincidencia anterior",
+    "replaceAll": "Reemplazar todas las coincidencias",
+    "replaceAllShort": "Todo",
+    "replaceLabel": "Reemplazar con",
+    "replaceOne": "Reemplazar coincidencia",
+    "replaceOneShort": "Una",
+    "replacePlaceholder": "Reemplazar",
+    "toggleReplace": "Mostrar u ocultar reemplazar"
   },
   "theme": {
     "toggle": "Cambiar tema",
@@ -106,6 +113,11 @@
   },
   "focusMode": {
     "toggle": "Activar o desactivar modo enfoque"
+  },
+  "frontmatter": {
+    "hidden": "Frontmatter oculto",
+    "shown": "Frontmatter visible",
+    "toggle": "Mostrar u ocultar frontmatter"
   },
   "view": {
     "editor": "Editor",

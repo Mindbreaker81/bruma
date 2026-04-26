@@ -45,7 +45,11 @@ import { useFileStore } from './features/files/state';
 import { Preview } from './features/preview/Preview';
 import { useScrollSyncStore } from './features/preview/scrollSync';
 import { SearchPanel } from './features/search/SearchPanel';
-import { findSearchMatches } from './features/search/search';
+import {
+  findSearchMatches,
+  replaceAllMatches,
+  replaceMatchAt,
+} from './features/search/search';
 import { useSearchStore } from './features/search/state';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
@@ -115,6 +119,10 @@ export default function App() {
   const toggleToc = useThemeStore((state) => state.toggleToc);
   const scrollSyncEnabled = useScrollSyncStore((state) => state.enabled);
   const toggleScrollSync = useScrollSyncStore((state) => state.toggle);
+  const showFrontmatter = useThemeStore((state) => state.showFrontmatter);
+  const toggleShowFrontmatter = useThemeStore(
+    (state) => state.toggleShowFrontmatter
+  );
   const searchActiveIndex = useSearchStore((state) => state.activeIndex);
   const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
   const closeSearch = useSearchStore((state) => state.close);
@@ -130,6 +138,10 @@ export default function App() {
     (state) => state.setCaseSensitive
   );
   const setSearchQuery = useSearchStore((state) => state.setQuery);
+  const replaceQuery = useSearchStore((state) => state.replaceQuery);
+  const replaceMode = useSearchStore((state) => state.replaceMode);
+  const setReplaceQuery = useSearchStore((state) => state.setReplaceQuery);
+  const toggleReplaceMode = useSearchStore((state) => state.toggleReplaceMode);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
@@ -166,6 +178,44 @@ export default function App() {
   const handleSelectHeading = useCallback((line: number) => {
     editorRef.current?.scrollToLine(line);
   }, []);
+
+  const handleReplaceOne = useCallback(() => {
+    if (searchMatchCount === 0) return;
+    const result = replaceMatchAt(
+      document.content,
+      searchMatches,
+      searchActiveIndex,
+      replaceQuery
+    );
+    if (result.replacements > 0) {
+      updateContent(result.content);
+    }
+  }, [
+    document.content,
+    replaceQuery,
+    searchActiveIndex,
+    searchMatchCount,
+    searchMatches,
+    updateContent,
+  ]);
+
+  const handleReplaceAll = useCallback(() => {
+    if (searchMatchCount === 0) return;
+    const result = replaceAllMatches(
+      document.content,
+      searchMatches,
+      replaceQuery
+    );
+    if (result.replacements > 0) {
+      updateContent(result.content);
+    }
+  }, [
+    document.content,
+    replaceQuery,
+    searchMatchCount,
+    searchMatches,
+    updateContent,
+  ]);
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -896,10 +946,24 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <span>
-              {t(`theme.preference.${themePreference}`)} ·{' '}
-              {t(`view.mode.${viewMode}`)}
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                type="button"
+                aria-label={t('frontmatter.toggle')}
+                title={t('frontmatter.toggle')}
+                aria-pressed={!showFrontmatter}
+                onClick={toggleShowFrontmatter}
+              >
+                {showFrontmatter
+                  ? t('frontmatter.shown')
+                  : t('frontmatter.hidden')}
+              </button>
+              <span>
+                {t(`theme.preference.${themePreference}`)} ·{' '}
+                {t(`view.mode.${viewMode}`)}
+              </span>
+            </div>
           </div>
 
           <div
@@ -915,11 +979,17 @@ export default function App() {
                 caseSensitive={searchCaseSensitive}
                 matchCount={searchMatchCount}
                 query={searchQuery}
+                replaceMode={replaceMode}
+                replaceQuery={replaceQuery}
                 onCaseSensitiveChange={setSearchCaseSensitive}
                 onClose={handleCloseSearch}
                 onNext={() => goNextSearch(searchMatchCount)}
                 onPrevious={() => goPreviousSearch(searchMatchCount)}
                 onQueryChange={setSearchQuery}
+                onReplaceAll={handleReplaceAll}
+                onReplaceOne={handleReplaceOne}
+                onReplaceQueryChange={setReplaceQuery}
+                onToggleReplace={toggleReplaceMode}
               />
             ) : null}
             {viewMode !== 'preview' ? (
@@ -937,6 +1007,7 @@ export default function App() {
               <Preview
                 content={document.content}
                 documentPath={document.path ?? null}
+                hideFrontmatter={!showFrontmatter}
                 onExternalLinkClick={handleExternalLinkClick}
                 onLocalImageRequest={handleLocalImageRequest}
               />

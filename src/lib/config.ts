@@ -3,7 +3,7 @@ import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
 import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
 
-export const CONFIG_VERSION = 3;
+export const CONFIG_VERSION = 4;
 const CONFIG_STORAGE_KEY = 'bruma.config';
 
 export type AppConfig = {
@@ -15,6 +15,7 @@ export type AppConfig = {
   fontScale: number;
   focusMode: boolean;
   tocOpen: boolean;
+  showFrontmatter: boolean;
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -26,6 +27,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   fontScale: FONT_SCALE_DEFAULT,
   focusMode: false,
   tocOpen: false,
+  showFrontmatter: true,
 };
 
 type PartialConfig = Partial<AppConfig> & {
@@ -73,6 +75,10 @@ export function migrateConfig(input: unknown): AppConfig {
     typeof config.tocOpen === 'boolean'
       ? config.tocOpen
       : DEFAULT_CONFIG.tocOpen;
+  const showFrontmatter =
+    typeof config.showFrontmatter === 'boolean'
+      ? config.showFrontmatter
+      : DEFAULT_CONFIG.showFrontmatter;
 
   return {
     version: CONFIG_VERSION,
@@ -83,6 +89,7 @@ export function migrateConfig(input: unknown): AppConfig {
     fontScale,
     focusMode,
     tocOpen,
+    showFrontmatter,
   };
 }
 
