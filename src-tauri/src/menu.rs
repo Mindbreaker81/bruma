@@ -43,12 +43,23 @@ pub fn install(app: &App) -> tauri::Result<()> {
         &[
             &MenuItem::with_id(
                 app,
+                "view_toggle_mode",
+                "Cambiar vista",
+                true,
+                Some("CmdOrCtrl+Shift+V"),
+            )?,
+            &PredefinedMenuItem::separator(app)?,
+            &MenuItem::with_id(app, "view_editor", "Editor", true, None::<&str>)?,
+            &MenuItem::with_id(app, "view_preview", "Preview", true, None::<&str>)?,
+            &MenuItem::with_id(app, "view_split", "Dividido", true, None::<&str>)?,
+            &PredefinedMenuItem::separator(app)?,
+            &MenuItem::with_id(
+                app,
                 "view_toggle_theme",
                 "Cambiar tema",
                 true,
                 Some("CmdOrCtrl+Shift+T"),
             )?,
-            &MenuItem::with_id(app, "view_editor", "Editor", true, None::<&str>)?,
         ],
     )?;
 

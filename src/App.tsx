@@ -1,12 +1,24 @@
-import { FileInput, FileText, Moon, RotateCcw, Save } from 'lucide-react';
+import {
+  Columns2,
+  Eye,
+  FileInput,
+  FileText,
+  Moon,
+  RotateCcw,
+  Save,
+} from 'lucide-react';
 import { type DragEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { MarkdownEditor } from './features/editor/MarkdownEditor';
 import { openFileDialog, saveFile, saveFileDialog } from './features/files/ipc';
 import { useFileStore } from './features/files/state';
+import { Preview } from './features/preview/Preview';
 import { useThemeStore } from './features/settings/state';
+import type { ViewMode } from './features/settings/view';
 import { listenToMenuActions, setAppWindowTitle } from './lib/tauri';
+
+const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
 
 export default function App() {
   const { t } = useTranslation();
@@ -18,8 +30,11 @@ export default function App() {
   const resetUntitled = useFileStore((state) => state.resetUntitled);
   const updateContent = useFileStore((state) => state.updateContent);
   const cycleTheme = useThemeStore((state) => state.cycleTheme);
+  const cycleViewMode = useThemeStore((state) => state.cycleViewMode);
   const themePreference = useThemeStore((state) => state.preference);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const setViewMode = useThemeStore((state) => state.setViewMode);
+  const viewMode = useThemeStore((state) => state.viewMode);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const showError = useCallback((message: string) => {
@@ -143,12 +158,24 @@ export default function App() {
         event.preventDefault();
         cycleTheme();
       }
+
+      if (modifier && event.shiftKey && event.key.toLowerCase() === 'v') {
+        event.preventDefault();
+        cycleViewMode();
+      }
     };
 
     window.addEventListener('keydown', onKeyDown);
 
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cycleTheme, handleOpen, handleSave, handleSaveAs, resetUntitled]);
+  }, [
+    cycleTheme,
+    cycleViewMode,
+    handleOpen,
+    handleSave,
+    handleSaveAs,
+    resetUntitled,
+  ]);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -173,12 +200,36 @@ export default function App() {
       if (action === 'view_toggle_theme') {
         cycleTheme();
       }
+
+      if (action === 'view_editor') {
+        setViewMode('editor');
+      }
+
+      if (action === 'view_preview') {
+        setViewMode('preview');
+      }
+
+      if (action === 'view_split') {
+        setViewMode('split');
+      }
+
+      if (action === 'view_toggle_mode') {
+        cycleViewMode();
+      }
     }).then((unlisten) => {
       cleanup = unlisten;
     });
 
     return () => cleanup?.();
-  }, [cycleTheme, handleOpen, handleSave, handleSaveAs, resetUntitled]);
+  }, [
+    cycleTheme,
+    cycleViewMode,
+    handleOpen,
+    handleSave,
+    handleSaveAs,
+    resetUntitled,
+    setViewMode,
+  ]);
 
   return (
     <main
@@ -237,21 +288,62 @@ export default function App() {
           >
             <Moon className="size-4" aria-hidden />
           </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
+            aria-label={t('view.toggle')}
+            title={t('view.toggle')}
+            onClick={cycleViewMode}
+          >
+            {viewMode === 'preview' ? (
+              <Eye className="size-4" aria-hidden />
+            ) : (
+              <Columns2 className="size-4" aria-hidden />
+            )}
+          </button>
         </div>
       </header>
 
       <section className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
         <div className="flex h-10 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-panel))] px-4 text-xs text-[rgb(var(--color-muted))]">
-          <span>{t('view.editor')}</span>
-          <span>{t(`theme.preference.${themePreference}`)}</span>
+          <div className="flex items-center gap-1">
+            {VIEW_MODES.map((mode) => (
+              <button
+                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                type="button"
+                aria-pressed={viewMode === mode}
+                key={mode}
+                onClick={() => setViewMode(mode)}
+              >
+                {t(`view.mode.${mode}`)}
+              </button>
+            ))}
+          </div>
+          <span>
+            {t(`theme.preference.${themePreference}`)} ·{' '}
+            {t(`view.mode.${viewMode}`)}
+          </span>
         </div>
 
-        <MarkdownEditor
-          ariaLabel={t('editor.label')}
-          placeholder={t('editor.placeholder')}
-          value={document.content}
-          onChange={updateContent}
-        />
+        <div
+          className={
+            viewMode === 'split'
+              ? 'grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
+              : 'min-h-0'
+          }
+        >
+          {viewMode !== 'preview' ? (
+            <MarkdownEditor
+              ariaLabel={t('editor.label')}
+              placeholder={t('editor.placeholder')}
+              value={document.content}
+              onChange={updateContent}
+            />
+          ) : null}
+          {viewMode !== 'editor' ? (
+            <Preview content={document.content} />
+          ) : null}
+        </div>
       </section>
 
       {errorMessage ? (

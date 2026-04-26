@@ -114,15 +114,24 @@
 
 ## Sprint 3 — Preview y modos de vista
 
-- [ ] Wrapper de markdown-it (`src/lib/markdown.ts`) con plugins GFM mínimos.
-- [ ] Sanitización con DOMPurify y allowlist documentada (`ARCHITECTURE.md` §6).
-- [ ] Componente `<Preview />` con `dangerouslySetInnerHTML` controlado.
-- [ ] Modos de vista: solo editor / solo preview / dividido. Persistencia.
-- [ ] Debounce de render (~150 ms).
-- [ ] Estilos del preview (tipografía, espacios, código, tablas, citas).
-- [ ] Tests unit: render Markdown determinista sobre fixtures.
-- [ ] Tests unit: sanitización bloquea `<script>`, handlers `on*`, `javascript:`.
-- [ ] Test E2E: editar y ver actualización del preview.
+- [x] Wrapper de markdown-it (`src/lib/markdown.ts`) con plugins GFM mínimos.
+- [x] Sanitización con DOMPurify y allowlist documentada (`ARCHITECTURE.md` §6).
+- [x] Componente `<Preview />` con `dangerouslySetInnerHTML` controlado.
+- [x] Modos de vista: solo editor / solo preview / dividido. Persistencia.
+- [x] Debounce de render (~150 ms).
+- [x] Estilos del preview (tipografía, espacios, código, tablas, citas).
+- [x] Tests unit: render Markdown determinista sobre fixtures.
+- [x] Tests unit: sanitización bloquea `<script>`, handlers `on*`, `javascript:`.
+- [x] Test E2E: editar y ver actualización del preview.
+
+### Validación Sprint 3
+
+- [x] Ejecutar `pnpm lint`.
+- [x] Ejecutar `pnpm format:check`.
+- [x] Ejecutar `pnpm test`.
+- [x] Ejecutar `pnpm build`.
+- [x] Ejecutar `pnpm test:e2e`.
+- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
 
 **Cierre del sprint:** preview en tiempo real funcional y seguro, con tres modos de vista.
 

@@ -8,6 +8,7 @@
   --color-surface: 255 255 255;
   --color-panel: 245 245 244;
   --color-editor: 255 255 255;
+  --color-preview: 255 255 255;
   --color-text: 24 24 27;
   --color-muted: 82 82 91;
   --color-border: 228 228 231;
@@ -28,6 +29,7 @@
   --color-surface: 39 39 42;
   --color-panel: 32 32 36;
   --color-editor: 18 18 20;
+  --color-preview: 18 18 20;
   --color-text: 244 244 245;
   --color-muted: 161 161 170;
   --color-border: 63 63 70;
@@ -72,4 +74,98 @@ textarea {
 
 .bruma-editor .cm-gutters {
   display: none;
+}
+
+.bruma-preview {
+  color: rgb(var(--color-text));
+}
+
+.bruma-preview :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: 650;
+  line-height: 1.2;
+  margin: 1.35em 0 0.55em;
+}
+
+.bruma-preview h1 {
+  font-size: 1.75rem;
+}
+
+.bruma-preview h2 {
+  font-size: 1.35rem;
+}
+
+.bruma-preview h3 {
+  font-size: 1.1rem;
+}
+
+.bruma-preview :where(p, ul, ol, blockquote, pre, table) {
+  margin: 0 0 1rem;
+}
+
+.bruma-preview :where(ul, ol) {
+  padding-left: 1.5rem;
+}
+
+.bruma-preview li {
+  margin: 0.25rem 0;
+}
+
+.bruma-preview a {
+  color: rgb(4 120 87);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.bruma-preview blockquote {
+  border-left: 3px solid rgb(var(--color-border));
+  color: rgb(var(--color-muted));
+  padding-left: 1rem;
+}
+
+.bruma-preview :where(code, pre) {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    monospace;
+}
+
+.bruma-preview :not(pre) > code {
+  border-radius: 4px;
+  background: rgb(var(--color-panel));
+  padding: 0.1rem 0.25rem;
+  font-size: 0.875em;
+}
+
+.bruma-preview pre {
+  overflow: auto;
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 8px;
+  background: rgb(var(--color-panel));
+  padding: 1rem;
+}
+
+.bruma-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.bruma-preview :where(th, td) {
+  border: 1px solid rgb(var(--color-border));
+  padding: 0.45rem 0.6rem;
+}
+
+.bruma-preview th {
+  background: rgb(var(--color-panel));
+  font-weight: 600;
+}
+
+.bruma-preview .contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.bruma-preview .task-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }

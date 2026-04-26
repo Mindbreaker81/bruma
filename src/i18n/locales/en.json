@@ -32,6 +32,12 @@
     }
   },
   "view": {
-    "editor": "Editor"
+    "editor": "Editor",
+    "toggle": "Change view mode",
+    "mode": {
+      "editor": "Editor",
+      "preview": "Preview",
+      "split": "Split"
+    }
   }
 }
