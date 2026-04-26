@@ -6,9 +6,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-26
+
+### Added
+
+- `Archivo > Abrir recientes` pasa a ser un submenu nativo real sincronizado desde la lista de recientes del frontend.
+- El popup de recientes del header ahora muestra nombre de archivo, path completo truncado y tooltip con la ruta completa.
+
+### Changed
+
+- Version de app, paquete npm y crate Rust actualizada a `1.0.1`.
+
 ### Fixed
 
 - Se estabilizaron los listeners del menu nativo para evitar acciones duplicadas como abrir y guardar como.
+- Se restauro el item nativo de salida en macOS para que `Cmd+Q` vuelva a cerrar la app correctamente.
 
 ### Security
 
@@ -18,6 +30,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Docs
 
 - Documentacion actualizada para reflejar artifacts versionados, validacion Rust en Linux y el hardening de seguridad.
+- README, release notes y TODO actualizados para reflejar `v1.0.1` y el comportamiento del menu de recientes.
 
 ## [1.0.0] - 2026-04-26
 

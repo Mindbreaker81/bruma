@@ -30,6 +30,7 @@ import {
   readFile,
   saveFile,
   saveFileDialog,
+  syncRecentFilesMenu,
 } from './features/files/ipc';
 import { useFileStore } from './features/files/state';
 import { Preview } from './features/preview/Preview';
@@ -38,9 +39,11 @@ import { findSearchMatches } from './features/search/search';
 import { useSearchStore } from './features/search/state';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
+import { APP_VERSION } from './lib/app';
 import {
   isTauriRuntime,
   listenToMenuActions,
+  listenToRecentOpen,
   setAppWindowTitle,
 } from './lib/tauri';
 
@@ -58,6 +61,11 @@ type MenuHandlers = {
   setLanguage: (language: 'es' | 'en') => void;
   setViewMode: (nextViewMode: ViewMode) => void;
 };
+
+function getPathBasename(path: string): string {
+  const segments = path.split(/[\\/]/).filter(Boolean);
+  return segments[segments.length - 1] ?? path;
+}
 
 export default function App() {
   const { i18n, t } = useTranslation();
@@ -336,6 +344,14 @@ export default function App() {
   }, [normalizeSearchActiveIndex, searchMatchCount]);
 
   useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    void syncRecentFilesMenu(recentFiles);
+  }, [recentFiles]);
+
+  useEffect(() => {
     if (isTauriRuntime()) {
       return;
     }
@@ -408,10 +424,6 @@ export default function App() {
         handlers.handleOpenWithConfirmation();
       }
 
-      if (action === 'file_recent') {
-        setIsRecentMenuOpen(true);
-      }
-
       if (action === 'file_save') {
         void handlers.handleSave();
       }
@@ -469,6 +481,27 @@ export default function App() {
       cleanup?.();
     };
   }, []);
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let isDisposed = false;
+
+    void listenToRecentOpen((path) => {
+      handleOpenRecent(path);
+    }).then((unlisten) => {
+      if (isDisposed) {
+        unlisten();
+        return;
+      }
+
+      cleanup = unlisten;
+    });
+
+    return () => {
+      isDisposed = true;
+      cleanup?.();
+    };
+  }, [handleOpenRecent]);
 
   return (
     <main
@@ -529,13 +562,20 @@ export default function App() {
                 {recentFiles.length > 0 ? (
                   recentFiles.map((path) => (
                     <button
-                      className="block w-full truncate rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                      className="block w-full rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                       type="button"
                       role="menuitem"
                       key={path}
+                      aria-label={`Abrir reciente: ${path}`}
+                      title={path}
                       onClick={() => handleOpenRecent(path)}
                     >
-                      {path}
+                      <span className="block truncate font-medium">
+                        {getPathBasename(path)}
+                      </span>
+                      <span className="block truncate text-xs text-[rgb(var(--color-muted))]">
+                        {path}
+                      </span>
                     </button>
                   ))
                 ) : (
@@ -702,7 +742,7 @@ export default function App() {
               {t('about.body')}
             </p>
             <p className="mt-1 text-sm leading-6 text-[rgb(var(--color-muted))]">
-              {t('about.version', { version: '1.0.0' })}
+              {t('about.version', { version: APP_VERSION })}
             </p>
             <div className="mt-5 flex justify-end">
               <button

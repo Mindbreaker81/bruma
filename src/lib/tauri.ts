@@ -26,3 +26,17 @@ export async function listenToMenuActions(
     handler(event.payload);
   });
 }
+
+export async function listenToRecentOpen(
+  handler: (path: string) => void
+): Promise<() => void> {
+  if (!isTauriRuntime()) {
+    return () => undefined;
+  }
+
+  const { listen } = await import('@tauri-apps/api/event');
+
+  return listen<string>('menu://recent-open', (event) => {
+    handler(event.payload);
+  });
+}

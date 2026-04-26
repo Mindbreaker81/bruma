@@ -4,12 +4,12 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
 ## Estado actual
 
-- Version de app: `1.0.0`
+- Version de app: `1.0.1`
 - Plataformas objetivo MVP: macOS y Windows
 - Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
 - Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
-## Que incluye v1.0.0
+## Que incluye v1.0.1
 
 - Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
 - Editor Markdown (CodeMirror 6)
@@ -18,10 +18,11 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Busqueda con contador, siguiente/anterior y case-sensitive
 - Proteccion ante cambios sin guardar (confirmacion en acciones de riesgo)
 - Drag and drop de archivos Markdown
-- Recientes persistidos (max 10)
+- Recientes persistidos (max 10) con submenu nativo real en `Archivo > Abrir recientes`
 - Tema claro/oscuro/sistema
 - Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
 - Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
+- Soporte restaurado de cierre nativo con `Cmd+Q` en macOS
 
 ## Seguridad y privacidad
 
@@ -109,11 +110,11 @@ En Ubuntu 24.04, `cargo test` ya fue verificado correctamente tras instalar:
 
 ## Release interno
 
-El workflow de release se dispara con el tag `v1.0.0`.
+El workflow de release se dispara con el tag `v1.0.1`.
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 El detalle operativo de firma y QA esta en `docs/RELEASE.md`.

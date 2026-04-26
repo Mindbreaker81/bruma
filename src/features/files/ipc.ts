@@ -53,3 +53,11 @@ export async function saveFileDialog(args: {
 
   return invoke<SavedFile | null>('save_file_dialog', args);
 }
+
+export async function syncRecentFilesMenu(paths: string[]): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+
+  await invoke('sync_recent_files_menu', { paths });
+}

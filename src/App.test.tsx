@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import App from './App';
@@ -46,5 +47,27 @@ describe('App', () => {
         screen.getByRole('button', { name: /Cambiar idioma/i })
       ).toBeInTheDocument();
     });
+  });
+
+  it('renders recent files with basename, full path tooltip and full path label', async () => {
+    const path = '/Users/eva/proyectos/bruma/notas/ideas.md';
+
+    act(() => {
+      useFileStore.setState({ recentFiles: [path] });
+    });
+
+    render(<App />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Recent files|Abrir recientes/i })
+    );
+
+    const recentItem = screen.getByRole('menuitem', {
+      name: `Abrir reciente: ${path}`,
+    });
+
+    expect(screen.getByText('ideas.md')).toBeInTheDocument();
+    expect(screen.getByText(path)).toBeInTheDocument();
+    expect(recentItem).toHaveAttribute('title', path);
   });
 });

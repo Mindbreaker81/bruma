@@ -1,6 +1,6 @@
 # TODO — Bruma
 
-- **Estado:** MVP v1.0 preparado para QA interno macOS/Windows; validacion manual de plataforma pendiente y hardening de filesystem aplicado.
+- **Estado:** `v1.0.1` lista para QA interno macOS/Windows; submenu nativo de recientes y cierre con `Cmd+Q` en macOS corregidos, validacion manual de plataforma pendiente.
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
@@ -239,6 +239,17 @@
 - [~] Ejecutar `pnpm tauri build`: frontend compila; bundle Tauri bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
 
 **Cierre del sprint:** release v1.0.0 disponible.
+
+---
+
+## Post-release v1.0.1 — Ajustes de menu nativo
+
+- [x] Convertir `Archivo > Abrir recientes` en un submenu nativo real sincronizado desde `recentFiles`.
+- [x] Emitir evento dedicado `menu://recent-open` para abrir recientes desde el menu nativo.
+- [x] Mejorar popup de recientes en header con basename, path truncado y tooltip del path completo.
+- [x] Restaurar item nativo `Quit` en macOS para que `Cmd+Q` cierre la app.
+- [x] Sincronizar version `1.0.1` en frontend, paquete npm y crate Rust.
+- [x] Validar con `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`, `cargo fmt --check` y `cargo test`.
 
 ---
 

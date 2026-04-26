@@ -42,6 +42,8 @@ jobs:
   tauri:
     name: Tauri (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -89,3 +91,18 @@ jobs:
             src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe
           if-no-files-found: error
+
+      - name: Upload to draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.app.tar.gz
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.exe
+          name: "bruma-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}"
+          tag_name: "draft-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}-${{ matrix.platform }}"
+          body: "Draft release from CI run [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          draft: true
+          prerelease: true
+          generate_release_notes: false
