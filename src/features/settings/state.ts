@@ -30,6 +30,14 @@ type ThemeState = {
   fontScale: number;
   focusMode: boolean;
   tocOpen: boolean;
+  autosaveEnabled: boolean;
+  autosaveDelayMs: number;
+  editorFontFamily: string;
+  editorTabSize: number;
+  editorShowGutter: boolean;
+  editorWrap: boolean;
+  previewMaxWidth: number;
+  previewShowToc: boolean;
   setPreference: (preference: ThemePreference) => void;
   cycleTheme: () => void;
   setLanguage: (language: LanguagePreference) => void;
@@ -47,6 +55,14 @@ type ThemeState = {
   showFrontmatter: boolean;
   toggleShowFrontmatter: () => void;
   setShowFrontmatter: (show: boolean) => void;
+  setAutosaveEnabled: (enabled: boolean) => void;
+  setAutosaveDelayMs: (delayMs: number) => void;
+  setEditorFontFamily: (family: string) => void;
+  setEditorTabSize: (size: number) => void;
+  setEditorShowGutter: (show: boolean) => void;
+  setEditorWrap: (wrap: boolean) => void;
+  setPreviewMaxWidth: (width: number) => void;
+  setPreviewShowToc: (show: boolean) => void;
 };
 
 function getSystemPrefersDark(): boolean {
@@ -118,6 +134,49 @@ function applyTocOpen(open: boolean): boolean {
 
 function applyShowFrontmatter(show: boolean): boolean {
   patchConfig({ showFrontmatter: show });
+  return show;
+}
+
+function applyAutosaveEnabled(enabled: boolean): boolean {
+  patchConfig({ autosaveEnabled: enabled });
+  return enabled;
+}
+
+function applyAutosaveDelayMs(delayMs: number): number {
+  const clamped = Math.min(Math.max(delayMs, 500), 30000);
+  patchConfig({ autosaveDelayMs: clamped });
+  return clamped;
+}
+
+function applyEditorFontFamily(family: string): string {
+  patchConfig({ editorFontFamily: family });
+  return family;
+}
+
+function applyEditorTabSize(size: number): number {
+  const clamped = Math.min(Math.max(size, 1), 16);
+  patchConfig({ editorTabSize: clamped });
+  return clamped;
+}
+
+function applyEditorShowGutter(show: boolean): boolean {
+  patchConfig({ editorShowGutter: show });
+  return show;
+}
+
+function applyEditorWrap(wrap: boolean): boolean {
+  patchConfig({ editorWrap: wrap });
+  return wrap;
+}
+
+function applyPreviewMaxWidth(width: number): number {
+  const clamped = Math.min(Math.max(width, 20), 200);
+  patchConfig({ previewMaxWidth: clamped });
+  return clamped;
+}
+
+function applyPreviewShowToc(show: boolean): boolean {
+  patchConfig({ previewShowToc: show });
   return show;
 }
 
@@ -199,4 +258,27 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     })),
   setShowFrontmatter: (show) =>
     set(() => ({ showFrontmatter: applyShowFrontmatter(show) })),
+  autosaveEnabled: initialConfig.autosaveEnabled ?? true,
+  autosaveDelayMs: initialConfig.autosaveDelayMs ?? 2000,
+  editorFontFamily: initialConfig.editorFontFamily ?? 'sans',
+  editorTabSize: initialConfig.editorTabSize ?? 4,
+  editorShowGutter: initialConfig.editorShowGutter ?? false,
+  editorWrap: initialConfig.editorWrap ?? true,
+  previewMaxWidth: initialConfig.previewMaxWidth ?? 65,
+  previewShowToc: initialConfig.previewShowToc ?? false,
+  setAutosaveEnabled: (enabled) =>
+    set(() => ({ autosaveEnabled: applyAutosaveEnabled(enabled) })),
+  setAutosaveDelayMs: (delayMs) =>
+    set(() => ({ autosaveDelayMs: applyAutosaveDelayMs(delayMs) })),
+  setEditorFontFamily: (family) =>
+    set(() => ({ editorFontFamily: applyEditorFontFamily(family) })),
+  setEditorTabSize: (size) =>
+    set(() => ({ editorTabSize: applyEditorTabSize(size) })),
+  setEditorShowGutter: (show) =>
+    set(() => ({ editorShowGutter: applyEditorShowGutter(show) })),
+  setEditorWrap: (wrap) => set(() => ({ editorWrap: applyEditorWrap(wrap) })),
+  setPreviewMaxWidth: (width) =>
+    set(() => ({ previewMaxWidth: applyPreviewMaxWidth(width) })),
+  setPreviewShowToc: (show) =>
+    set(() => ({ previewShowToc: applyPreviewShowToc(show) })),
 }));

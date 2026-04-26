@@ -11,42 +11,48 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
-type ConfirmDirtyDialogProps = {
+type RestoreSessionDialogProps = {
   open: boolean;
-  onCancel: () => void;
+  hasPath: boolean;
+  onRecover: () => void;
   onDiscard: () => void;
-  onSave: () => void;
+  onViewDiff?: () => void;
 };
 
-export function ConfirmDirtyDialog({
+export function RestoreSessionDialog({
   open,
-  onCancel,
+  hasPath,
+  onRecover,
   onDiscard,
-  onSave,
-}: ConfirmDirtyDialogProps) {
+  onViewDiff,
+}: RestoreSessionDialogProps) {
   const { t } = useTranslation();
 
   return (
-    <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
+    <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && onDiscard()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('confirmDirty.title')}</AlertDialogTitle>
+          <AlertDialogTitle>{t('session.restoreTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('confirmDirty.body')}
+            {hasPath
+              ? t('session.restoreBody')
+              : t('session.restoreBodyUntitled')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>
-            {t('confirmDirty.cancel')}
+          {onViewDiff && (
+            <Button variant="ghost" onClick={onViewDiff}>
+              {t('session.viewDiff')}
+            </Button>
+          )}
+          <AlertDialogCancel onClick={onDiscard}>
+            {t('session.discard')}
           </AlertDialogCancel>
-          <Button variant="outline" onClick={onDiscard}>
-            {t('confirmDirty.discard')}
-          </Button>
           <AlertDialogAction
-            onClick={onSave}
+            onClick={onRecover}
             className="bg-emerald-700 text-white hover:bg-emerald-800"
           >
-            {t('confirmDirty.save')}
+            {t('session.recover')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

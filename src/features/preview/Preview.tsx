@@ -10,12 +10,17 @@ type PreviewProps = {
   hideFrontmatter?: boolean;
   onExternalLinkClick?: (href: string) => void;
   onLocalImageRequest?: (relativeSrc: string) => Promise<string | null>;
+  maxWidth?: number;
 };
 
 const RENDER_DEBOUNCE_MS = 150;
 
 function isAbsoluteUrl(value: string): boolean {
-  return /^(?:[a-z][a-z0-9+.-]*:|\/\/|data:|blob:)/i.test(value);
+  try {
+    return Boolean(new URL(value));
+  } catch {
+    return false;
+  }
 }
 
 export function Preview({
@@ -24,6 +29,7 @@ export function Preview({
   hideFrontmatter = false,
   onExternalLinkClick,
   onLocalImageRequest,
+  maxWidth = 65,
 }: PreviewProps) {
   const sourceForRender = hideFrontmatter ? stripFrontmatter(content) : content;
   const [html, setHtml] = useState(() => renderSafeMarkdown(sourceForRender));
@@ -97,6 +103,7 @@ export function Preview({
       ref={containerRef}
       aria-label="Markdown preview"
       className="bruma-preview h-full min-h-0 overflow-auto bg-[rgb(var(--color-preview))] px-6 py-5"
+      style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
       dangerouslySetInnerHTML={{ __html: html }}
       onClick={handleClick}
       onScroll={handleScroll}

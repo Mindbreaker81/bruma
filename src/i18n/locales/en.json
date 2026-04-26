@@ -114,10 +114,73 @@
   "focusMode": {
     "toggle": "Toggle focus mode"
   },
+  "autosave": {
+    "toggle": "Toggle autosave",
+    "savingNow": "Saving...",
+    "lastSavedAt": "Saved at {{time}}"
+  },
+  "session": {
+    "restoreTitle": "Restore session",
+    "restoreBody": "The app closed with unsaved changes in this file. Do you want to restore the session?",
+    "restoreBodyUntitled": "The app closed with an unsaved document. Do you want to restore the session?",
+    "recover": "Recover",
+    "discard": "Discard",
+    "viewDiff": "View differences"
+  },
+  "template": {
+    "empty": "Empty note",
+    "blogPost": "Blog post",
+    "meeting": "Meeting",
+    "readme": "Minimal README"
+  },
   "frontmatter": {
     "hidden": "Frontmatter hidden",
     "shown": "Frontmatter visible",
     "toggle": "Toggle frontmatter visibility"
+  },
+  "tabs": {
+    "label": "Open tabs",
+    "unsaved": "Unsaved changes",
+    "close": "Close {{name}}"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "command": "Command",
+    "binding": "Binding",
+    "unbound": "Unbound",
+    "newDocument": "New document",
+    "openDocument": "Open document",
+    "saveDocument": "Save document",
+    "saveAsDocument": "Save as...",
+    "closeTab": "Close tab",
+    "newTab": "New tab",
+    "nextTab": "Next tab",
+    "previousTab": "Previous tab",
+    "toggleSearch": "Find",
+    "toggleTheme": "Toggle theme",
+    "toggleViewMode": "Toggle view",
+    "toggleFocusMode": "Focus mode",
+    "togglePreferences": "Preferences",
+    "toggleTemplateMenu": "Templates",
+    "exportHtml": "Export HTML"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "close": "Close",
+    "general": "General",
+    "autosaveEnabled": "Enable autosave",
+    "autosaveDelay": "Autosave delay",
+    "editor": "Editor",
+    "fontFamily": "Font family",
+    "fontSans": "Sans-serif",
+    "fontSerif": "Serif",
+    "fontMono": "Monospace",
+    "tabSize": "Tab size",
+    "wrapLines": "Wrap lines",
+    "showGutter": "Show line numbers",
+    "preview": "Preview",
+    "maxWidth": "Max width",
+    "showToc": "Show table of contents"
   },
   "view": {
     "editor": "Editor",

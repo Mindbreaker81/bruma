@@ -3,8 +3,10 @@ import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
 import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
 
-export const CONFIG_VERSION = 4;
+export const CONFIG_VERSION = 6;
 const CONFIG_STORAGE_KEY = 'bruma.config';
+
+import type { CommandId } from '../lib/shortcuts';
 
 export type AppConfig = {
   version: number;
@@ -16,6 +18,15 @@ export type AppConfig = {
   focusMode: boolean;
   tocOpen: boolean;
   showFrontmatter: boolean;
+  autosaveEnabled: boolean;
+  autosaveDelayMs: number;
+  editorFontFamily: string;
+  editorTabSize: number;
+  editorShowGutter: boolean;
+  editorWrap: boolean;
+  previewMaxWidth: number;
+  previewShowToc: boolean;
+  shortcuts: Partial<Record<CommandId, string | null>>;
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -28,6 +39,15 @@ export const DEFAULT_CONFIG: AppConfig = {
   focusMode: false,
   tocOpen: false,
   showFrontmatter: true,
+  autosaveEnabled: true,
+  autosaveDelayMs: 2000,
+  editorFontFamily: 'sans',
+  editorTabSize: 4,
+  editorShowGutter: false,
+  editorWrap: true,
+  previewMaxWidth: 65,
+  previewShowToc: false,
+  shortcuts: {},
 };
 
 type PartialConfig = Partial<AppConfig> & {
@@ -79,6 +99,44 @@ export function migrateConfig(input: unknown): AppConfig {
     typeof config.showFrontmatter === 'boolean'
       ? config.showFrontmatter
       : DEFAULT_CONFIG.showFrontmatter;
+  const autosaveEnabled =
+    typeof config.autosaveEnabled === 'boolean'
+      ? config.autosaveEnabled
+      : DEFAULT_CONFIG.autosaveEnabled;
+  const autosaveDelayMs =
+    typeof config.autosaveDelayMs === 'number' &&
+    config.autosaveDelayMs >= 500 &&
+    config.autosaveDelayMs <= 30000
+      ? config.autosaveDelayMs
+      : DEFAULT_CONFIG.autosaveDelayMs;
+  const editorFontFamily =
+    typeof config.editorFontFamily === 'string'
+      ? config.editorFontFamily
+      : DEFAULT_CONFIG.editorFontFamily;
+  const editorTabSize =
+    typeof config.editorTabSize === 'number' &&
+    config.editorTabSize >= 1 &&
+    config.editorTabSize <= 16
+      ? config.editorTabSize
+      : DEFAULT_CONFIG.editorTabSize;
+  const editorShowGutter =
+    typeof config.editorShowGutter === 'boolean'
+      ? config.editorShowGutter
+      : DEFAULT_CONFIG.editorShowGutter;
+  const editorWrap =
+    typeof config.editorWrap === 'boolean'
+      ? config.editorWrap
+      : DEFAULT_CONFIG.editorWrap;
+  const previewMaxWidth =
+    typeof config.previewMaxWidth === 'number' &&
+    config.previewMaxWidth >= 20 &&
+    config.previewMaxWidth <= 200
+      ? config.previewMaxWidth
+      : DEFAULT_CONFIG.previewMaxWidth;
+  const previewShowToc =
+    typeof config.previewShowToc === 'boolean'
+      ? config.previewShowToc
+      : DEFAULT_CONFIG.previewShowToc;
 
   return {
     version: CONFIG_VERSION,
@@ -90,6 +148,21 @@ export function migrateConfig(input: unknown): AppConfig {
     focusMode,
     tocOpen,
     showFrontmatter,
+    autosaveEnabled,
+    autosaveDelayMs,
+    editorFontFamily,
+    editorTabSize,
+    editorShowGutter,
+    editorWrap,
+    previewMaxWidth,
+    previewShowToc,
+    shortcuts:
+      typeof (config as Record<string, unknown>).shortcuts === 'object' &&
+      (config as Record<string, unknown>).shortcuts !== null
+        ? ((config as Record<string, unknown>).shortcuts as Partial<
+            Record<CommandId, string | null>
+          >)
+        : {},
   };
 }
 

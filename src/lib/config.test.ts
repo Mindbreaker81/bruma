@@ -16,6 +16,14 @@ describe('app config', () => {
       theme: 'system',
       language: 'system',
       viewMode: 'editor',
+      autosaveEnabled: true,
+      autosaveDelayMs: 2000,
+      editorFontFamily: 'sans',
+      editorTabSize: 4,
+      editorShowGutter: false,
+      editorWrap: true,
+      previewMaxWidth: 65,
+      previewShowToc: false,
     });
   });
 
@@ -43,6 +51,86 @@ describe('app config', () => {
     expect(migrateConfig({ language: 'fr' })).toMatchObject({
       language: 'system',
     });
+  });
+
+  it('migrates v4 without autosave fields to v5 defaults', () => {
+    const config = migrateConfig({
+      version: 4,
+      theme: 'dark',
+      language: 'es',
+      viewMode: 'split',
+      recentFiles: [],
+      fontScale: 1,
+      focusMode: false,
+      tocOpen: false,
+      showFrontmatter: true,
+    });
+    expect(config.autosaveEnabled).toBe(true);
+    expect(config.autosaveDelayMs).toBe(2000);
+    expect(config.version).toBe(CONFIG_VERSION);
+  });
+
+  it('preserves valid autosave settings', () => {
+    const config = migrateConfig({
+      autosaveEnabled: false,
+      autosaveDelayMs: 5000,
+    });
+    expect(config.autosaveEnabled).toBe(false);
+    expect(config.autosaveDelayMs).toBe(5000);
+  });
+
+  it('clamps invalid autosaveDelayMs', () => {
+    expect(migrateConfig({ autosaveDelayMs: 200 }).autosaveDelayMs).toBe(2000);
+    expect(migrateConfig({ autosaveDelayMs: 60000 }).autosaveDelayMs).toBe(
+      2000
+    );
+  });
+
+  it('migrates v5 without editor/preview fields to v6 defaults', () => {
+    const config = migrateConfig({
+      version: 5,
+      theme: 'dark',
+      language: 'es',
+      viewMode: 'split',
+      recentFiles: [],
+      fontScale: 1,
+      focusMode: false,
+      tocOpen: false,
+      showFrontmatter: true,
+      autosaveEnabled: true,
+      autosaveDelayMs: 2000,
+    });
+    expect(config.editorFontFamily).toBe('sans');
+    expect(config.editorTabSize).toBe(4);
+    expect(config.editorShowGutter).toBe(false);
+    expect(config.editorWrap).toBe(true);
+    expect(config.previewMaxWidth).toBe(65);
+    expect(config.previewShowToc).toBe(false);
+    expect(config.version).toBe(CONFIG_VERSION);
+  });
+
+  it('preserves valid editor and preview settings', () => {
+    const config = migrateConfig({
+      editorFontFamily: 'serif',
+      editorTabSize: 2,
+      editorShowGutter: true,
+      editorWrap: false,
+      previewMaxWidth: 80,
+      previewShowToc: true,
+    });
+    expect(config.editorFontFamily).toBe('serif');
+    expect(config.editorTabSize).toBe(2);
+    expect(config.editorShowGutter).toBe(true);
+    expect(config.editorWrap).toBe(false);
+    expect(config.previewMaxWidth).toBe(80);
+    expect(config.previewShowToc).toBe(true);
+  });
+
+  it('clamps invalid editorTabSize and previewMaxWidth', () => {
+    expect(migrateConfig({ editorTabSize: 0 }).editorTabSize).toBe(4);
+    expect(migrateConfig({ editorTabSize: 20 }).editorTabSize).toBe(4);
+    expect(migrateConfig({ previewMaxWidth: 5 }).previewMaxWidth).toBe(65);
+    expect(migrateConfig({ previewMaxWidth: 300 }).previewMaxWidth).toBe(65);
   });
 });
 

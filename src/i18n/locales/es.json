@@ -114,10 +114,73 @@
   "focusMode": {
     "toggle": "Activar o desactivar modo enfoque"
   },
+  "autosave": {
+    "toggle": "Activar o desactivar autoguardado",
+    "savingNow": "Guardando...",
+    "lastSavedAt": "Guardado a las {{time}}"
+  },
+  "session": {
+    "restoreTitle": "Recuperar sesión",
+    "restoreBody": "La aplicación se cerró con cambios sin guardar en este archivo. ¿Quieres recuperar la sesión?",
+    "restoreBodyUntitled": "La aplicación se cerró con un documento sin guardar. ¿Quieres recuperar la sesión?",
+    "recover": "Recuperar",
+    "discard": "Descartar",
+    "viewDiff": "Ver diferencias"
+  },
+  "template": {
+    "empty": "Nota vacía",
+    "blogPost": "Post de blog",
+    "meeting": "Reunión",
+    "readme": "README mínimo"
+  },
   "frontmatter": {
     "hidden": "Frontmatter oculto",
     "shown": "Frontmatter visible",
     "toggle": "Mostrar u ocultar frontmatter"
+  },
+  "tabs": {
+    "label": "Pestañas abiertas",
+    "unsaved": "Cambios sin guardar",
+    "close": "Cerrar {{name}}"
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "command": "Comando",
+    "binding": "Atajo",
+    "unbound": "Sin atajo",
+    "newDocument": "Nuevo documento",
+    "openDocument": "Abrir documento",
+    "saveDocument": "Guardar documento",
+    "saveAsDocument": "Guardar como...",
+    "closeTab": "Cerrar pestaña",
+    "newTab": "Nueva pestaña",
+    "nextTab": "Pestaña siguiente",
+    "previousTab": "Pestaña anterior",
+    "toggleSearch": "Buscar",
+    "toggleTheme": "Cambiar tema",
+    "toggleViewMode": "Cambiar vista",
+    "toggleFocusMode": "Modo enfoque",
+    "togglePreferences": "Preferencias",
+    "toggleTemplateMenu": "Plantillas",
+    "exportHtml": "Exportar HTML"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "close": "Cerrar",
+    "general": "General",
+    "autosaveEnabled": "Autoguardado activado",
+    "autosaveDelay": "Retraso autoguardado",
+    "editor": "Editor",
+    "fontFamily": "Tipografía",
+    "fontSans": "Sans-serif",
+    "fontSerif": "Serif",
+    "fontMono": "Monospace",
+    "tabSize": "Tabulación",
+    "wrapLines": "Ajustar líneas",
+    "showGutter": "Mostrar números de línea",
+    "preview": "Vista previa",
+    "maxWidth": "Ancho máximo",
+    "showToc": "Mostrar índice"
   },
   "view": {
     "editor": "Editor",

@@ -6,6 +6,7 @@ import {
   EyeOff,
   FileInput,
   FileText,
+  Keyboard,
   Languages,
   Link as LinkIcon,
   List,
@@ -32,6 +33,7 @@ import {
   MarkdownEditor,
 } from './features/editor/MarkdownEditor';
 import { ConfirmDirtyDialog } from './features/files/ConfirmDirtyDialog';
+import { type Tab } from './features/files/document';
 import {
   openFileDialog,
   readFile,
@@ -41,7 +43,15 @@ import {
   saveFileDialog,
   syncRecentFilesMenu,
 } from './features/files/ipc';
+import { RestoreSessionDialog } from './features/files/RestoreSessionDialog';
+import { TabBar } from './features/files/TabBar';
 import { useFileStore } from './features/files/state';
+import {
+  BUILTIN_TEMPLATES,
+  applyTemplate,
+} from './features/templates/templates';
+import { isDirty as isDocumentDirty } from './features/files/document';
+import { clearSession, readSession, writeSession } from './lib/session';
 import { Preview } from './features/preview/Preview';
 import { useScrollSyncStore } from './features/preview/scrollSync';
 import { SearchPanel } from './features/search/SearchPanel';
@@ -51,12 +61,17 @@ import {
   replaceMatchAt,
 } from './features/search/search';
 import { useSearchStore } from './features/search/state';
+import { PreferencesDialog } from './features/settings/PreferencesDialog';
+import { ShortcutsDialog } from './features/settings/ShortcutsDialog';
 import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
 import { TableOfContents } from './features/toc/TableOfContents';
 import { APP_VERSION } from './lib/app';
+import { patchConfig, readConfig } from './lib/config';
 import { buildExportHtml } from './lib/export';
 import { getTextStats } from './lib/textStats';
+import { toast } from 'sonner';
+import type { CommandId } from './lib/shortcuts';
 import {
   isTauriRuntime,
   listenToMenuActions,
@@ -89,8 +104,14 @@ export default function App() {
   const document = useFileStore((state) => state.document);
   const displayName = useFileStore((state) => state.displayName);
   const isDirty = useFileStore((state) => state.isDirty);
-  const loadDocument = useFileStore((state) => state.loadDocument);
+  const openTab = useFileStore((state) => state.openTab);
+  const closeTab = useFileStore((state) => state.closeTab);
+  const activateTab = useFileStore((state) => state.activateTab);
+  const moveTab = useFileStore((state) => state.moveTab);
+  const tabs = useFileStore((state) => state.tabs);
+  const activeTabId = useFileStore((state) => state.activeTabId);
   const markSaved = useFileStore((state) => state.markSaved);
+  const restoreSession = useFileStore((state) => state.restoreSession);
   const recentFiles = useFileStore((state) => state.recentFiles);
   const removeRecentFile = useFileStore((state) => state.removeRecentFile);
   const resetUntitled = useFileStore((state) => state.resetUntitled);
@@ -123,6 +144,26 @@ export default function App() {
   const toggleShowFrontmatter = useThemeStore(
     (state) => state.toggleShowFrontmatter
   );
+  const autosaveEnabled = useThemeStore((state) => state.autosaveEnabled);
+  const setAutosaveEnabled = useThemeStore((state) => state.setAutosaveEnabled);
+  const autosaveDelayMs = useThemeStore((state) => state.autosaveDelayMs);
+  const setAutosaveDelayMs = useThemeStore((state) => state.setAutosaveDelayMs);
+  const editorFontFamily = useThemeStore((state) => state.editorFontFamily);
+  const setEditorFontFamily = useThemeStore(
+    (state) => state.setEditorFontFamily
+  );
+  const editorTabSize = useThemeStore((state) => state.editorTabSize);
+  const setEditorTabSize = useThemeStore((state) => state.setEditorTabSize);
+  const editorShowGutter = useThemeStore((state) => state.editorShowGutter);
+  const setEditorShowGutter = useThemeStore(
+    (state) => state.setEditorShowGutter
+  );
+  const editorWrap = useThemeStore((state) => state.editorWrap);
+  const setEditorWrap = useThemeStore((state) => state.setEditorWrap);
+  const previewMaxWidth = useThemeStore((state) => state.previewMaxWidth);
+  const setPreviewMaxWidth = useThemeStore((state) => state.setPreviewMaxWidth);
+  const previewShowToc = useThemeStore((state) => state.previewShowToc);
+  const setPreviewShowToc = useThemeStore((state) => state.setPreviewShowToc);
   const searchActiveIndex = useSearchStore((state) => state.activeIndex);
   const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
   const closeSearch = useSearchStore((state) => state.close);
@@ -142,16 +183,32 @@ export default function App() {
   const replaceMode = useSearchStore((state) => state.replaceMode);
   const setReplaceQuery = useSearchStore((state) => state.setReplaceQuery);
   const toggleReplaceMode = useSearchStore((state) => state.toggleReplaceMode);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [shortcuts, setShortcutsState] = useState<
+    Partial<Record<CommandId, string | null>>
+  >(() => readConfig().shortcuts);
   const [externalLinkPrompt, setExternalLinkPrompt] = useState<string | null>(
     null
   );
   const [pendingDirtyAction, setPendingDirtyAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
+  const [autosaveStatus, setAutosaveStatus] = useState<string | null>(null);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
+  const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingSession, setPendingSession] = useState<{
+    path: string | null;
+    content: string;
+    eol: 'lf' | 'crlf';
+    tabs?: Tab[];
+    activeTabId?: string | null;
+  } | null>(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const menuHandlersRef = useRef<MenuHandlers>({
     cycleTheme: () => {},
@@ -218,8 +275,7 @@ export default function App() {
   ]);
 
   const showError = useCallback((message: string) => {
-    setErrorMessage(message);
-    window.setTimeout(() => setErrorMessage(null), 4500);
+    toast.error(message);
   }, []);
 
   const handleExportHtml = useCallback(
@@ -270,6 +326,29 @@ export default function App() {
     [documentBasePath]
   );
 
+  const handleCloseTab = useCallback(
+    (id: string) => {
+      const tab = tabs.find((t) => t.id === id);
+      if (!tab) return;
+      if (!isDocumentDirty(tab.document)) {
+        closeTab(id);
+        return;
+      }
+      activateTab(id);
+      setPendingDirtyAction(() => () => {
+        closeTab(id);
+      });
+    },
+    [tabs, closeTab, activateTab]
+  );
+
+  const handleActivateTab = useCallback(
+    (id: string) => {
+      activateTab(id);
+    },
+    [activateTab]
+  );
+
   const requestDirtyConfirmation = useCallback(
     (action: () => Promise<void> | void) => {
       if (!isDirty) {
@@ -281,6 +360,13 @@ export default function App() {
     },
     [isDirty]
   );
+
+  const handleNewTab = useCallback(() => {
+    requestDirtyConfirmation(() => {
+      clearSession();
+      resetUntitled();
+    });
+  }, [requestDirtyConfirmation, resetUntitled]);
 
   const runPendingDirtyAction = useCallback(async () => {
     const action = pendingDirtyAction;
@@ -310,12 +396,13 @@ export default function App() {
       const openedFile = await openFileDialog();
 
       if (openedFile) {
-        loadDocument(openedFile);
+        clearSession();
+        openTab(openedFile);
       }
     } catch {
       showError(t('errors.openFailed'));
     }
-  }, [loadDocument, showError, t]);
+  }, [openTab, showError, t]);
 
   const handleSaveAs = useCallback(async (): Promise<boolean> => {
     try {
@@ -327,6 +414,7 @@ export default function App() {
 
       if (savedFile) {
         markSaved(savedFile.savedAt, savedFile.path);
+        clearSession();
         return true;
       }
     } catch {
@@ -349,6 +437,7 @@ export default function App() {
       });
 
       markSaved(savedFile.savedAt, savedFile.path);
+      clearSession();
       return true;
     } catch {
       showError(t('errors.saveFailed'));
@@ -366,6 +455,7 @@ export default function App() {
 
   const handleNewDocument = useCallback(() => {
     requestDirtyConfirmation(() => {
+      clearSession();
       resetUntitled();
       setIsRecentMenuOpen(false);
     });
@@ -383,7 +473,8 @@ export default function App() {
       requestDirtyConfirmation(async () => {
         try {
           const openedFile = await readFile(path);
-          loadDocument(openedFile);
+          clearSession();
+          openTab(openedFile);
           setIsRecentMenuOpen(false);
         } catch {
           removeRecentFile(path);
@@ -391,7 +482,7 @@ export default function App() {
         }
       });
     },
-    [loadDocument, removeRecentFile, requestDirtyConfirmation, showError, t]
+    [openTab, removeRecentFile, requestDirtyConfirmation, showError, t]
   );
 
   const handleDrop = useCallback(
@@ -412,14 +503,15 @@ export default function App() {
       const content = await file.text();
 
       requestDirtyConfirmation(() => {
-        loadDocument({
+        clearSession();
+        openTab({
           path: file.name,
           content,
           eol: content.includes('\r\n') ? 'crlf' : 'lf',
         });
       });
     },
-    [loadDocument, requestDirtyConfirmation, showError, t]
+    [openTab, requestDirtyConfirmation, showError, t]
   );
 
   useEffect(() => {
@@ -427,6 +519,36 @@ export default function App() {
 
     void setAppWindowTitle(title);
   }, [displayName, isDirty]);
+
+  useEffect(() => {
+    const session = readSession();
+    if (!session) return;
+    setPendingSession(session);
+
+    if (session.tabs && session.tabs.length > 0) {
+      setIsRestoreDialogOpen(true);
+      return;
+    }
+
+    const path = session.path;
+    if (path) {
+      void (async () => {
+        try {
+          const file = await readFile(path);
+          if (file.content !== session.content) {
+            setIsRestoreDialogOpen(true);
+          } else {
+            clearSession();
+            setPendingSession(null);
+          }
+        } catch {
+          setIsRestoreDialogOpen(true);
+        }
+      })();
+    } else {
+      setIsRestoreDialogOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     window.document.documentElement.lang = resolvedLanguage;
@@ -450,6 +572,52 @@ export default function App() {
 
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [isDirty]);
+
+  useEffect(() => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+
+    if (!autosaveEnabled || !isDirty || !document.path) {
+      return;
+    }
+
+    setAutosaveStatus(t('autosave.savingNow'));
+
+    autosaveTimerRef.current = setTimeout(() => {
+      void (async () => {
+        const saved = await handleSave();
+        if (saved) {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString(resolvedLanguage, {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          setAutosaveStatus(t('autosave.lastSavedAt', { time: timeStr }));
+        } else {
+          setAutosaveStatus(null);
+        }
+        window.setTimeout(() => setAutosaveStatus(null), 3000);
+      })();
+    }, autosaveDelayMs);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [
+    autosaveEnabled,
+    autosaveDelayMs,
+    document.content,
+    document.path,
+    handleSave,
+    isDirty,
+    resolvedLanguage,
+    t,
+  ]);
 
   useEffect(() => {
     menuHandlersRef.current = {
@@ -487,6 +655,42 @@ export default function App() {
 
     void syncRecentFilesMenu(recentFiles);
   }, [recentFiles]);
+
+  useEffect(() => {
+    if (pendingSessionRef.current) {
+      clearTimeout(pendingSessionRef.current);
+      pendingSessionRef.current = null;
+    }
+
+    if (!isDirty) {
+      return;
+    }
+
+    pendingSessionRef.current = setTimeout(() => {
+      writeSession({
+        path: document.path,
+        content: document.content,
+        eol: document.eol,
+        savedAt: Date.now(),
+        tabs,
+        activeTabId,
+      });
+    }, 500);
+
+    return () => {
+      if (pendingSessionRef.current) {
+        clearTimeout(pendingSessionRef.current);
+        pendingSessionRef.current = null;
+      }
+    };
+  }, [
+    document.content,
+    document.path,
+    document.eol,
+    isDirty,
+    tabs,
+    activeTabId,
+  ]);
 
   useEffect(() => {
     if (isTauriRuntime()) {
@@ -531,6 +735,43 @@ export default function App() {
         event.preventDefault();
         cycleViewMode();
       }
+
+      if (modifier && event.shiftKey && event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        setIsTemplateMenuOpen((open) => !open);
+      }
+
+      if (modifier && event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        handleNewTab();
+      }
+
+      if (modifier && event.key.toLowerCase() === 'w') {
+        event.preventDefault();
+        if (activeTabId) {
+          handleCloseTab(activeTabId);
+        }
+      }
+
+      if (modifier && event.key === 'Tab') {
+        event.preventDefault();
+        if (tabs.length === 0) return;
+        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
+        if (event.shiftKey) {
+          const prevIndex =
+            currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+          activateTab(tabs[prevIndex]!.id);
+        } else {
+          const nextIndex =
+            currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+          activateTab(tabs[nextIndex]!.id);
+        }
+      }
+
+      if (modifier && event.key === ',') {
+        event.preventDefault();
+        setIsPreferencesOpen((open) => !open);
+      }
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -544,6 +785,11 @@ export default function App() {
     handleOpenSearch,
     handleSave,
     handleSaveAs,
+    handleNewTab,
+    handleCloseTab,
+    activeTabId,
+    tabs,
+    activateTab,
   ]);
 
   useEffect(() => {
@@ -696,15 +942,44 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-1">
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('actions.newDocument')}
-            title={t('actions.newDocument')}
-            onClick={handleNewDocument}
-          >
-            <FileText className="size-4" aria-hidden />
-          </button>
+          <div className="relative">
+            <button
+              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              type="button"
+              aria-label={t('actions.newDocument')}
+              title={t('actions.newDocument')}
+              aria-expanded={isTemplateMenuOpen}
+              onClick={() => setIsTemplateMenuOpen((open) => !open)}
+            >
+              <FileText className="size-4" aria-hidden />
+            </button>
+            {isTemplateMenuOpen ? (
+              <div
+                className="absolute left-0 top-11 z-20 w-56 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
+                role="menu"
+                aria-label={t('actions.newDocument')}
+              >
+                {BUILTIN_TEMPLATES.map((template) => (
+                  <button
+                    className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                    type="button"
+                    role="menuitem"
+                    key={template.id}
+                    onClick={() => {
+                      setIsTemplateMenuOpen(false);
+                      requestDirtyConfirmation(() => {
+                        clearSession();
+                        resetUntitled();
+                        updateContent(applyTemplate(template));
+                      });
+                    }}
+                  >
+                    {t(template.name)}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
@@ -768,6 +1043,16 @@ export default function App() {
             <Save className="size-4" aria-hidden />
           </button>
           <button
+            className={`inline-flex size-9 items-center justify-center rounded-md transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${autosaveEnabled ? 'text-emerald-600' : 'text-[rgb(var(--color-muted))]'}`}
+            type="button"
+            aria-label={t('autosave.toggle')}
+            title={t('autosave.toggle')}
+            aria-pressed={autosaveEnabled}
+            onClick={() => setAutosaveEnabled(!autosaveEnabled)}
+          >
+            <Save className="size-4" aria-hidden />
+          </button>
+          <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             aria-label={t('theme.toggle')}
@@ -775,6 +1060,15 @@ export default function App() {
             onClick={cycleTheme}
           >
             <Moon className="size-4" aria-hidden />
+          </button>
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            type="button"
+            aria-label={t('shortcuts.title')}
+            title={t('shortcuts.title')}
+            onClick={() => setIsShortcutsOpen((open) => !open)}
+          >
+            <Keyboard className="size-4" aria-hidden />
           </button>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
@@ -919,6 +1213,14 @@ export default function App() {
         </div>
       </header>
 
+      <TabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onActivate={handleActivateTab}
+        onClose={handleCloseTab}
+        onMove={moveTab}
+      />
+
       <section className="flex min-h-0 flex-1">
         {tocOpen ? (
           <TableOfContents
@@ -1001,6 +1303,9 @@ export default function App() {
                 searchMatches={searchMatches}
                 value={document.content}
                 onChange={updateContent}
+                tabSize={editorTabSize}
+                lineWrapping={editorWrap}
+                fontFamily={editorFontFamily}
               />
             ) : null}
             {viewMode !== 'editor' ? (
@@ -1010,20 +1315,13 @@ export default function App() {
                 hideFrontmatter={!showFrontmatter}
                 onExternalLinkClick={handleExternalLinkClick}
                 onLocalImageRequest={handleLocalImageRequest}
+                maxWidth={previewMaxWidth}
+                showToc={previewShowToc}
               />
             ) : null}
           </div>
         </div>
       </section>
-
-      {errorMessage ? (
-        <div
-          className="fixed bottom-12 right-4 max-w-sm rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900 dark:bg-red-950 dark:text-red-100"
-          role="status"
-        >
-          {errorMessage}
-        </div>
-      ) : null}
 
       <ConfirmDirtyDialog
         open={Boolean(pendingDirtyAction)}
@@ -1037,6 +1335,70 @@ export default function App() {
               await runPendingDirtyAction();
             }
           })();
+        }}
+      />
+
+      <RestoreSessionDialog
+        open={isRestoreDialogOpen}
+        hasPath={
+          Boolean(pendingSession?.path) || Boolean(pendingSession?.tabs?.length)
+        }
+        onRecover={() => {
+          if (pendingSession) {
+            if (pendingSession.tabs && pendingSession.tabs.length > 0) {
+              restoreSession(
+                pendingSession.tabs,
+                pendingSession.activeTabId ?? null
+              );
+            } else if (pendingSession.path) {
+              openTab({
+                path: pendingSession.path,
+                content: pendingSession.content,
+                eol: pendingSession.eol,
+              });
+            } else {
+              updateContent(pendingSession.content);
+            }
+          }
+          setIsRestoreDialogOpen(false);
+          clearSession();
+          setPendingSession(null);
+        }}
+        onDiscard={() => {
+          setIsRestoreDialogOpen(false);
+          clearSession();
+          setPendingSession(null);
+        }}
+      />
+
+      <PreferencesDialog
+        open={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
+        autosaveEnabled={autosaveEnabled}
+        autosaveDelayMs={autosaveDelayMs}
+        editorFontFamily={editorFontFamily}
+        editorTabSize={editorTabSize}
+        editorShowGutter={editorShowGutter}
+        editorWrap={editorWrap}
+        previewMaxWidth={previewMaxWidth}
+        previewShowToc={previewShowToc}
+        onAutosaveEnabledChange={setAutosaveEnabled}
+        onAutosaveDelayMsChange={setAutosaveDelayMs}
+        onEditorFontFamilyChange={setEditorFontFamily}
+        onEditorTabSizeChange={setEditorTabSize}
+        onEditorShowGutterChange={setEditorShowGutter}
+        onEditorWrapChange={setEditorWrap}
+        onPreviewMaxWidthChange={setPreviewMaxWidth}
+        onPreviewShowTocChange={setPreviewShowToc}
+      />
+
+      <ShortcutsDialog
+        open={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+        shortcuts={shortcuts}
+        onChange={(next) => {
+          setShortcutsState(next);
+          patchConfig({ shortcuts: next });
         }}
       />
 
@@ -1112,7 +1474,11 @@ export default function App() {
       >
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate">{displayName}</span>
-          {isDirty ? (
+          {autosaveStatus ? (
+            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+              {autosaveStatus}
+            </span>
+          ) : isDirty ? (
             <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300">
               <RotateCcw className="size-3" aria-hidden />
               {t('document.unsaved')}

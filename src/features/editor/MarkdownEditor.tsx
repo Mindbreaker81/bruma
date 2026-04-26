@@ -26,6 +26,9 @@ type MarkdownEditorProps = {
   placeholder: string;
   activeSearchIndex?: number;
   searchMatches?: SearchMatch[];
+  tabSize?: number;
+  lineWrapping?: boolean;
+  fontFamily?: string;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -77,6 +80,9 @@ export const MarkdownEditor = forwardRef<
     placeholder,
     activeSearchIndex = 0,
     searchMatches = [],
+    tabSize = 4,
+    lineWrapping = true,
+    fontFamily = 'sans',
   },
   ref
 ) {
@@ -88,6 +94,8 @@ export const MarkdownEditor = forwardRef<
   const ignoreNextScrollRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
+  const tabSizeCompartmentRef = useRef(new Compartment());
+  const lineWrappingCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
     searchMatches.length > 0
       ? Math.min(activeSearchIndex, searchMatches.length - 1)
@@ -134,7 +142,10 @@ export const MarkdownEditor = forwardRef<
           history(),
           markdown(),
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
-          EditorView.lineWrapping,
+          tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
+          lineWrappingCompartmentRef.current.of(
+            lineWrapping ? EditorView.lineWrapping : []
+          ),
           searchCompartmentRef.current.of(searchDecorationExtension([], 0)),
           contentAttributesCompartmentRef.current.of(
             EditorView.contentAttributes.of({
@@ -236,6 +247,26 @@ export const MarkdownEditor = forwardRef<
   }, [searchExtension]);
 
   useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.dispatch({
+      effects: tabSizeCompartmentRef.current.reconfigure(
+        EditorState.tabSize.of(tabSize)
+      ),
+    });
+  }, [tabSize]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.dispatch({
+      effects: lineWrappingCompartmentRef.current.reconfigure(
+        lineWrapping ? EditorView.lineWrapping : []
+      ),
+    });
+  }, [lineWrapping]);
+
+  useEffect(() => {
     return useScrollSyncStore.subscribe((state, prev) => {
       if (state.source !== 'preview') return;
       if (state === prev) return;
@@ -266,10 +297,21 @@ export const MarkdownEditor = forwardRef<
     });
   }, [normalizedActiveSearchIndex, searchMatches]);
 
+  const fontStyle =
+    fontFamily === 'serif'
+      ? { fontFamily: 'ui-serif, Georgia, Cambria, serif' }
+      : fontFamily === 'mono'
+        ? {
+            fontFamily:
+              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          }
+        : undefined;
+
   return (
     <div
       ref={containerRef}
       className="bruma-editor h-full min-h-0 bg-[rgb(var(--color-editor))]"
+      style={fontStyle}
     />
   );
 });

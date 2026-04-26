@@ -10,6 +10,11 @@ export type Document = {
   lastSavedAt: number | null;
 };
 
+export type Tab = {
+  id: string;
+  document: Document;
+};
+
 export const UNTITLED_DOCUMENT_NAME = 'Sin titulo';
 
 type LoadedDocumentInput = {
