@@ -381,7 +381,15 @@ Dos opciones; decidir en sprint 0:
 
 ---
 
-## 18. Estrategia Linux (post-MVP, v2.0)
+## 18. Estrategia multiplataforma
+
+### 18.1 macOS (Apple Silicon + Intel)
+
+- Universal binary: un solo `.app` contiene código x86_64 y arm64. Tauri compila ambos targets y los une con `lipo`.
+- Build de desarrollo: puede ser solo la arquitectura del host para velocidad; builds de release siempre universal.
+- Tests: CI debe validar ambas arquitecturas (o al menos el universal binary).
+
+### 18.2 Linux (post-MVP, v2.0)
 
 Para que el cambio sea barato cuando llegue:
 

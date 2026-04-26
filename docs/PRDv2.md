@@ -327,8 +327,8 @@ Persona técnica o semitécnica que usa Markdown para notas, documentación, art
 - **RNF-02 Tamaño de binario.** Instalado: **< 20 MB** objetivo, **< 30 MB** límite duro.
 - **RNF-03 Usabilidad.** Interfaz clara, sin saturación. Flujo principal entendible sin tutorial. Funciones esenciales accesibles por menú **y** por atajo.
 - **RNF-04 Estabilidad.** No pérdida de datos ante acciones normales. Errores de I/O con mensajes claros. Crashes < 0.1% de sesiones.
-- **RNF-05 Compatibilidad.**
-  - macOS 12 (Monterey) o superior, x86_64 y arm64.
+- **RNF-04 Compatibilidad.**
+  - macOS 12 (Monterey) o superior, x86_64 y arm64 (Apple Silicon M1/M2/M3). Se distribuirá como universal binary (un solo `.app` compatible con ambas arquitecturas).
   - Windows 10 (build 19041+) y Windows 11, x86_64.
   - WebView del sistema: WebKit (macOS), WebView2 (Windows). Se asume disponible en versiones soportadas; en Windows se documenta el bootstrapper de WebView2 para edge cases.
 - **RNF-06 Seguridad.**

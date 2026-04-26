@@ -41,6 +41,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   - Versionado: **SemVer** estricto.
   - Convención de commits: **Conventional Commits** con validación por `commitlint`.
 - Sección de convención de commits documentada en `docs/ARCHITECTURE.md` §21.
+- Aclaración de compatibilidad macOS: soporte de Apple Silicon (arm64) + Intel (x86_64) via universal binary. Actualizado en `PRDv2.md` (RNF-04) y `ARCHITECTURE.md` (§16.1, §18).
 
 ### Changed
 
