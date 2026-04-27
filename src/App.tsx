@@ -1057,7 +1057,7 @@ export default function App() {
                               clearSession();
                               resetUntitled();
                               updateContent(applyTemplate({ ...template, content }));
-                            } catch (error) {
+                            } catch {
                               showError(t('errors.templateLoadFailed'));
                             }
                           });
