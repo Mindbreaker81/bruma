@@ -144,9 +144,7 @@ function IconButton({
           <span className="sr-only">{label}</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent>
-        {label}
-      </TooltipContent>
+      <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   );
 }
@@ -988,470 +986,495 @@ export default function App() {
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
-      <header
-        className={`${focusMode ? 'hidden' : 'flex'} h-14 shrink-0 items-center justify-between border-b bg-card px-4`}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
-            B
+        <header
+          className={`${focusMode ? 'hidden' : 'flex'} h-14 shrink-0 items-center justify-between border-b bg-card px-4`}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
+              B
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-semibold">
+                {t('app.name')}
+              </h1>
+              <p className="truncate text-xs text-muted-foreground">
+                {displayName}
+                {isDirty ? ` ${t('document.dirtyMark')}` : ''}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold">{t('app.name')}</h1>
-            <p className="truncate text-xs text-muted-foreground">
-              {displayName}
-              {isDirty ? ` ${t('document.dirtyMark')}` : ''}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-1">
-          <DropdownMenu open={isTemplateMenuOpen} onOpenChange={setIsTemplateMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9"
-                aria-label={t('actions.newDocument')}
-              >
-                <FileText className="size-4" aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              {BUILTIN_TEMPLATES.map((template) => (
-                <DropdownMenuItem
-                  key={template.id}
-                  onClick={() => {
-                    setIsTemplateMenuOpen(false);
-                    requestDirtyConfirmation(() => {
-                      clearSession();
-                      resetUntitled();
-                      updateContent(applyTemplate(template));
-                    });
-                  }}
+          <div className="flex items-center gap-1">
+            <DropdownMenu
+              open={isTemplateMenuOpen}
+              onOpenChange={setIsTemplateMenuOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={t('actions.newDocument')}
                 >
-                  {t(template.name)}
-                </DropdownMenuItem>
-              ))}
-              {customTemplates.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  {customTemplates.map((template) => (
-                    <DropdownMenuItem
-                      key={template.id}
-                      onClick={() => {
-                        setIsTemplateMenuOpen(false);
-                        requestDirtyConfirmation(() => {
-                          clearSession();
-                          resetUntitled();
-                          updateContent(applyTemplate(template));
-                        });
-                      }}
-                    >
-                      {template.name}
-                    </DropdownMenuItem>
-                  ))}
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <IconButton
-            icon={FileInput}
-            label={t('actions.openDocument')}
-            onClick={handleOpenWithConfirmation}
-          />
-          <DropdownMenu open={isRecentMenuOpen} onOpenChange={setIsRecentMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9"
-                aria-label={t('recent.open')}
-              >
-                <Clock className="size-4" aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
-              {recentFiles.length > 0 ? (
-                recentFiles.map((path) => (
-                  <DropdownMenuItem key={path} onClick={() => handleOpenRecent(path)} title={path}>
-                    <div className="flex flex-col min-w-0">
-                      <span className="block truncate font-medium">
-                        {getPathBasename(path)}
-                      </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {path}
-                      </span>
-                    </div>
+                  <FileText className="size-4" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {BUILTIN_TEMPLATES.map((template) => (
+                  <DropdownMenuItem
+                    key={template.id}
+                    onClick={() => {
+                      setIsTemplateMenuOpen(false);
+                      requestDirtyConfirmation(() => {
+                        clearSession();
+                        resetUntitled();
+                        updateContent(applyTemplate(template));
+                      });
+                    }}
+                  >
+                    {t(template.name)}
                   </DropdownMenuItem>
-                ))
-              ) : (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  {t('recent.empty')}
-                </div>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <IconButton
-            icon={Save}
-            label={t('actions.markSaved')}
-            onClick={() => void handleSave()}
-          />
-          <IconButton
-            icon={Save}
-            label={t('autosave.toggle')}
-            onClick={() => setAutosaveEnabled(!autosaveEnabled)}
-            active={autosaveEnabled}
-            className={autosaveEnabled ? 'text-primary' : ''}
-          />
-          <IconButton
-            icon={Moon}
-            label={t('theme.toggle')}
-            onClick={cycleTheme}
-          />
-          <IconButton
-            icon={Keyboard}
-            label={t('shortcuts.title')}
-            onClick={() => setIsShortcutsOpen(true)}
-          />
-          <IconButton
-            icon={Languages}
-            label={t('language.toggle')}
-            onClick={cycleLanguage}
-          />
-          <IconButton
-            icon={List}
-            label={t('toc.toggle')}
-            onClick={toggleToc}
-            active={tocOpen}
-          />
-          <IconButton
-            icon={Minus}
-            label={t('zoom.decrease')}
-            onClick={decreaseFontScaleStore}
-          />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetFontScaleStore}
-                className="h-9 min-w-12 px-2 text-xs"
+                ))}
+                {customTemplates.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    {customTemplates.map((template) => (
+                      <DropdownMenuItem
+                        key={template.id}
+                        onClick={() => {
+                          setIsTemplateMenuOpen(false);
+                          requestDirtyConfirmation(() => {
+                            clearSession();
+                            resetUntitled();
+                            updateContent(applyTemplate(template));
+                          });
+                        }}
+                      >
+                        {template.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <IconButton
+              icon={FileInput}
+              label={t('actions.openDocument')}
+              onClick={handleOpenWithConfirmation}
+            />
+            <DropdownMenu
+              open={isRecentMenuOpen}
+              onOpenChange={setIsRecentMenuOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={t('recent.open')}
+                >
+                  <Clock className="size-4" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-72 max-h-96 overflow-y-auto"
               >
-                {Math.round(fontScale * 100)}%
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('zoom.reset')}</TooltipContent>
-          </Tooltip>
-          <IconButton
-            icon={Plus}
-            label={t('zoom.increase')}
-            onClick={increaseFontScaleStore}
-          />
-          <IconButton
-            icon={focusMode ? Maximize2 : EyeOff}
-            label={t('focusMode.toggle')}
-            onClick={toggleFocusMode}
-            active={focusMode}
-          />
-          <IconButton
-            icon={LinkIcon}
-            label={t('scrollSync.toggle')}
-            onClick={toggleScrollSync}
-            active={scrollSyncEnabled}
-          />
-          <DropdownMenu open={isExportMenuOpen} onOpenChange={setIsExportMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9"
-                aria-label={t('export.title')}
-              >
-                <Download className="size-4" aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
-                {t('export.htmlStyled')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
-                {t('export.htmlPlain')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportPdf}>
-                {t('export.pdf')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <IconButton
-            icon={Search}
-            label={t('search.open')}
-            onClick={handleOpenSearch}
-          />
-          <IconButton
-            icon={viewMode === 'preview' ? Eye : Columns2}
-            label={t('view.toggle')}
-            onClick={cycleViewMode}
-          />
-        </div>
-      </header>
+                {recentFiles.length > 0 ? (
+                  recentFiles.map((path) => (
+                    <DropdownMenuItem
+                      key={path}
+                      onClick={() => handleOpenRecent(path)}
+                      title={path}
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="block truncate font-medium">
+                          {getPathBasename(path)}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {path}
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    {t('recent.empty')}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <IconButton
+              icon={Save}
+              label={t('actions.markSaved')}
+              onClick={() => void handleSave()}
+            />
+            <IconButton
+              icon={Save}
+              label={t('autosave.toggle')}
+              onClick={() => setAutosaveEnabled(!autosaveEnabled)}
+              active={autosaveEnabled}
+              className={autosaveEnabled ? 'text-primary' : ''}
+            />
+            <IconButton
+              icon={Moon}
+              label={t('theme.toggle')}
+              onClick={cycleTheme}
+            />
+            <IconButton
+              icon={Keyboard}
+              label={t('shortcuts.title')}
+              onClick={() => setIsShortcutsOpen(true)}
+            />
+            <IconButton
+              icon={Languages}
+              label={t('language.toggle')}
+              onClick={cycleLanguage}
+            />
+            <IconButton
+              icon={List}
+              label={t('toc.toggle')}
+              onClick={toggleToc}
+              active={tocOpen}
+            />
+            <IconButton
+              icon={Minus}
+              label={t('zoom.decrease')}
+              onClick={decreaseFontScaleStore}
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFontScaleStore}
+                  className="h-9 min-w-12 px-2 text-xs"
+                >
+                  {Math.round(fontScale * 100)}%
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('zoom.reset')}</TooltipContent>
+            </Tooltip>
+            <IconButton
+              icon={Plus}
+              label={t('zoom.increase')}
+              onClick={increaseFontScaleStore}
+            />
+            <IconButton
+              icon={focusMode ? Maximize2 : EyeOff}
+              label={t('focusMode.toggle')}
+              onClick={toggleFocusMode}
+              active={focusMode}
+            />
+            <IconButton
+              icon={LinkIcon}
+              label={t('scrollSync.toggle')}
+              onClick={toggleScrollSync}
+              active={scrollSyncEnabled}
+            />
+            <DropdownMenu
+              open={isExportMenuOpen}
+              onOpenChange={setIsExportMenuOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={t('export.title')}
+                >
+                  <Download className="size-4" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
+                  {t('export.htmlStyled')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
+                  {t('export.htmlPlain')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPdf}>
+                  {t('export.pdf')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <IconButton
+              icon={Search}
+              label={t('search.open')}
+              onClick={handleOpenSearch}
+            />
+            <IconButton
+              icon={viewMode === 'preview' ? Eye : Columns2}
+              label={t('view.toggle')}
+              onClick={cycleViewMode}
+            />
+          </div>
+        </header>
 
-      <TabBar
-        tabs={tabs}
-        activeTabId={activeTabId}
-        onActivate={handleActivateTab}
-        onClose={handleCloseTab}
-        onMove={moveTab}
-      />
+        <TabBar
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onActivate={handleActivateTab}
+          onClose={handleCloseTab}
+          onMove={moveTab}
+        />
 
-      <section className="flex min-h-0 flex-1">
-        {tocOpen ? (
-          <TableOfContents
-            content={document.content}
-            onSelect={handleSelectHeading}
-          />
-        ) : null}
-        <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
-          <div
-            className={`${focusMode ? 'hidden' : 'flex'} h-10 items-center justify-between border-b bg-muted/40 px-4 text-xs text-muted-foreground`}
-          >
-            <div className="flex items-center gap-1">
-              {VIEW_MODES.map((mode) => (
+        <section className="flex min-h-0 flex-1">
+          {tocOpen ? (
+            <TableOfContents
+              content={document.content}
+              onSelect={handleSelectHeading}
+            />
+          ) : null}
+          <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
+            <div
+              className={`${focusMode ? 'hidden' : 'flex'} h-10 items-center justify-between border-b bg-muted/40 px-4 text-xs text-muted-foreground`}
+            >
+              <div className="flex items-center gap-1">
+                {VIEW_MODES.map((mode) => (
+                  <button
+                    className="rounded px-2 py-1 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+                    type="button"
+                    aria-pressed={viewMode === mode}
+                    aria-label={t('view.selectMode', {
+                      mode: t(`view.mode.${mode}`),
+                    })}
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                  >
+                    {t(`view.mode.${mode}`)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   className="rounded px-2 py-1 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
                   type="button"
-                  aria-pressed={viewMode === mode}
-                  aria-label={t('view.selectMode', {
-                    mode: t(`view.mode.${mode}`),
-                  })}
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
+                  aria-label={t('frontmatter.toggle')}
+                  title={t('frontmatter.toggle')}
+                  aria-pressed={!showFrontmatter}
+                  onClick={toggleShowFrontmatter}
                 >
-                  {t(`view.mode.${mode}`)}
+                  {showFrontmatter
+                    ? t('frontmatter.shown')
+                    : t('frontmatter.hidden')}
                 </button>
-              ))}
+                <span>
+                  {t(`theme.preference.${themePreference}`)} ·{' '}
+                  {t(`view.mode.${viewMode}`)}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="rounded px-2 py-1 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-                type="button"
-                aria-label={t('frontmatter.toggle')}
-                title={t('frontmatter.toggle')}
-                aria-pressed={!showFrontmatter}
-                onClick={toggleShowFrontmatter}
-              >
-                {showFrontmatter
-                  ? t('frontmatter.shown')
-                  : t('frontmatter.hidden')}
-              </button>
-              <span>
-                {t(`theme.preference.${themePreference}`)} ·{' '}
-                {t(`view.mode.${viewMode}`)}
-              </span>
+
+            <div
+              className={
+                viewMode === 'split'
+                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
+                  : 'relative min-h-0'
+              }
+            >
+              {isSearchOpen ? (
+                <SearchPanel
+                  activeIndex={searchActiveIndex}
+                  caseSensitive={searchCaseSensitive}
+                  matchCount={searchMatchCount}
+                  query={searchQuery}
+                  replaceMode={replaceMode}
+                  replaceQuery={replaceQuery}
+                  onCaseSensitiveChange={setSearchCaseSensitive}
+                  onClose={handleCloseSearch}
+                  onNext={() => goNextSearch(searchMatchCount)}
+                  onPrevious={() => goPreviousSearch(searchMatchCount)}
+                  onQueryChange={setSearchQuery}
+                  onReplaceAll={handleReplaceAll}
+                  onReplaceOne={handleReplaceOne}
+                  onReplaceQueryChange={setReplaceQuery}
+                  onToggleReplace={toggleReplaceMode}
+                />
+              ) : null}
+              {viewMode !== 'preview' ? (
+                <MarkdownEditor
+                  ref={editorRef}
+                  activeSearchIndex={searchActiveIndex}
+                  ariaLabel={t('editor.label')}
+                  placeholder={t('editor.placeholder')}
+                  searchMatches={searchMatches}
+                  value={document.content}
+                  onChange={updateContent}
+                  tabSize={editorTabSize}
+                  lineWrapping={editorWrap}
+                  fontFamily={editorFontFamily}
+                />
+              ) : null}
+              {viewMode !== 'editor' ? (
+                <Preview
+                  content={document.content}
+                  documentPath={document.path ?? null}
+                  hideFrontmatter={!showFrontmatter}
+                  onExternalLinkClick={handleExternalLinkClick}
+                  onLocalImageRequest={handleLocalImageRequest}
+                  maxWidth={previewMaxWidth}
+                />
+              ) : null}
             </div>
           </div>
+        </section>
 
-          <div
-            className={
-              viewMode === 'split'
-                ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
-                : 'relative min-h-0'
-            }
-          >
-            {isSearchOpen ? (
-              <SearchPanel
-                activeIndex={searchActiveIndex}
-                caseSensitive={searchCaseSensitive}
-                matchCount={searchMatchCount}
-                query={searchQuery}
-                replaceMode={replaceMode}
-                replaceQuery={replaceQuery}
-                onCaseSensitiveChange={setSearchCaseSensitive}
-                onClose={handleCloseSearch}
-                onNext={() => goNextSearch(searchMatchCount)}
-                onPrevious={() => goPreviousSearch(searchMatchCount)}
-                onQueryChange={setSearchQuery}
-                onReplaceAll={handleReplaceAll}
-                onReplaceOne={handleReplaceOne}
-                onReplaceQueryChange={setReplaceQuery}
-                onToggleReplace={toggleReplaceMode}
-              />
-            ) : null}
-            {viewMode !== 'preview' ? (
-              <MarkdownEditor
-                ref={editorRef}
-                activeSearchIndex={searchActiveIndex}
-                ariaLabel={t('editor.label')}
-                placeholder={t('editor.placeholder')}
-                searchMatches={searchMatches}
-                value={document.content}
-                onChange={updateContent}
-                tabSize={editorTabSize}
-                lineWrapping={editorWrap}
-                fontFamily={editorFontFamily}
-              />
-            ) : null}
-            {viewMode !== 'editor' ? (
-              <Preview
-                content={document.content}
-                documentPath={document.path ?? null}
-                hideFrontmatter={!showFrontmatter}
-                onExternalLinkClick={handleExternalLinkClick}
-                onLocalImageRequest={handleLocalImageRequest}
-                maxWidth={previewMaxWidth}
-              />
-            ) : null}
-          </div>
-        </div>
-      </section>
+        <ConfirmDirtyDialog
+          open={Boolean(pendingDirtyAction)}
+          onCancel={() => setPendingDirtyAction(null)}
+          onDiscard={() => void runPendingDirtyAction()}
+          onSave={() => {
+            void (async () => {
+              const saved = await handleSave();
 
-      <ConfirmDirtyDialog
-        open={Boolean(pendingDirtyAction)}
-        onCancel={() => setPendingDirtyAction(null)}
-        onDiscard={() => void runPendingDirtyAction()}
-        onSave={() => {
-          void (async () => {
-            const saved = await handleSave();
+              if (saved) {
+                await runPendingDirtyAction();
+              }
+            })();
+          }}
+        />
 
-            if (saved) {
-              await runPendingDirtyAction();
-            }
-          })();
-        }}
-      />
-
-      <RestoreSessionDialog
-        open={isRestoreDialogOpen}
-        hasPath={
-          Boolean(pendingSession?.path) || Boolean(pendingSession?.tabs?.length)
-        }
-        onRecover={() => {
-          if (pendingSession) {
-            if (pendingSession.tabs && pendingSession.tabs.length > 0) {
-              restoreSession(
-                pendingSession.tabs,
-                pendingSession.activeTabId ?? null
-              );
-            } else if (pendingSession.path) {
-              openTab({
-                path: pendingSession.path,
-                content: pendingSession.content,
-                eol: pendingSession.eol,
-              });
-            } else {
-              updateContent(pendingSession.content);
-            }
+        <RestoreSessionDialog
+          open={isRestoreDialogOpen}
+          hasPath={
+            Boolean(pendingSession?.path) ||
+            Boolean(pendingSession?.tabs?.length)
           }
-          setIsRestoreDialogOpen(false);
-          clearSession();
-          setPendingSession(null);
-        }}
-        onDiscard={() => {
-          setIsRestoreDialogOpen(false);
-          clearSession();
-          setPendingSession(null);
-        }}
-      />
+          onRecover={() => {
+            if (pendingSession) {
+              if (pendingSession.tabs && pendingSession.tabs.length > 0) {
+                restoreSession(
+                  pendingSession.tabs,
+                  pendingSession.activeTabId ?? null
+                );
+              } else if (pendingSession.path) {
+                openTab({
+                  path: pendingSession.path,
+                  content: pendingSession.content,
+                  eol: pendingSession.eol,
+                });
+              } else {
+                updateContent(pendingSession.content);
+              }
+            }
+            setIsRestoreDialogOpen(false);
+            clearSession();
+            setPendingSession(null);
+          }}
+          onDiscard={() => {
+            setIsRestoreDialogOpen(false);
+            clearSession();
+            setPendingSession(null);
+          }}
+        />
 
-      <PreferencesDialog
-        open={isPreferencesOpen}
-        onClose={() => setIsPreferencesOpen(false)}
-        autosaveEnabled={autosaveEnabled}
-        autosaveDelayMs={autosaveDelayMs}
-        editorFontFamily={editorFontFamily}
-        editorTabSize={editorTabSize}
-        editorShowGutter={editorShowGutter}
-        editorWrap={editorWrap}
-        previewMaxWidth={previewMaxWidth}
-        previewShowToc={previewShowToc}
-        onAutosaveEnabledChange={setAutosaveEnabled}
-        onAutosaveDelayMsChange={setAutosaveDelayMs}
-        onEditorFontFamilyChange={setEditorFontFamily}
-        onEditorTabSizeChange={setEditorTabSize}
-        onEditorShowGutterChange={setEditorShowGutter}
-        onEditorWrapChange={setEditorWrap}
-        onPreviewMaxWidthChange={setPreviewMaxWidth}
-        onPreviewShowTocChange={setPreviewShowToc}
-      />
+        <PreferencesDialog
+          open={isPreferencesOpen}
+          onClose={() => setIsPreferencesOpen(false)}
+          autosaveEnabled={autosaveEnabled}
+          autosaveDelayMs={autosaveDelayMs}
+          editorFontFamily={editorFontFamily}
+          editorTabSize={editorTabSize}
+          editorShowGutter={editorShowGutter}
+          editorWrap={editorWrap}
+          previewMaxWidth={previewMaxWidth}
+          previewShowToc={previewShowToc}
+          onAutosaveEnabledChange={setAutosaveEnabled}
+          onAutosaveDelayMsChange={setAutosaveDelayMs}
+          onEditorFontFamilyChange={setEditorFontFamily}
+          onEditorTabSizeChange={setEditorTabSize}
+          onEditorShowGutterChange={setEditorShowGutter}
+          onEditorWrapChange={setEditorWrap}
+          onPreviewMaxWidthChange={setPreviewMaxWidth}
+          onPreviewShowTocChange={setPreviewShowToc}
+        />
 
-      <ShortcutsDialog
-        open={isShortcutsOpen}
-        onClose={() => setIsShortcutsOpen(false)}
-        shortcuts={shortcuts}
-        onChange={(next) => {
-          setShortcutsState(next);
-          patchConfig({ shortcuts: next });
-        }}
-      />
+        <ShortcutsDialog
+          open={isShortcutsOpen}
+          onClose={() => setIsShortcutsOpen(false)}
+          shortcuts={shortcuts}
+          onChange={(next) => {
+            setShortcutsState(next);
+            patchConfig({ shortcuts: next });
+          }}
+        />
 
-      <Dialog open={isAboutOpen} onOpenChange={setIsAboutOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('about.title')}</DialogTitle>
-            <DialogDescription className="space-y-1">
-              <p>{t('about.body')}</p>
-              <p>{t('about.version', { version: APP_VERSION })}</p>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={isAboutOpen} onOpenChange={setIsAboutOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('about.title')}</DialogTitle>
+              <DialogDescription className="space-y-1">
+                <p>{t('about.body')}</p>
+                <p>{t('about.version', { version: APP_VERSION })}</p>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
 
-      <AlertDialog open={Boolean(externalLinkPrompt)} onOpenChange={(open) => !open && setExternalLinkPrompt(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('externalLink.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('externalLink.body')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <p className="mt-2 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
-            {externalLinkPrompt}
-          </p>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setExternalLinkPrompt(null)}>
-              {t('externalLink.cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmExternalLink} className="bg-emerald-700 text-white hover:bg-emerald-800">
-              {t('externalLink.confirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog
+          open={Boolean(externalLinkPrompt)}
+          onOpenChange={(open) => !open && setExternalLinkPrompt(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('externalLink.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('externalLink.body')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <p className="mt-2 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
+              {externalLinkPrompt}
+            </p>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setExternalLinkPrompt(null)}>
+                {t('externalLink.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmExternalLink}
+                className="bg-emerald-700 text-white hover:bg-emerald-800"
+              >
+                {t('externalLink.confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <footer
-        className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t bg-card px-4 text-xs text-muted-foreground`}
-      >
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate">{displayName}</span>
-          {autosaveStatus ? (
-            <span className="inline-flex items-center gap-1 text-primary">
-              {autosaveStatus}
+        <footer
+          className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t bg-card px-4 text-xs text-muted-foreground`}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate">{displayName}</span>
+            {autosaveStatus ? (
+              <span className="inline-flex items-center gap-1 text-primary">
+                {autosaveStatus}
+              </span>
+            ) : isDirty ? (
+              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-500">
+                <RotateCcw className="size-3" aria-hidden />
+                {t('document.unsaved')}
+              </span>
+            ) : (
+              <span>{t('document.saved')}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <span aria-label={t('stats.words')} title={t('stats.words')}>
+              {t('stats.wordsValue', { count: textStats.words })}
             </span>
-          ) : isDirty ? (
-            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-500">
-              <RotateCcw className="size-3" aria-hidden />
-              {t('document.unsaved')}
+            <span
+              aria-label={t('stats.characters')}
+              title={t('stats.characters')}
+            >
+              {t('stats.charactersValue', { count: textStats.characters })}
             </span>
-          ) : (
-            <span>{t('document.saved')}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <span aria-label={t('stats.words')} title={t('stats.words')}>
-            {t('stats.wordsValue', { count: textStats.words })}
-          </span>
-          <span
-            aria-label={t('stats.characters')}
-            title={t('stats.characters')}
-          >
-            {t('stats.charactersValue', { count: textStats.characters })}
-          </span>
-          <span>{document.encoding.toUpperCase()}</span>
-          <span>{document.eol.toUpperCase()}</span>
-          <span>{t(`language.preference.${languagePreference}`)}</span>
-          <span>{t(`theme.resolved.${resolvedTheme}`)}</span>
-        </div>
-      </footer>
-    </main>
+            <span>{document.encoding.toUpperCase()}</span>
+            <span>{document.eol.toUpperCase()}</span>
+            <span>{t(`language.preference.${languagePreference}`)}</span>
+            <span>{t(`theme.resolved.${resolvedTheme}`)}</span>
+          </div>
+        </footer>
+      </main>
     </TooltipProvider>
   );
 }

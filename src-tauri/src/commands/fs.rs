@@ -446,8 +446,10 @@ mod tests {
     #[test]
     fn reads_image_as_data_url_for_valid_file() {
         let home = user_home_dir().expect("home directory should exist");
-        let dir = create_test_path(home.join(".bruma-security-tests").join("img-ok"));
-        fs::create_dir_all(&dir).unwrap();
+        let base_dir = home.join(".bruma-security-tests").join("img-ok");
+        fs::create_dir_all(&base_dir).unwrap();
+        let dir = create_test_path(base_dir);
+        fs::create_dir(&dir).unwrap();
         let image = dir.join("logo.png");
         // 1x1 transparent PNG
         let png: [u8; 67] = [

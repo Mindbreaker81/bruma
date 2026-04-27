@@ -36,11 +36,19 @@ describe('TabBar', () => {
     const tabs: Tab[] = [
       {
         id: '1',
-        document: createLoadedDocument({ path: '/a.md', content: 'a', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/a.md',
+          content: 'a',
+          eol: 'lf',
+        }),
       },
       {
         id: '2',
-        document: createLoadedDocument({ path: '/b.md', content: 'b', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/b.md',
+          content: 'b',
+          eol: 'lf',
+        }),
       },
     ];
     const { getByRole } = render(
@@ -59,11 +67,19 @@ describe('TabBar', () => {
     const tabs: Tab[] = [
       {
         id: '1',
-        document: createLoadedDocument({ path: '/a.md', content: 'a', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/a.md',
+          content: 'a',
+          eol: 'lf',
+        }),
       },
       {
         id: '2',
-        document: createLoadedDocument({ path: '/b.md', content: 'b', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/b.md',
+          content: 'b',
+          eol: 'lf',
+        }),
       },
     ];
     const { getAllByRole } = render(
@@ -98,7 +114,11 @@ describe('TabBar', () => {
       },
       {
         id: '2',
-        document: createLoadedDocument({ path: '/b.md', content: 'b', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/b.md',
+          content: 'b',
+          eol: 'lf',
+        }),
       },
     ];
     const { getAllByRole } = render(
@@ -114,7 +134,9 @@ describe('TabBar', () => {
     // First tab should have dirty indicator (amber dot)
     expect(tabElements[0]?.querySelector('.bg-amber-500')).toBeInTheDocument();
     // Second tab should not have dirty indicator
-    expect(tabElements[1]?.querySelector('.bg-amber-500')).not.toBeInTheDocument();
+    expect(
+      tabElements[1]?.querySelector('.bg-amber-500')
+    ).not.toBeInTheDocument();
   });
 
   it('calls onActivate when clicking a tab', () => {
@@ -122,11 +144,19 @@ describe('TabBar', () => {
     const tabs: Tab[] = [
       {
         id: '1',
-        document: createLoadedDocument({ path: '/a.md', content: 'a', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/a.md',
+          content: 'a',
+          eol: 'lf',
+        }),
       },
       {
         id: '2',
-        document: createLoadedDocument({ path: '/b.md', content: 'b', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/b.md',
+          content: 'b',
+          eol: 'lf',
+        }),
       },
     ];
     const { getAllByRole } = render(
@@ -149,11 +179,19 @@ describe('TabBar', () => {
     const tabs: Tab[] = [
       {
         id: '1',
-        document: createLoadedDocument({ path: '/a.md', content: 'a', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/a.md',
+          content: 'a',
+          eol: 'lf',
+        }),
       },
       {
         id: '2',
-        document: createLoadedDocument({ path: '/b.md', content: 'b', eol: 'lf' }),
+        document: createLoadedDocument({
+          path: '/b.md',
+          content: 'b',
+          eol: 'lf',
+        }),
       },
     ];
     const { getAllByLabelText } = render(

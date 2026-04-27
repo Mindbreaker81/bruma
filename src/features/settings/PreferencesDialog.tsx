@@ -82,7 +82,10 @@ export function PreferencesDialog({
             </div>
 
             <div className="flex items-center justify-between">
-              <label htmlFor="pref-autosave-delay" className="text-sm font-medium">
+              <label
+                htmlFor="pref-autosave-delay"
+                className="text-sm font-medium"
+              >
                 {t('autosave.delay')}
               </label>
               <div className="flex items-center gap-2">
@@ -97,7 +100,9 @@ export function PreferencesDialog({
                   }
                   className="w-16 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
-                <span className="text-sm text-muted-foreground">{t('autosave.seconds')}</span>
+                <span className="text-sm text-muted-foreground">
+                  {t('autosave.seconds')}
+                </span>
               </div>
             </div>
           </section>
@@ -136,9 +141,7 @@ export function PreferencesDialog({
                 max="8"
                 step="2"
                 value={editorTabSize}
-                onChange={(e) =>
-                  onEditorTabSizeChange(Number(e.target.value))
-                }
+                onChange={(e) => onEditorTabSizeChange(Number(e.target.value))}
                 className="w-16 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
               />
             </div>
@@ -151,9 +154,7 @@ export function PreferencesDialog({
                 id="pref-gutter"
                 type="checkbox"
                 checked={editorShowGutter}
-                onChange={(e) =>
-                  onEditorShowGutterChange(e.target.checked)
-                }
+                onChange={(e) => onEditorShowGutterChange(e.target.checked)}
                 className="size-4"
               />
             </div>

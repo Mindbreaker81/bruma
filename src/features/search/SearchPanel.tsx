@@ -88,7 +88,9 @@ export function SearchPanel({
           onChange={(e) => onQueryChange(e.target.value)}
         />
         <span className="min-w-14 text-center text-xs tabular-nums text-muted-foreground">
-          {matchCount > 0 ? `${activeIndex + 1} / ${matchCount}` : t('search.noMatches')}
+          {matchCount > 0
+            ? `${activeIndex + 1} / ${matchCount}`
+            : t('search.noMatches')}
         </span>
         <div className="flex items-center gap-0.5">
           <button

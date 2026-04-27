@@ -19,7 +19,13 @@ function eventToBinding(event: KeyboardEvent): string {
   if (event.metaKey || event.ctrlKey) parts.push('Mod');
   if (event.shiftKey) parts.push('Shift');
   if (event.altKey) parts.push('Alt');
-  if (event.key && event.key !== 'Meta' && event.key !== 'Control' && event.key !== 'Shift' && event.key !== 'Alt') {
+  if (
+    event.key &&
+    event.key !== 'Meta' &&
+    event.key !== 'Control' &&
+    event.key !== 'Shift' &&
+    event.key !== 'Alt'
+  ) {
     parts.push(event.key);
   }
   return parts.join('+');
@@ -120,7 +126,9 @@ export function ShortcutsDialog({
                           <input
                             className="w-32 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
                             autoFocus
-                            value={isCapturing ? capturedBinding : (binding ?? '')}
+                            value={
+                              isCapturing ? capturedBinding : (binding ?? '')
+                            }
                             onChange={(e) => {
                               setIsCapturing(false);
                               const val = e.target.value.trim() || null;
@@ -141,23 +149,28 @@ export function ShortcutsDialog({
                             className="rounded px-2 py-1 text-xs bg-[rgb(var(--color-control-hover))] hover:bg-[rgb(var(--color-bg))]"
                             type="button"
                             onClick={() => setIsCapturing(!isCapturing)}
-                            title={isCapturing ? 'Cancel capture' : 'Capture shortcut'}
+                            title={
+                              isCapturing
+                                ? 'Cancel capture'
+                                : 'Capture shortcut'
+                            }
                           >
                             {isCapturing ? 'Cancel' : 'Record'}
                           </button>
-                          {shortcuts[cmd.id] !== undefined && shortcuts[cmd.id] !== null && (
-                            <button
-                              className="rounded px-2 py-1 text-xs bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-950 dark:text-red-200"
-                              type="button"
-                              onClick={() => {
-                                onChange({ ...shortcuts, [cmd.id]: null });
-                                setIsCapturing(false);
-                              }}
-                              title="Reset to default"
-                            >
-                              Reset
-                            </button>
-                          )}
+                          {shortcuts[cmd.id] !== undefined &&
+                            shortcuts[cmd.id] !== null && (
+                              <button
+                                className="rounded px-2 py-1 text-xs bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-950 dark:text-red-200"
+                                type="button"
+                                onClick={() => {
+                                  onChange({ ...shortcuts, [cmd.id]: null });
+                                  setIsCapturing(false);
+                                }}
+                                title="Reset to default"
+                              >
+                                Reset
+                              </button>
+                            )}
                         </div>
                       ) : (
                         <button
