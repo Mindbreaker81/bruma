@@ -1125,17 +1125,17 @@ export default function App() {
             </DropdownMenu>
             <IconButton
               icon={Save}
-              label={t('actions.markSaved')}
+              label={t('actions.save')}
               onClick={() => void handleSave()}
             />
             <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {t('autosave.toggle')}
+              </span>
               <Switch
                 checked={autosaveEnabled}
                 onCheckedChange={setAutosaveEnabled}
               />
-              <span className="text-sm text-muted-foreground">
-                {t('autosave.toggle')}
-              </span>
             </div>
             <IconButton
               icon={Moon}

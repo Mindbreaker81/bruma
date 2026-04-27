@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
+import { Switch } from '../../components/ui/switch';
 
 type PreferencesDialogProps = {
   open: boolean;
@@ -72,12 +73,10 @@ export function PreferencesDialog({
               <label htmlFor="pref-autosave" className="text-sm font-medium">
                 {t('autosave.toggle')}
               </label>
-              <input
+              <Switch
                 id="pref-autosave"
-                type="checkbox"
                 checked={autosaveEnabled}
-                onChange={(e) => onAutosaveEnabledChange(e.target.checked)}
-                className="size-4"
+                onCheckedChange={onAutosaveEnabledChange}
               />
             </div>
 

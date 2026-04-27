@@ -10,7 +10,7 @@
     "version": "Version {{version}}"
   },
   "actions": {
-    "markSaved": "Marcar como guardado",
+    "save": "Guardar",
     "newDocument": "Nuevo documento",
     "openDocument": "Abrir documento"
   },
