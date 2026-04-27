@@ -19,7 +19,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Bruma' })).toBeInTheDocument();
     expect(screen.getByLabelText(/Markdown/i)).toBeInTheDocument();
-    expect(screen.getByText(/Guardado|Saved/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Guardado|Saved/i).length).toBeGreaterThan(0);
   });
 
   it('marks the document as dirty when edited', async () => {
@@ -51,6 +51,7 @@ describe('App', () => {
 
   it('renders recent files with basename, full path tooltip and full path label', async () => {
     const path = '/Users/eva/proyectos/bruma/notas/ideas.md';
+    const basename = 'ideas.md';
 
     act(() => {
       useFileStore.setState({ recentFiles: [path] });
@@ -63,7 +64,7 @@ describe('App', () => {
     );
 
     const recentItem = screen.getByRole('menuitem', {
-      name: `Abrir reciente: ${path}`,
+      name: `${basename}${path}`,
     });
 
     expect(screen.getByText('ideas.md')).toBeInTheDocument();

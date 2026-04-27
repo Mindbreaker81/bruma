@@ -168,9 +168,8 @@ describe('TabBar', () => {
         onMove={() => {}}
       />
     );
-    const tabButtons = getAllByRole('tab');
-    const button = tabButtons[1]?.querySelector('button');
-    if (button) button.click();
+    const tabElements = getAllByRole('tab');
+    tabElements[1]?.click();
     expect(onActivate).toHaveBeenCalledWith('2');
   });
 
