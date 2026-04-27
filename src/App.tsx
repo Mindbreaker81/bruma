@@ -1053,10 +1053,14 @@ export default function App() {
                           setIsTemplateMenuOpen(false);
                           requestDirtyConfirmation(async () => {
                             try {
-                              const content = await loadCustomTemplate(template.id);
+                              const content = await loadCustomTemplate(
+                                template.id
+                              );
                               clearSession();
                               resetUntitled();
-                              updateContent(applyTemplate({ ...template, content }));
+                              updateContent(
+                                applyTemplate({ ...template, content })
+                              );
                             } catch {
                               showError(t('errors.templateLoadFailed'));
                             }
