@@ -6,8 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Changed
+
+- Etiqueta de autoguardado acortada (`es`/`en`) y texto del toolbar enlazado al interruptor con `label`/`htmlFor` para accesibilidad.
+
 ### Fixed
 
+- Contraste del `Switch` en tema claro: pista visible con fondos `input`/`primary` en estados off/on.
 - Fixed Prettier formatting issues in 7 files to resolve CI format check failures.
 - Fixed Rust test `reads_image_as_data_url_for_valid_file` by properly creating directory structure.
 - Fixed Windows test failure in `accepts_new_markdown_paths_inside_home_on_write` by avoiding exact path comparison on Windows (canonicalize() can return NT paths).

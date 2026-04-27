@@ -116,7 +116,7 @@
     "toggle": "Activar o desactivar modo enfoque"
   },
   "autosave": {
-    "toggle": "Activar o desactivar autoguardado",
+    "toggle": "Autoguardado",
     "savingNow": "Guardando...",
     "lastSavedAt": "Guardado a las {{time}}"
   },

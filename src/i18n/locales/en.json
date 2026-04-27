@@ -116,7 +116,7 @@
     "toggle": "Toggle focus mode"
   },
   "autosave": {
-    "toggle": "Toggle autosave",
+    "toggle": "Autosave",
     "savingNow": "Saving...",
     "lastSavedAt": "Saved at {{time}}"
   },

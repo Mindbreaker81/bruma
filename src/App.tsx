@@ -1129,10 +1129,14 @@ export default function App() {
               onClick={() => void handleSave()}
             />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <label
+                htmlFor="toolbar-autosave"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
                 {t('autosave.toggle')}
-              </span>
+              </label>
               <Switch
+                id="toolbar-autosave"
                 checked={autosaveEnabled}
                 onCheckedChange={setAutosaveEnabled}
               />
