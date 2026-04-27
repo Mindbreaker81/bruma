@@ -17,6 +17,7 @@ import {
 } from 'react';
 
 import type { SearchMatch } from '../search/search';
+import { useScrollSyncStore } from '../preview/scrollSync';
 
 type MarkdownEditorProps = {
   value: string;
@@ -25,12 +26,16 @@ type MarkdownEditorProps = {
   placeholder: string;
   activeSearchIndex?: number;
   searchMatches?: SearchMatch[];
+  tabSize?: number;
+  lineWrapping?: boolean;
+  fontFamily?: string;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
 
 export type MarkdownEditorHandle = {
   focus: () => void;
+  scrollToLine: (line: number) => void;
 };
 
 function buildSearchDecorations(
@@ -75,6 +80,9 @@ export const MarkdownEditor = forwardRef<
     placeholder,
     activeSearchIndex = 0,
     searchMatches = [],
+    tabSize = 4,
+    lineWrapping = true,
+    fontFamily = 'sans',
   },
   ref
 ) {
@@ -83,8 +91,11 @@ export const MarkdownEditor = forwardRef<
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<number | null>(null);
+  const ignoreNextScrollRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
+  const tabSizeCompartmentRef = useRef(new Compartment());
+  const lineWrappingCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
     searchMatches.length > 0
       ? Math.min(activeSearchIndex, searchMatches.length - 1)
@@ -96,6 +107,18 @@ export const MarkdownEditor = forwardRef<
 
   useImperativeHandle(ref, () => ({
     focus: () => editorRef.current?.focus(),
+    scrollToLine: (line: number) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const totalLines = editor.state.doc.lines;
+      const target = Math.min(Math.max(line + 1, 1), totalLines);
+      const { from } = editor.state.doc.line(target);
+      editor.dispatch({
+        selection: { anchor: from, head: from },
+        scrollIntoView: true,
+      });
+      editor.focus();
+    },
   }));
 
   useEffect(() => {
@@ -119,7 +142,10 @@ export const MarkdownEditor = forwardRef<
           history(),
           markdown(),
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
-          EditorView.lineWrapping,
+          tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
+          lineWrappingCompartmentRef.current.of(
+            lineWrapping ? EditorView.lineWrapping : []
+          ),
           searchCompartmentRef.current.of(searchDecorationExtension([], 0)),
           contentAttributesCompartmentRef.current.of(
             EditorView.contentAttributes.of({
@@ -144,6 +170,20 @@ export const MarkdownEditor = forwardRef<
               onChangeRef.current(nextValue);
             }, CHANGE_DEBOUNCE_MS);
           }),
+          EditorView.domEventHandlers({
+            scroll(_event, view) {
+              if (ignoreNextScrollRef.current) {
+                ignoreNextScrollRef.current = false;
+                return false;
+              }
+              const scroller = view.scrollDOM;
+              const max = scroller.scrollHeight - scroller.clientHeight;
+              if (max <= 0) return false;
+              const ratio = scroller.scrollTop / max;
+              useScrollSyncStore.getState().emit('editor', ratio);
+              return false;
+            },
+          }),
         ],
       }),
     });
@@ -158,6 +198,7 @@ export const MarkdownEditor = forwardRef<
       editor.destroy();
       editorRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ariaLabel, placeholder]);
 
   useEffect(() => {
@@ -208,6 +249,40 @@ export const MarkdownEditor = forwardRef<
 
   useEffect(() => {
     const editor = editorRef.current;
+    if (!editor) return;
+    editor.dispatch({
+      effects: tabSizeCompartmentRef.current.reconfigure(
+        EditorState.tabSize.of(tabSize)
+      ),
+    });
+  }, [tabSize]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.dispatch({
+      effects: lineWrappingCompartmentRef.current.reconfigure(
+        lineWrapping ? EditorView.lineWrapping : []
+      ),
+    });
+  }, [lineWrapping]);
+
+  useEffect(() => {
+    return useScrollSyncStore.subscribe((state, prev) => {
+      if (state.source !== 'preview') return;
+      if (state === prev) return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      const scroller = editor.scrollDOM;
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      if (max <= 0) return;
+      ignoreNextScrollRef.current = true;
+      scroller.scrollTop = state.ratio * max;
+    });
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
     const activeMatch = searchMatches[normalizedActiveSearchIndex];
 
     if (!editor || !activeMatch) {
@@ -223,10 +298,21 @@ export const MarkdownEditor = forwardRef<
     });
   }, [normalizedActiveSearchIndex, searchMatches]);
 
+  const fontStyle =
+    fontFamily === 'serif'
+      ? { fontFamily: 'ui-serif, Georgia, Cambria, serif' }
+      : fontFamily === 'mono'
+        ? {
+            fontFamily:
+              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          }
+        : undefined;
+
   return (
     <div
       ref={containerRef}
-      className="bruma-editor h-full min-h-0 bg-[rgb(var(--color-editor))]"
+      className="bruma-editor h-full min-h-0 bg-background"
+      style={fontStyle}
     />
   );
 });

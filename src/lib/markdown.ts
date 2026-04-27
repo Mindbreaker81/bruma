@@ -42,6 +42,7 @@ const ALLOWED_TAGS = [
   'h5',
   'h6',
   'hr',
+  'img',
   'input',
   'li',
   'ol',
@@ -60,12 +61,14 @@ const ALLOWED_TAGS = [
 ];
 
 const ALLOWED_ATTR = [
+  'alt',
   'aria-hidden',
   'checked',
   'class',
   'disabled',
   'href',
   'id',
+  'src',
   'target',
   'title',
   'type',

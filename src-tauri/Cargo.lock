@@ -355,6 +355,7 @@ dependencies = [
 name = "bruma"
 version = "1.0.1"
 dependencies = [
+ "base64 0.22.1",
  "rfd",
  "serde",
  "tauri",

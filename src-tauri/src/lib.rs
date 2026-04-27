@@ -8,8 +8,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::fs::open_file_dialog,
             commands::fs::read_file,
+            commands::fs::read_image_as_data_url,
+            commands::fs::save_export_dialog,
             commands::fs::save_file,
             commands::fs::save_file_dialog,
+            commands::fs::list_custom_templates,
+            commands::fs::read_custom_template,
             commands::recent::sync_recent_files_menu
         ])
         .setup(|app| {

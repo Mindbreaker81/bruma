@@ -32,10 +32,27 @@
     "placeholder": "Empieza a escribir Markdown..."
   },
   "errors": {
+    "exportFailed": "No se pudo exportar el documento.",
     "openFailed": "No se pudo abrir el archivo.",
     "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",
-    "unsupportedFile": "Solo se admiten archivos .md y .markdown."
+    "unsupportedFile": "Solo se admiten archivos .md y .markdown.",
+    "templateLoadFailed": "No se pudo cargar la plantilla."
+  },
+  "export": {
+    "open": "Exportar",
+    "htmlStyled": "HTML con estilos",
+    "htmlPlain": "HTML simple",
+    "pdf": "PDF (imprimir)"
+  },
+  "externalLink": {
+    "body": "Vas a abrir un enlace externo en el navegador. ¿Continuar?",
+    "cancel": "Cancelar",
+    "confirm": "Abrir",
+    "title": "Abrir enlace externo"
+  },
+  "scrollSync": {
+    "toggle": "Sincronizar desplazamiento entre editor y preview"
   },
   "recent": {
     "empty": "No hay archivos recientes.",
@@ -57,7 +74,14 @@
     "noMatches": "0/0",
     "open": "Buscar",
     "placeholder": "Buscar",
-    "previous": "Coincidencia anterior"
+    "previous": "Coincidencia anterior",
+    "replaceAll": "Reemplazar todas las coincidencias",
+    "replaceAllShort": "Todo",
+    "replaceLabel": "Reemplazar con",
+    "replaceOne": "Reemplazar coincidencia",
+    "replaceOneShort": "Una",
+    "replacePlaceholder": "Reemplazar",
+    "toggleReplace": "Mostrar u ocultar reemplazar"
   },
   "theme": {
     "toggle": "Cambiar tema",
@@ -70,6 +94,94 @@
       "dark": "Oscuro",
       "light": "Claro"
     }
+  },
+  "stats": {
+    "characters": "Caracteres",
+    "charactersValue": "{{count}} car.",
+    "words": "Palabras",
+    "wordsValue_one": "{{count}} palabra",
+    "wordsValue_other": "{{count}} palabras"
+  },
+  "toc": {
+    "empty": "No hay encabezados.",
+    "title": "Indice",
+    "toggle": "Mostrar u ocultar indice"
+  },
+  "zoom": {
+    "decrease": "Reducir tipografia",
+    "increase": "Aumentar tipografia",
+    "reset": "Restablecer tipografia"
+  },
+  "focusMode": {
+    "toggle": "Activar o desactivar modo enfoque"
+  },
+  "autosave": {
+    "toggle": "Activar o desactivar autoguardado",
+    "savingNow": "Guardando...",
+    "lastSavedAt": "Guardado a las {{time}}"
+  },
+  "session": {
+    "restoreTitle": "Recuperar sesión",
+    "restoreBody": "La aplicación se cerró con cambios sin guardar en este archivo. ¿Quieres recuperar la sesión?",
+    "restoreBodyUntitled": "La aplicación se cerró con un documento sin guardar. ¿Quieres recuperar la sesión?",
+    "recover": "Recuperar",
+    "discard": "Descartar",
+    "viewDiff": "Ver diferencias"
+  },
+  "template": {
+    "empty": "Nota vacía",
+    "blogPost": "Post de blog",
+    "meeting": "Reunión",
+    "readme": "README mínimo"
+  },
+  "frontmatter": {
+    "hidden": "Frontmatter oculto",
+    "shown": "Frontmatter visible",
+    "toggle": "Mostrar u ocultar frontmatter"
+  },
+  "tabs": {
+    "label": "Pestañas abiertas",
+    "unsaved": "Cambios sin guardar",
+    "close": "Cerrar {{name}}"
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "command": "Comando",
+    "binding": "Atajo",
+    "unbound": "Sin atajo",
+    "newDocument": "Nuevo documento",
+    "openDocument": "Abrir documento",
+    "saveDocument": "Guardar documento",
+    "saveAsDocument": "Guardar como...",
+    "closeTab": "Cerrar pestaña",
+    "newTab": "Nueva pestaña",
+    "nextTab": "Pestaña siguiente",
+    "previousTab": "Pestaña anterior",
+    "toggleSearch": "Buscar",
+    "toggleTheme": "Cambiar tema",
+    "toggleViewMode": "Cambiar vista",
+    "toggleFocusMode": "Modo enfoque",
+    "togglePreferences": "Preferencias",
+    "toggleTemplateMenu": "Plantillas",
+    "exportHtml": "Exportar HTML"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "close": "Cerrar",
+    "general": "General",
+    "autosaveEnabled": "Autoguardado activado",
+    "autosaveDelay": "Retraso autoguardado",
+    "editor": "Editor",
+    "fontFamily": "Tipografía",
+    "fontSans": "Sans-serif",
+    "fontSerif": "Serif",
+    "fontMono": "Monospace",
+    "tabSize": "Tabulación",
+    "wrapLines": "Ajustar líneas",
+    "showGutter": "Mostrar números de línea",
+    "preview": "Vista previa",
+    "maxWidth": "Ancho máximo",
+    "showToc": "Mostrar índice"
   },
   "view": {
     "editor": "Editor",

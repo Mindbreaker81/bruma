@@ -1,9 +1,13 @@
 import type { LanguagePreference } from '../features/settings/language';
 import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
+import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
+import type { Template } from '../features/templates/templates';
 
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 7;
 const CONFIG_STORAGE_KEY = 'bruma.config';
+
+import type { CommandId } from '../lib/shortcuts';
 
 export type AppConfig = {
   version: number;
@@ -11,6 +15,20 @@ export type AppConfig = {
   language: LanguagePreference;
   viewMode: ViewMode;
   recentFiles: string[];
+  fontScale: number;
+  focusMode: boolean;
+  tocOpen: boolean;
+  showFrontmatter: boolean;
+  autosaveEnabled: boolean;
+  autosaveDelayMs: number;
+  editorFontFamily: string;
+  editorTabSize: number;
+  editorShowGutter: boolean;
+  editorWrap: boolean;
+  previewMaxWidth: number;
+  previewShowToc: boolean;
+  shortcuts: Partial<Record<CommandId, string | null>>;
+  customTemplates: Template[];
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -19,6 +37,20 @@ export const DEFAULT_CONFIG: AppConfig = {
   language: 'system',
   viewMode: 'editor',
   recentFiles: [],
+  fontScale: FONT_SCALE_DEFAULT,
+  focusMode: false,
+  tocOpen: false,
+  showFrontmatter: true,
+  autosaveEnabled: true,
+  autosaveDelayMs: 2000,
+  editorFontFamily: 'sans',
+  editorTabSize: 4,
+  editorShowGutter: false,
+  editorWrap: true,
+  previewMaxWidth: 65,
+  previewShowToc: false,
+  shortcuts: {},
+  customTemplates: [],
 };
 
 type PartialConfig = Partial<AppConfig> & {
@@ -54,6 +86,66 @@ export function migrateConfig(input: unknown): AppConfig {
         (path): path is string => typeof path === 'string'
       )
     : DEFAULT_CONFIG.recentFiles;
+  const fontScale =
+    typeof config.fontScale === 'number'
+      ? clampFontScale(config.fontScale)
+      : DEFAULT_CONFIG.fontScale;
+  const focusMode =
+    typeof config.focusMode === 'boolean'
+      ? config.focusMode
+      : DEFAULT_CONFIG.focusMode;
+  const tocOpen =
+    typeof config.tocOpen === 'boolean'
+      ? config.tocOpen
+      : DEFAULT_CONFIG.tocOpen;
+  const showFrontmatter =
+    typeof config.showFrontmatter === 'boolean'
+      ? config.showFrontmatter
+      : DEFAULT_CONFIG.showFrontmatter;
+  const autosaveEnabled =
+    typeof config.autosaveEnabled === 'boolean'
+      ? config.autosaveEnabled
+      : DEFAULT_CONFIG.autosaveEnabled;
+  const autosaveDelayMs =
+    typeof config.autosaveDelayMs === 'number' &&
+    config.autosaveDelayMs >= 500 &&
+    config.autosaveDelayMs <= 30000
+      ? config.autosaveDelayMs
+      : DEFAULT_CONFIG.autosaveDelayMs;
+  const editorFontFamily =
+    typeof config.editorFontFamily === 'string'
+      ? config.editorFontFamily
+      : DEFAULT_CONFIG.editorFontFamily;
+  const editorTabSize =
+    typeof config.editorTabSize === 'number' &&
+    config.editorTabSize >= 1 &&
+    config.editorTabSize <= 16
+      ? config.editorTabSize
+      : DEFAULT_CONFIG.editorTabSize;
+  const editorShowGutter =
+    typeof config.editorShowGutter === 'boolean'
+      ? config.editorShowGutter
+      : DEFAULT_CONFIG.editorShowGutter;
+  const editorWrap =
+    typeof config.editorWrap === 'boolean'
+      ? config.editorWrap
+      : DEFAULT_CONFIG.editorWrap;
+  const previewMaxWidth =
+    typeof config.previewMaxWidth === 'number' &&
+    config.previewMaxWidth >= 20 &&
+    config.previewMaxWidth <= 200
+      ? config.previewMaxWidth
+      : DEFAULT_CONFIG.previewMaxWidth;
+  const previewShowToc =
+    typeof config.previewShowToc === 'boolean'
+      ? config.previewShowToc
+      : DEFAULT_CONFIG.previewShowToc;
+
+  const customTemplates =
+    Array.isArray((config as Record<string, unknown>).customTemplates) &&
+    typeof (config as Record<string, unknown>).customTemplates === 'object'
+      ? ((config as Record<string, unknown>).customTemplates as Template[])
+      : DEFAULT_CONFIG.customTemplates;
 
   return {
     version: CONFIG_VERSION,
@@ -61,6 +153,26 @@ export function migrateConfig(input: unknown): AppConfig {
     language,
     viewMode,
     recentFiles: recentFiles.slice(0, 10),
+    fontScale,
+    focusMode,
+    tocOpen,
+    showFrontmatter,
+    autosaveEnabled,
+    autosaveDelayMs,
+    editorFontFamily,
+    editorTabSize,
+    editorShowGutter,
+    editorWrap,
+    previewMaxWidth,
+    previewShowToc,
+    shortcuts:
+      typeof (config as Record<string, unknown>).shortcuts === 'object' &&
+      (config as Record<string, unknown>).shortcuts !== null
+        ? ((config as Record<string, unknown>).shortcuts as Partial<
+            Record<CommandId, string | null>
+          >)
+        : {},
+    customTemplates,
   };
 }
 

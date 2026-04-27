@@ -46,3 +46,51 @@ export function getPreviousSearchIndex(
 ): number {
   return normalizeSearchIndex(index - 1, matchCount);
 }
+
+export type ReplaceResult = {
+  content: string;
+  cursor: number;
+  replacements: number;
+};
+
+export function replaceMatchAt(
+  content: string,
+  matches: SearchMatch[],
+  index: number,
+  replacement: string
+): ReplaceResult {
+  if (matches.length === 0) {
+    return { content, cursor: 0, replacements: 0 };
+  }
+  const safeIndex = normalizeSearchIndex(index, matches.length);
+  const target = matches[safeIndex];
+  if (!target) {
+    return { content, cursor: 0, replacements: 0 };
+  }
+  const next =
+    content.slice(0, target.from) + replacement + content.slice(target.to);
+  return {
+    content: next,
+    cursor: target.from + replacement.length,
+    replacements: 1,
+  };
+}
+
+export function replaceAllMatches(
+  content: string,
+  matches: SearchMatch[],
+  replacement: string
+): ReplaceResult {
+  if (matches.length === 0) {
+    return { content, cursor: 0, replacements: 0 };
+  }
+  const ordered = [...matches].sort((a, b) => a.from - b.from);
+  let result = '';
+  let cursor = 0;
+  for (const match of ordered) {
+    result += content.slice(cursor, match.from) + replacement;
+    cursor = match.to;
+  }
+  result += content.slice(cursor);
+  return { content: result, cursor: 0, replacements: ordered.length };
+}

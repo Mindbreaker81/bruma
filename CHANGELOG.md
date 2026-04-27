@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed Prettier formatting issues in 7 files to resolve CI format check failures.
+- Fixed Rust test `reads_image_as_data_url_for_valid_file` by properly creating directory structure.
+- Fixed Windows test failure in `accepts_new_markdown_paths_inside_home_on_write` by avoiding exact path comparison on Windows (canonicalize() can return NT paths).
+
 ## [1.0.1] - 2026-04-26
 
 ### Added
