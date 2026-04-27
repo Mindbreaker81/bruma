@@ -49,14 +49,24 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
-      - name: Build unsigned bundle
-        run: pnpm tauri build
+      - name: Build unsigned bundle (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: pnpm tauri build --bundles app
+
+      - name: Build unsigned bundle (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: pnpm tauri build --bundles nsis
+
+      - name: Archive macOS .app
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        working-directory: src-tauri/target/release/bundle/macos
+        run: tar -czf "Bruma_${{ steps.app_version.outputs.value }}_macos.app.tar.gz" Bruma.app
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            src-tauri/target/release/bundle/**/*.dmg
             src-tauri/target/release/bundle/**/*.app.tar.gz
             src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe
