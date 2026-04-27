@@ -83,6 +83,9 @@ export function TabBar({
               draggable
               onDragStart={(event) => handleDragStart(event, tab.id)}
               onClick={() => onActivate(tab.id)}
+              role="tab"
+              aria-selected={active}
+              tabIndex={active ? 0 : -1}
             >
               <span className="max-w-[12ch] truncate">{name}</span>
               {dirty ? (

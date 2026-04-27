@@ -79,6 +79,8 @@ import { RestoreSessionDialog } from './features/files/RestoreSessionDialog';
 import { TabBar } from './features/files/TabBar';
 import { useFileStore } from './features/files/state';
 import {
+  getAllTemplates,
+  loadCustomTemplate,
   BUILTIN_TEMPLATES,
   applyTemplate,
 } from './features/templates/templates';
@@ -259,9 +261,15 @@ export default function App() {
   const [shortcuts, setShortcutsState] = useState<
     Partial<Record<CommandId, string | null>>
   >(() => readConfig().shortcuts);
-  const [customTemplates] = useState<Template[]>(
-    () => readConfig().customTemplates
-  );
+  const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
+
+  // Load custom templates on mount
+  useEffect(() => {
+    getAllTemplates().then((templates) => {
+      const custom = templates.filter((t) => t.isCustom);
+      setCustomTemplates(custom);
+    });
+  }, []);
   const [externalLinkPrompt, setExternalLinkPrompt] = useState<string | null>(
     null
   );
@@ -1041,12 +1049,17 @@ export default function App() {
                     {customTemplates.map((template) => (
                       <DropdownMenuItem
                         key={template.id}
-                        onClick={() => {
+                        onClick={async () => {
                           setIsTemplateMenuOpen(false);
-                          requestDirtyConfirmation(() => {
-                            clearSession();
-                            resetUntitled();
-                            updateContent(applyTemplate(template));
+                          requestDirtyConfirmation(async () => {
+                            try {
+                              const content = await loadCustomTemplate(template.id);
+                              clearSession();
+                              resetUntitled();
+                              updateContent(applyTemplate({ ...template, content }));
+                            } catch (error) {
+                              showError(t('errors.templateLoadFailed'));
+                            }
                           });
                         }}
                       >

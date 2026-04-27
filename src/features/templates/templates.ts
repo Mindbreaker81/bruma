@@ -1,8 +1,11 @@
+import { invoke } from '@tauri-apps/api/core';
+
 export type Template = {
   id: string;
   name: string;
   content: string;
   locale?: 'es' | 'en';
+  isCustom?: boolean;
 };
 
 export function applyTemplate(
@@ -77,6 +80,37 @@ npm start
 `,
   },
 ];
+
+export async function listCustomTemplates(): Promise<Template[]> {
+  try {
+    const customTemplates = await invoke<{ id: string; name: string }[]>(
+      'list_custom_templates'
+    );
+    return customTemplates.map((t) => ({
+      id: t.id,
+      name: t.name,
+      content: '', // Will be loaded on demand
+      isCustom: true,
+    }));
+  } catch (error) {
+    console.error('Failed to list custom templates:', error);
+    return [];
+  }
+}
+
+export async function loadCustomTemplate(id: string): Promise<string> {
+  try {
+    return await invoke<string>('read_custom_template', { id });
+  } catch (error) {
+    console.error('Failed to load custom template:', error);
+    throw error;
+  }
+}
+
+export async function getAllTemplates(): Promise<Template[]> {
+  const customTemplates = await listCustomTemplates();
+  return [...BUILTIN_TEMPLATES, ...customTemplates];
+}
 
 export function getTemplateById(id: string): Template | undefined {
   return BUILTIN_TEMPLATES.find((t) => t.id === id);

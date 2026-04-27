@@ -15,4 +15,7 @@ export default defineConfig({
     strictPort: true,
   },
   envPrefix: ['VITE_', 'TAURI_'],
+  test: {
+    environment: 'jsdom',
+  },
 });

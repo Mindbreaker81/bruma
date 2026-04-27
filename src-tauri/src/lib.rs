@@ -12,6 +12,8 @@ pub fn run() {
             commands::fs::save_export_dialog,
             commands::fs::save_file,
             commands::fs::save_file_dialog,
+            commands::fs::list_custom_templates,
+            commands::fs::read_custom_template,
             commands::recent::sync_recent_files_menu
         ])
         .setup(|app| {

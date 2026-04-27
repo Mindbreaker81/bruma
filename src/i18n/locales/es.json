@@ -36,7 +36,8 @@
     "openFailed": "No se pudo abrir el archivo.",
     "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",
-    "unsupportedFile": "Solo se admiten archivos .md y .markdown."
+    "unsupportedFile": "Solo se admiten archivos .md y .markdown.",
+    "templateLoadFailed": "No se pudo cargar la plantilla."
   },
   "export": {
     "open": "Exportar",

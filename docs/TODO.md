@@ -290,8 +290,8 @@
 #### D.3 Plantillas de documentos
 
 - [x] Built-ins: nota vacía, post de blog, reunión, README mínimo.
-- [ ] Plantillas custom en `~/.config/bruma/templates/*.md`.
-- [ ] Submenú en botón "Nuevo" con built-ins + custom.
+- [x] Plantillas custom en `~/.config/bruma/templates/*.md`.
+- [x] Submenú en botón "Nuevo" con built-ins + custom.
 
 ### Bloque E — Multi-doc y preferencias (v1.2)
 
@@ -339,15 +339,9 @@
 
 ---
 
-## Pendientes v1.1 (items menores)
-
-- [ ] Plantillas custom en `~/.config/bruma/templates/*.md` (D.3).
-- [ ] Submenú en botón "Nuevo" con built-ins + custom (D.3).
-
 ## Sugerencia de orden para v1.2
 
-Los bloques A-E de v1.1 están completados. Pendientes menores:
-- Completar integración de plantillas custom en UI
+Los bloques A-E de v1.1 están completados. Pendientes:
 - Validación manual en macOS y Windows
 - Considerar bump a v1.1.0 para release
 

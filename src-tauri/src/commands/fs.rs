@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
+use tauri::AppHandle;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -489,4 +490,74 @@ mod tests {
     fn forbidden_system_path() -> PathBuf {
         PathBuf::from(r"C:\Windows\System32\drivers\etc\hosts")
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomTemplate {
+    pub id: String,
+    pub name: String,
+}
+
+#[tauri::command]
+pub fn list_custom_templates(app: AppHandle) -> Result<Vec<CustomTemplate>, String> {
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("config_dir_error: {e}"))?;
+
+    let templates_dir = config_dir.join("templates");
+
+    if !templates_dir.exists() {
+        // Create templates directory if it doesn't exist
+        fs::create_dir_all(&templates_dir)
+            .map_err(|e| format!("create_templates_dir_error: {e}"))?;
+        return Ok(Vec::new());
+    }
+
+    let mut templates = Vec::new();
+
+    let entries = fs::read_dir(&templates_dir)
+        .map_err(|e| format!("read_templates_dir_error: {e}"))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("read_entry_error: {e}"))?;
+        let path = entry.path();
+
+        if path.extension().and_then(|e| e.to_str()) == Some("md") {
+            let file_name = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .ok_or_else(|| "invalid_template_name".to_string())?;
+
+            templates.push(CustomTemplate {
+                id: file_name.to_string(),
+                name: file_name.to_string(),
+            });
+        }
+    }
+
+    templates.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(templates)
+}
+
+#[tauri::command]
+pub fn read_custom_template(app: AppHandle, id: String) -> Result<String, String> {
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("config_dir_error: {e}"))?;
+
+    let template_path = config_dir.join("templates").join(format!("{}.md", id));
+
+    let canonical_path = resolve_allowed_read_path(&template_path)?;
+
+    if !is_markdown_path(&canonical_path) {
+        return Err("unsupported_file_type".to_string());
+    }
+
+    let content = fs::read_to_string(&canonical_path)
+        .map_err(|e| format!("read_template_error: {e}"))?;
+
+    Ok(content)
 }
