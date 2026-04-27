@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Save,
   Search,
+  X,
 } from 'lucide-react';
 import {
   type DragEvent,
@@ -1227,6 +1228,18 @@ export default function App() {
             />
           </div>
         </header>
+
+        {focusMode && (
+          <button
+            type="button"
+            onClick={toggleFocusMode}
+            className="fixed right-4 top-4 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label={t('focusMode.toggle')}
+            title={t('focusMode.toggle')}
+          >
+            <X className="size-5" aria-hidden />
+          </button>
+        )}
 
         <TabBar
           tabs={tabs}
