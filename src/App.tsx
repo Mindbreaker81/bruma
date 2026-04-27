@@ -27,6 +27,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import {
   type MarkdownEditorHandle,
@@ -34,6 +35,29 @@ import {
 } from './features/editor/MarkdownEditor';
 import { ConfirmDirtyDialog } from './features/files/ConfirmDirtyDialog';
 import { type Tab } from './features/files/document';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from './components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './components/ui/dropdown-menu';
 import {
   openFileDialog,
   readFile,
@@ -70,8 +94,8 @@ import { APP_VERSION } from './lib/app';
 import { patchConfig, readConfig } from './lib/config';
 import { buildExportHtml } from './lib/export';
 import { getTextStats } from './lib/textStats';
-import { toast } from 'sonner';
 import type { CommandId } from './lib/shortcuts';
+import { useShortcutRegistry } from './lib/useShortcut';
 import {
   isTauriRuntime,
   listenToMenuActions,
@@ -692,6 +716,53 @@ export default function App() {
     activeTabId,
   ]);
 
+  const shortcutHandlers = useMemo<Partial<Record<CommandId, () => void>>>(
+    () => ({
+      newDocument: handleNewDocument,
+      openDocument: handleOpenWithConfirmation,
+      saveDocument: () => void handleSave(),
+      saveAsDocument: () => void handleSaveAs(),
+      closeTab: () => activeTabId && handleCloseTab(activeTabId),
+      newTab: handleNewTab,
+      nextTab: () => {
+        if (tabs.length === 0) return;
+        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
+        const nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+        activateTab(tabs[nextIndex]!.id);
+      },
+      previousTab: () => {
+        if (tabs.length === 0) return;
+        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+        activateTab(tabs[prevIndex]!.id);
+      },
+      toggleSearch: handleOpenSearch,
+      toggleTheme: cycleTheme,
+      toggleViewMode: cycleViewMode,
+      toggleFocusMode: toggleFocusMode,
+      togglePreferences: () => setIsPreferencesOpen((open) => !open),
+      toggleTemplateMenu: () => setIsTemplateMenuOpen((open) => !open),
+      exportHtml: handleOpenExport,
+    }),
+    [
+      handleNewDocument,
+      handleOpenWithConfirmation,
+      handleSave,
+      handleSaveAs,
+      activeTabId,
+      handleCloseTab,
+      handleNewTab,
+      tabs,
+      activateTab,
+      handleOpenSearch,
+      cycleTheme,
+      cycleViewMode,
+      toggleFocusMode,
+    ]
+  );
+
+  useShortcutRegistry(shortcuts, shortcutHandlers);
+
   useEffect(() => {
     if (isTauriRuntime()) {
       return;
@@ -699,97 +770,30 @@ export default function App() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey;
+      if (!modifier) return;
 
-      if (modifier && event.key.toLowerCase() === 'n') {
+      if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        handleNewDocument();
-      }
-
-      if (modifier && event.shiftKey && event.key.toLowerCase() === 's') {
+        increaseFontScaleStore();
+      } else if (event.key === '-' || event.key === '_') {
         event.preventDefault();
-        void handleSaveAs();
-        return;
-      }
-
-      if (modifier && event.key.toLowerCase() === 'o') {
+        decreaseFontScaleStore();
+      } else if (event.key === '0') {
         event.preventDefault();
-        handleOpenWithConfirmation();
-      }
-
-      if (modifier && event.key.toLowerCase() === 's') {
+        resetFontScaleStore();
+      } else if (event.shiftKey && event.key.toLowerCase() === 'h') {
         event.preventDefault();
-        void handleSave();
-      }
-
-      if (modifier && event.key.toLowerCase() === 'f') {
-        event.preventDefault();
-        handleOpenSearch();
-      }
-
-      if (modifier && event.shiftKey && event.key.toLowerCase() === 't') {
-        event.preventDefault();
-        cycleTheme();
-      }
-
-      if (modifier && event.shiftKey && event.key.toLowerCase() === 'v') {
-        event.preventDefault();
-        cycleViewMode();
-      }
-
-      if (modifier && event.shiftKey && event.key.toLowerCase() === 'n') {
-        event.preventDefault();
-        setIsTemplateMenuOpen((open) => !open);
-      }
-
-      if (modifier && event.key.toLowerCase() === 't') {
-        event.preventDefault();
-        handleNewTab();
-      }
-
-      if (modifier && event.key.toLowerCase() === 'w') {
-        event.preventDefault();
-        if (activeTabId) {
-          handleCloseTab(activeTabId);
-        }
-      }
-
-      if (modifier && event.key === 'Tab') {
-        event.preventDefault();
-        if (tabs.length === 0) return;
-        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
-        if (event.shiftKey) {
-          const prevIndex =
-            currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
-          activateTab(tabs[prevIndex]!.id);
-        } else {
-          const nextIndex =
-            currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
-          activateTab(tabs[nextIndex]!.id);
-        }
-      }
-
-      if (modifier && event.key === ',') {
-        event.preventDefault();
-        setIsPreferencesOpen((open) => !open);
+        toggleToc();
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
-
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
-    cycleTheme,
-    cycleViewMode,
-    handleNewDocument,
-    handleOpenWithConfirmation,
-    handleOpenSearch,
-    handleSave,
-    handleSaveAs,
-    handleNewTab,
-    handleCloseTab,
-    activeTabId,
-    tabs,
-    activateTab,
+    decreaseFontScaleStore,
+    increaseFontScaleStore,
+    resetFontScaleStore,
+    toggleToc,
   ]);
 
   useEffect(() => {
@@ -942,44 +946,35 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-1">
-          <div className="relative">
-            <button
-              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-              type="button"
-              aria-label={t('actions.newDocument')}
-              title={t('actions.newDocument')}
-              aria-expanded={isTemplateMenuOpen}
-              onClick={() => setIsTemplateMenuOpen((open) => !open)}
-            >
-              <FileText className="size-4" aria-hidden />
-            </button>
-            {isTemplateMenuOpen ? (
-              <div
-                className="absolute left-0 top-11 z-20 w-56 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
-                role="menu"
+          <DropdownMenu open={isTemplateMenuOpen} onOpenChange={setIsTemplateMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                type="button"
                 aria-label={t('actions.newDocument')}
+                title={t('actions.newDocument')}
               >
-                {BUILTIN_TEMPLATES.map((template) => (
-                  <button
-                    className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                    type="button"
-                    role="menuitem"
-                    key={template.id}
-                    onClick={() => {
-                      setIsTemplateMenuOpen(false);
-                      requestDirtyConfirmation(() => {
-                        clearSession();
-                        resetUntitled();
-                        updateContent(applyTemplate(template));
-                      });
-                    }}
-                  >
-                    {t(template.name)}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+                <FileText className="size-4" aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {BUILTIN_TEMPLATES.map((template) => (
+                <DropdownMenuItem
+                  key={template.id}
+                  onClick={() => {
+                    setIsTemplateMenuOpen(false);
+                    requestDirtyConfirmation(() => {
+                      clearSession();
+                      resetUntitled();
+                      updateContent(applyTemplate(template));
+                    });
+                  }}
+                >
+                  {t(template.name)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
@@ -989,50 +984,38 @@ export default function App() {
           >
             <FileInput className="size-4" aria-hidden />
           </button>
-          <div className="relative">
-            <button
-              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-              type="button"
-              aria-expanded={isRecentMenuOpen}
-              aria-label={t('recent.open')}
-              title={t('recent.open')}
-              onClick={() => setIsRecentMenuOpen((isOpen) => !isOpen)}
-            >
-              <Clock className="size-4" aria-hidden />
-            </button>
-            {isRecentMenuOpen ? (
-              <div
-                className="absolute right-0 top-11 z-20 w-72 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
-                role="menu"
+          <DropdownMenu open={isRecentMenuOpen} onOpenChange={setIsRecentMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                type="button"
                 aria-label={t('recent.open')}
+                title={t('recent.open')}
               >
-                {recentFiles.length > 0 ? (
-                  recentFiles.map((path) => (
-                    <button
-                      className="block w-full rounded px-3 py-2 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                      type="button"
-                      role="menuitem"
-                      key={path}
-                      aria-label={`Abrir reciente: ${path}`}
-                      title={path}
-                      onClick={() => handleOpenRecent(path)}
-                    >
+                <Clock className="size-4" aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
+              {recentFiles.length > 0 ? (
+                recentFiles.map((path) => (
+                  <DropdownMenuItem key={path} onClick={() => handleOpenRecent(path)} title={path}>
+                    <div className="flex flex-col min-w-0">
                       <span className="block truncate font-medium">
                         {getPathBasename(path)}
                       </span>
                       <span className="block truncate text-xs text-[rgb(var(--color-muted))]">
                         {path}
                       </span>
-                    </button>
-                  ))
-                ) : (
-                  <p className="px-3 py-2 text-[rgb(var(--color-muted))]">
-                    {t('recent.empty')}
-                  </p>
-                )}
-              </div>
-            ) : null}
-          </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <div className="px-2 py-1.5 text-sm text-[rgb(var(--color-muted))]">
+                  {t('recent.empty')}
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
@@ -1144,50 +1127,29 @@ export default function App() {
           >
             <LinkIcon className="size-4" aria-hidden />
           </button>
-          <div className="relative">
-            <button
-              className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-              type="button"
-              aria-expanded={isExportMenuOpen}
-              aria-label={t('export.open')}
-              title={t('export.open')}
-              onClick={() => setIsExportMenuOpen((open) => !open)}
-            >
-              <Download className="size-4" aria-hidden />
-            </button>
-            {isExportMenuOpen ? (
-              <div
-                className="absolute right-0 top-11 z-20 w-56 rounded-md border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-1 text-sm shadow-lg"
-                role="menu"
-                aria-label={t('export.open')}
+          <DropdownMenu open={isExportMenuOpen} onOpenChange={setIsExportMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                type="button"
+                aria-label={t('export.title')}
+                title={t('export.title')}
               >
-                <button
-                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => void handleExportHtml(true)}
-                >
-                  {t('export.htmlStyled')}
-                </button>
-                <button
-                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => void handleExportHtml(false)}
-                >
-                  {t('export.htmlPlain')}
-                </button>
-                <button
-                  className="block w-full rounded px-3 py-2 text-left hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                  type="button"
-                  role="menuitem"
-                  onClick={handleExportPdf}
-                >
-                  {t('export.pdf')}
-                </button>
-              </div>
-            ) : null}
-          </div>
+                <Download className="size-4" aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
+                {t('export.htmlStyled')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
+                {t('export.htmlPlain')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPdf}>
+                {t('export.pdf')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
@@ -1402,72 +1364,39 @@ export default function App() {
         }}
       />
 
-      {isAboutOpen ? (
-        <div className="fixed inset-0 z-20 grid place-items-center bg-black/35 px-4">
-          <section
-            className="w-full max-w-md rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-5 shadow-lg"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="about-dialog-title"
-          >
-            <h2 className="text-base font-semibold" id="about-dialog-title">
-              {t('about.title')}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[rgb(var(--color-muted))]">
-              {t('about.body')}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-[rgb(var(--color-muted))]">
-              {t('about.version', { version: APP_VERSION })}
-            </p>
-            <div className="mt-5 flex justify-end">
-              <button
-                className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                type="button"
-                onClick={() => setIsAboutOpen(false)}
-              >
-                {t('about.close')}
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <Dialog open={isAboutOpen} onOpenChange={setIsAboutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('about.title')}</DialogTitle>
+            <DialogDescription className="space-y-1">
+              <p>{t('about.body')}</p>
+              <p>{t('about.version', { version: APP_VERSION })}</p>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
-      {externalLinkPrompt ? (
-        <div className="fixed inset-0 z-30 grid place-items-center bg-black/35 px-4">
-          <section
-            className="w-full max-w-md rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] p-5 shadow-lg"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="external-link-title"
-          >
-            <h2 className="text-base font-semibold" id="external-link-title">
-              {t('externalLink.title')}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[rgb(var(--color-muted))]">
+      <AlertDialog open={Boolean(externalLinkPrompt)} onOpenChange={(open) => !open && setExternalLinkPrompt(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('externalLink.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
               {t('externalLink.body')}
-            </p>
-            <p className="mt-2 break-all rounded bg-[rgb(var(--color-panel))] px-2 py-1 font-mono text-xs">
-              {externalLinkPrompt}
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                className="rounded-md px-3 py-2 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                type="button"
-                onClick={() => setExternalLinkPrompt(null)}
-              >
-                {t('externalLink.cancel')}
-              </button>
-              <button
-                className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                type="button"
-                onClick={confirmExternalLink}
-              >
-                {t('externalLink.confirm')}
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <p className="mt-2 break-all rounded bg-[rgb(var(--color-panel))] px-2 py-1 font-mono text-xs text-[rgb(var(--color-text))]">
+            {externalLinkPrompt}
+          </p>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setExternalLinkPrompt(null)}>
+              {t('externalLink.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExternalLink} className="bg-emerald-700 text-white hover:bg-emerald-800">
+              {t('externalLink.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <footer
         className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]`}
