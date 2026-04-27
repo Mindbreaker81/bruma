@@ -106,8 +106,10 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     let language_en = MenuItem::with_id(app, "language_en", "English", true, None::<&str>)?;
     let language_menu = Submenu::with_items(app, "Idioma", true, &[&language_es, &language_en])?;
 
+    let help_preferences = MenuItem::with_id(app, "help_preferences", "Preferencias", true, Some("CmdOrCtrl+,"))?;
+    let help_separator = PredefinedMenuItem::separator(app)?;
     let help_about = MenuItem::with_id(app, "help_about", "Acerca de Bruma", true, None::<&str>)?;
-    let help_menu = Submenu::with_items(app, "Ayuda", true, &[&help_about])?;
+    let help_menu = Submenu::with_items(app, "Ayuda", true, &[&help_preferences, &help_separator, &help_about])?;
 
     Menu::with_items(
         app,

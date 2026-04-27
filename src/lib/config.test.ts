@@ -132,6 +132,21 @@ describe('app config', () => {
     expect(migrateConfig({ previewMaxWidth: 5 }).previewMaxWidth).toBe(65);
     expect(migrateConfig({ previewMaxWidth: 300 }).previewMaxWidth).toBe(65);
   });
+
+  it('preserves shortcuts field when present', () => {
+    const config = migrateConfig({
+      shortcuts: { newDocument: 'Mod+n', saveDocument: 'Mod+s' },
+    });
+    expect(config.shortcuts).toEqual({
+      newDocument: 'Mod+n',
+      saveDocument: 'Mod+s',
+    });
+  });
+
+  it('defaults shortcuts to empty object when missing', () => {
+    const config = migrateConfig({ theme: 'dark' });
+    expect(config.shortcuts).toEqual({});
+  });
 });
 
 class MapStorage implements Storage {

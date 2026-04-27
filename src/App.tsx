@@ -56,8 +56,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
+import { Button } from './components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './components/ui/tooltip';
 import {
   openFileDialog,
   readFile,
@@ -96,6 +104,7 @@ import { buildExportHtml } from './lib/export';
 import { getTextStats } from './lib/textStats';
 import type { CommandId } from './lib/shortcuts';
 import { useShortcutRegistry } from './lib/useShortcut';
+import type { Template } from './features/templates/templates';
 import {
   isTauriRuntime,
   listenToMenuActions,
@@ -104,6 +113,43 @@ import {
 } from './lib/tauri';
 
 const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
+
+function IconButton({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+  disabled,
+  className,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClick}
+          disabled={disabled}
+          data-active={active}
+          className={`size-9 data-[active=true]:bg-muted data-[active=true]:text-foreground ${className ?? ''}`}
+        >
+          <Icon className="size-4" aria-hidden />
+          <span className="sr-only">{label}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type MenuHandlers = {
   cycleTheme: () => void;
@@ -215,6 +261,9 @@ export default function App() {
   const [shortcuts, setShortcutsState] = useState<
     Partial<Record<CommandId, string | null>>
   >(() => readConfig().shortcuts);
+  const [customTemplates] = useState<Template[]>(
+    () => readConfig().customTemplates
+  );
   const [externalLinkPrompt, setExternalLinkPrompt] = useState<string | null>(
     null
   );
@@ -742,7 +791,7 @@ export default function App() {
       toggleFocusMode: toggleFocusMode,
       togglePreferences: () => setIsPreferencesOpen((open) => !open),
       toggleTemplateMenu: () => setIsTemplateMenuOpen((open) => !open),
-      exportHtml: handleOpenExport,
+      exportHtml: () => void handleExportHtml(true),
     }),
     [
       handleNewDocument,
@@ -758,10 +807,15 @@ export default function App() {
       cycleTheme,
       cycleViewMode,
       toggleFocusMode,
+      handleExportHtml,
     ]
   );
 
-  useShortcutRegistry(shortcuts, shortcutHandlers);
+  const shortcutsMap = useMemo(
+    () => new Map(Object.entries(shortcuts)) as Map<CommandId, string | null>,
+    [shortcuts]
+  );
+  useShortcutRegistry(shortcutsMap, shortcutHandlers);
 
   useEffect(() => {
     if (isTauriRuntime()) {
@@ -833,7 +887,7 @@ export default function App() {
     let cleanup: (() => void) | undefined;
     let isDisposed = false;
 
-    void listenToMenuActions((action) => {
+    void listenToMenuActions((action: string) => {
       const handlers = menuHandlersRef.current;
 
       if (action === 'file_new') {
@@ -884,8 +938,12 @@ export default function App() {
         handlers.setLanguage('en');
       }
 
+      if (action === 'help_preferences') {
+        setIsPreferencesOpen((open) => !open);
+      }
+
       if (action === 'help_about') {
-        handlers.openAbout();
+        setIsAboutOpen((open) => !open);
       }
     }).then((unlisten) => {
       if (isDisposed) {
@@ -924,13 +982,14 @@ export default function App() {
   }, [handleOpenRecent]);
 
   return (
-    <main
-      className="flex h-screen min-h-0 flex-col bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text))] antialiased"
-      onDragOver={(event) => event.preventDefault()}
-      onDrop={handleDrop}
-    >
+    <TooltipProvider delayDuration={400}>
+      <main
+        className="flex h-screen min-h-0 flex-col bg-background text-foreground antialiased"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+      >
       <header
-        className={`${focusMode ? 'hidden' : 'flex'} h-14 shrink-0 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4`}
+        className={`${focusMode ? 'hidden' : 'flex'} h-14 shrink-0 items-center justify-between border-b bg-card px-4`}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
@@ -938,7 +997,7 @@ export default function App() {
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold">{t('app.name')}</h1>
-            <p className="truncate text-xs text-[rgb(var(--color-muted))]">
+            <p className="truncate text-xs text-muted-foreground">
               {displayName}
               {isDirty ? ` ${t('document.dirtyMark')}` : ''}
             </p>
@@ -948,14 +1007,14 @@ export default function App() {
         <div className="flex items-center gap-1">
           <DropdownMenu open={isTemplateMenuOpen} onOpenChange={setIsTemplateMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button
-                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9"
                 aria-label={t('actions.newDocument')}
-                title={t('actions.newDocument')}
               >
                 <FileText className="size-4" aria-hidden />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               {BUILTIN_TEMPLATES.map((template) => (
@@ -973,27 +1032,43 @@ export default function App() {
                   {t(template.name)}
                 </DropdownMenuItem>
               ))}
+              {customTemplates.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  {customTemplates.map((template) => (
+                    <DropdownMenuItem
+                      key={template.id}
+                      onClick={() => {
+                        setIsTemplateMenuOpen(false);
+                        requestDirtyConfirmation(() => {
+                          clearSession();
+                          resetUntitled();
+                          updateContent(applyTemplate(template));
+                        });
+                      }}
+                    >
+                      {template.name}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('actions.openDocument')}
-            title={t('actions.openDocument')}
+          <IconButton
+            icon={FileInput}
+            label={t('actions.openDocument')}
             onClick={handleOpenWithConfirmation}
-          >
-            <FileInput className="size-4" aria-hidden />
-          </button>
+          />
           <DropdownMenu open={isRecentMenuOpen} onOpenChange={setIsRecentMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button
-                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9"
                 aria-label={t('recent.open')}
-                title={t('recent.open')}
               >
                 <Clock className="size-4" aria-hidden />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
               {recentFiles.length > 0 ? (
@@ -1003,140 +1078,97 @@ export default function App() {
                       <span className="block truncate font-medium">
                         {getPathBasename(path)}
                       </span>
-                      <span className="block truncate text-xs text-[rgb(var(--color-muted))]">
+                      <span className="block truncate text-xs text-muted-foreground">
                         {path}
                       </span>
                     </div>
                   </DropdownMenuItem>
                 ))
               ) : (
-                <div className="px-2 py-1.5 text-sm text-[rgb(var(--color-muted))]">
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
                   {t('recent.empty')}
                 </div>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('actions.markSaved')}
-            title={t('actions.markSaved')}
+          <IconButton
+            icon={Save}
+            label={t('actions.markSaved')}
             onClick={() => void handleSave()}
-          >
-            <Save className="size-4" aria-hidden />
-          </button>
-          <button
-            className={`inline-flex size-9 items-center justify-center rounded-md transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${autosaveEnabled ? 'text-emerald-600' : 'text-[rgb(var(--color-muted))]'}`}
-            type="button"
-            aria-label={t('autosave.toggle')}
-            title={t('autosave.toggle')}
-            aria-pressed={autosaveEnabled}
+          />
+          <IconButton
+            icon={Save}
+            label={t('autosave.toggle')}
             onClick={() => setAutosaveEnabled(!autosaveEnabled)}
-          >
-            <Save className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('theme.toggle')}
-            title={t('theme.toggle')}
+            active={autosaveEnabled}
+            className={autosaveEnabled ? 'text-primary' : ''}
+          />
+          <IconButton
+            icon={Moon}
+            label={t('theme.toggle')}
             onClick={cycleTheme}
-          >
-            <Moon className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('shortcuts.title')}
-            title={t('shortcuts.title')}
-            onClick={() => setIsShortcutsOpen((open) => !open)}
-          >
-            <Keyboard className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('language.toggle', {
-              language: t(`language.preference.${languagePreference}`),
-            })}
-            title={t('language.toggle', {
-              language: t(`language.preference.${languagePreference}`),
-            })}
+          />
+          <IconButton
+            icon={Keyboard}
+            label={t('shortcuts.title')}
+            onClick={() => setIsShortcutsOpen(true)}
+          />
+          <IconButton
+            icon={Languages}
+            label={t('language.toggle')}
             onClick={cycleLanguage}
-          >
-            <Languages className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
-            type="button"
-            aria-label={t('toc.toggle')}
-            title={t('toc.toggle')}
-            aria-pressed={tocOpen}
+          />
+          <IconButton
+            icon={List}
+            label={t('toc.toggle')}
             onClick={toggleToc}
-          >
-            <List className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('zoom.decrease')}
-            title={t('zoom.decrease')}
+            active={tocOpen}
+          />
+          <IconButton
+            icon={Minus}
+            label={t('zoom.decrease')}
             onClick={decreaseFontScaleStore}
-          >
-            <Minus className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex h-9 min-w-12 items-center justify-center rounded-md px-2 text-xs text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('zoom.reset')}
-            title={t('zoom.reset')}
-            onClick={resetFontScaleStore}
-          >
-            {Math.round(fontScale * 100)}%
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('zoom.increase')}
-            title={t('zoom.increase')}
+          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFontScaleStore}
+                className="h-9 min-w-12 px-2 text-xs"
+              >
+                {Math.round(fontScale * 100)}%
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('zoom.reset')}</TooltipContent>
+          </Tooltip>
+          <IconButton
+            icon={Plus}
+            label={t('zoom.increase')}
             onClick={increaseFontScaleStore}
-          >
-            <Plus className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
-            type="button"
-            aria-label={t('focusMode.toggle')}
-            title={t('focusMode.toggle')}
-            aria-pressed={focusMode}
+          />
+          <IconButton
+            icon={focusMode ? Maximize2 : EyeOff}
+            label={t('focusMode.toggle')}
             onClick={toggleFocusMode}
-          >
-            {focusMode ? (
-              <Maximize2 className="size-4" aria-hidden />
-            ) : (
-              <EyeOff className="size-4" aria-hidden />
-            )}
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
-            type="button"
-            aria-label={t('scrollSync.toggle')}
-            title={t('scrollSync.toggle')}
-            aria-pressed={scrollSyncEnabled}
+            active={focusMode}
+          />
+          <IconButton
+            icon={LinkIcon}
+            label={t('scrollSync.toggle')}
             onClick={toggleScrollSync}
-          >
-            <LinkIcon className="size-4" aria-hidden />
-          </button>
+            active={scrollSyncEnabled}
+          />
           <DropdownMenu open={isExportMenuOpen} onOpenChange={setIsExportMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <button
-                className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9"
                 aria-label={t('export.title')}
-                title={t('export.title')}
               >
                 <Download className="size-4" aria-hidden />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
@@ -1150,28 +1182,16 @@ export default function App() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('search.open')}
-            title={t('search.open')}
+          <IconButton
+            icon={Search}
+            label={t('search.open')}
             onClick={handleOpenSearch}
-          >
-            <Search className="size-4" aria-hidden />
-          </button>
-          <button
-            className="inline-flex size-9 items-center justify-center rounded-md text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            aria-label={t('view.toggle')}
-            title={t('view.toggle')}
+          />
+          <IconButton
+            icon={viewMode === 'preview' ? Eye : Columns2}
+            label={t('view.toggle')}
             onClick={cycleViewMode}
-          >
-            {viewMode === 'preview' ? (
-              <Eye className="size-4" aria-hidden />
-            ) : (
-              <Columns2 className="size-4" aria-hidden />
-            )}
-          </button>
+          />
         </div>
       </header>
 
@@ -1192,12 +1212,12 @@ export default function App() {
         ) : null}
         <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
           <div
-            className={`${focusMode ? 'hidden' : 'flex'} h-10 items-center justify-between border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-panel))] px-4 text-xs text-[rgb(var(--color-muted))]`}
+            className={`${focusMode ? 'hidden' : 'flex'} h-10 items-center justify-between border-b bg-muted/40 px-4 text-xs text-muted-foreground`}
           >
             <div className="flex items-center gap-1">
               {VIEW_MODES.map((mode) => (
                 <button
-                  className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                  className="rounded px-2 py-1 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
                   type="button"
                   aria-pressed={viewMode === mode}
                   aria-label={t('view.selectMode', {
@@ -1212,7 +1232,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="rounded px-2 py-1 text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-pressed:bg-[rgb(var(--color-control-hover))] aria-pressed:text-[rgb(var(--color-text))]"
+                className="rounded px-2 py-1 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
                 type="button"
                 aria-label={t('frontmatter.toggle')}
                 title={t('frontmatter.toggle')}
@@ -1278,7 +1298,6 @@ export default function App() {
                 onExternalLinkClick={handleExternalLinkClick}
                 onLocalImageRequest={handleLocalImageRequest}
                 maxWidth={previewMaxWidth}
-                showToc={previewShowToc}
               />
             ) : null}
           </div>
@@ -1384,7 +1403,7 @@ export default function App() {
               {t('externalLink.body')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <p className="mt-2 break-all rounded bg-[rgb(var(--color-panel))] px-2 py-1 font-mono text-xs text-[rgb(var(--color-text))]">
+          <p className="mt-2 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
             {externalLinkPrompt}
           </p>
           <AlertDialogFooter>
@@ -1399,16 +1418,16 @@ export default function App() {
       </AlertDialog>
 
       <footer
-        className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-4 text-xs text-[rgb(var(--color-muted))]`}
+        className={`${focusMode ? 'hidden' : 'flex'} h-8 shrink-0 items-center justify-between border-t bg-card px-4 text-xs text-muted-foreground`}
       >
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate">{displayName}</span>
           {autosaveStatus ? (
-            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 text-primary">
               {autosaveStatus}
             </span>
           ) : isDirty ? (
-            <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300">
+            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-500">
               <RotateCcw className="size-3" aria-hidden />
               {t('document.unsaved')}
             </span>
@@ -1433,5 +1452,6 @@ export default function App() {
         </div>
       </footer>
     </main>
+    </TooltipProvider>
   );
 }

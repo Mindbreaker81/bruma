@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { parseHeadings } from '../../lib/toc';
+import { parseHeadings, type TocEntry } from '../../lib/toc';
 
 type TableOfContentsProps = {
   content: string;
@@ -10,41 +9,38 @@ type TableOfContentsProps = {
 
 export function TableOfContents({ content, onSelect }: TableOfContentsProps) {
   const { t } = useTranslation();
-  const entries = useMemo(() => parseHeadings(content), [content]);
+  const headings = useMemo(() => parseHeadings(content), [content]);
 
   return (
     <aside
-      aria-label={t('toc.title')}
-      className="flex h-full min-h-0 w-64 shrink-0 flex-col border-r border-[rgb(var(--color-border))] bg-[rgb(var(--color-panel))]"
+      className="flex h-full min-h-0 w-64 shrink-0 flex-col border-r bg-muted/40"
+      aria-label="Table of contents"
     >
-      <header className="flex h-10 shrink-0 items-center px-3 text-xs font-semibold uppercase tracking-wide text-[rgb(var(--color-muted))]">
+      <header className="flex h-10 shrink-0 items-center px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {t('toc.title')}
       </header>
-      <nav className="flex-1 overflow-auto px-2 pb-2 text-sm">
-        {entries.length === 0 ? (
-          <p className="px-2 py-2 text-[rgb(var(--color-muted))]">
+      <div className="flex-1 overflow-y-auto px-1 py-2">
+        {headings.length === 0 ? (
+          <p className="px-2 py-2 text-sm text-muted-foreground">
             {t('toc.empty')}
           </p>
         ) : (
-          <ul className="space-y-0.5">
-            {entries.map((entry) => (
-              <li key={`${entry.line}-${entry.slug}`}>
+          <ul className="space-y-1">
+            {headings.map((h: TocEntry, i: number) => (
+              <li key={`${h.line}-${i}`}>
                 <button
-                  className="block w-full rounded px-2 py-1 text-left text-[rgb(var(--color-text))] hover:bg-[rgb(var(--color-control-hover))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                   type="button"
-                  style={{
-                    paddingLeft: `${0.5 + (entry.level - 1) * 0.75}rem`,
-                  }}
-                  title={entry.text}
-                  onClick={() => onSelect(entry.line)}
+                  className="block w-full rounded px-2 py-1 text-left text-sm text-foreground hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  style={{ paddingLeft: `${(h.level - 1) * 1 + 0.5}rem` }}
+                  onClick={() => onSelect(h.line)}
                 >
-                  <span className="block truncate">{entry.text}</span>
+                  <span className="truncate">{h.text}</span>
                 </button>
               </li>
             ))}
           </ul>
         )}
-      </nav>
+      </div>
     </aside>
   );
 }

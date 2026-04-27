@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   COMMAND_REGISTRY,
@@ -14,6 +14,17 @@ type ShortcutsDialogProps = {
   onChange: (shortcuts: Partial<Record<CommandId, string | null>>) => void;
 };
 
+function eventToBinding(event: KeyboardEvent): string {
+  const parts: string[] = [];
+  if (event.metaKey || event.ctrlKey) parts.push('Mod');
+  if (event.shiftKey) parts.push('Shift');
+  if (event.altKey) parts.push('Alt');
+  if (event.key && event.key !== 'Meta' && event.key !== 'Control' && event.key !== 'Shift' && event.key !== 'Alt') {
+    parts.push(event.key);
+  }
+  return parts.join('+');
+}
+
 export function ShortcutsDialog({
   open,
   onClose,
@@ -22,7 +33,41 @@ export function ShortcutsDialog({
 }: ShortcutsDialogProps) {
   const { t } = useTranslation();
   const [editingId, setEditingId] = useState<CommandId | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [capturedBinding, setCapturedBinding] = useState('');
   const conflicts = useMemo(() => detectConflicts(shortcuts), [shortcuts]);
+
+  useEffect(() => {
+    if (!isCapturing || !editingId) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === 'Escape') {
+        setIsCapturing(false);
+        setCapturedBinding('');
+        return;
+      }
+
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        onChange({ ...shortcuts, [editingId]: null });
+        setIsCapturing(false);
+        setCapturedBinding('');
+        setEditingId(null);
+        return;
+      }
+
+      const binding = eventToBinding(event);
+      setCapturedBinding(binding);
+      onChange({ ...shortcuts, [editingId]: binding });
+      setIsCapturing(false);
+      setCapturedBinding('');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCapturing, editingId, shortcuts, onChange]);
 
   if (!open) return null;
 
@@ -71,19 +116,49 @@ export function ShortcutsDialog({
                     <td className="py-2">{t(`shortcuts.${cmd.id}`)}</td>
                     <td className="py-2">
                       {editingId === cmd.id ? (
-                        <input
-                          className="w-32 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
-                          autoFocus
-                          value={binding ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value.trim() || null;
-                            onChange({ ...shortcuts, [cmd.id]: val });
-                          }}
-                          onBlur={() => setEditingId(null)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') setEditingId(null);
-                          }}
-                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            className="w-32 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
+                            autoFocus
+                            value={isCapturing ? capturedBinding : (binding ?? '')}
+                            onChange={(e) => {
+                              setIsCapturing(false);
+                              const val = e.target.value.trim() || null;
+                              onChange({ ...shortcuts, [cmd.id]: val });
+                            }}
+                            onBlur={() => {
+                              setIsCapturing(false);
+                              setEditingId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                setEditingId(null);
+                              }
+                            }}
+                            placeholder={isCapturing ? 'Press keys...' : ''}
+                          />
+                          <button
+                            className="rounded px-2 py-1 text-xs bg-[rgb(var(--color-control-hover))] hover:bg-[rgb(var(--color-bg))]"
+                            type="button"
+                            onClick={() => setIsCapturing(!isCapturing)}
+                            title={isCapturing ? 'Cancel capture' : 'Capture shortcut'}
+                          >
+                            {isCapturing ? 'Cancel' : 'Record'}
+                          </button>
+                          {shortcuts[cmd.id] !== undefined && shortcuts[cmd.id] !== null && (
+                            <button
+                              className="rounded px-2 py-1 text-xs bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-950 dark:text-red-200"
+                              type="button"
+                              onClick={() => {
+                                onChange({ ...shortcuts, [cmd.id]: null });
+                                setIsCapturing(false);
+                              }}
+                              title="Reset to default"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
                       ) : (
                         <button
                           className={`rounded px-2 py-1 text-sm ${

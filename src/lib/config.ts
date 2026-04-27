@@ -2,8 +2,9 @@ import type { LanguagePreference } from '../features/settings/language';
 import type { ThemePreference } from '../features/settings/theme';
 import type { ViewMode } from '../features/settings/view';
 import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
+import type { Template } from '../features/templates/templates';
 
-export const CONFIG_VERSION = 6;
+export const CONFIG_VERSION = 7;
 const CONFIG_STORAGE_KEY = 'bruma.config';
 
 import type { CommandId } from '../lib/shortcuts';
@@ -27,6 +28,7 @@ export type AppConfig = {
   previewMaxWidth: number;
   previewShowToc: boolean;
   shortcuts: Partial<Record<CommandId, string | null>>;
+  customTemplates: Template[];
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -48,6 +50,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   previewMaxWidth: 65,
   previewShowToc: false,
   shortcuts: {},
+  customTemplates: [],
 };
 
 type PartialConfig = Partial<AppConfig> & {
@@ -138,6 +141,12 @@ export function migrateConfig(input: unknown): AppConfig {
       ? config.previewShowToc
       : DEFAULT_CONFIG.previewShowToc;
 
+  const customTemplates =
+    Array.isArray((config as Record<string, unknown>).customTemplates) &&
+    typeof (config as Record<string, unknown>).customTemplates === 'object'
+      ? ((config as Record<string, unknown>).customTemplates as Template[])
+      : DEFAULT_CONFIG.customTemplates;
+
   return {
     version: CONFIG_VERSION,
     theme,
@@ -163,6 +172,7 @@ export function migrateConfig(input: unknown): AppConfig {
             Record<CommandId, string | null>
           >)
         : {},
+    customTemplates,
   };
 }
 

@@ -37,6 +37,61 @@ describe('session storage', () => {
     expect(readSession()).toEqual(session);
   });
 
+  it('reads a session with tabs and activeTabId', () => {
+    const session: PendingSession = {
+      path: '/home/test.md',
+      content: '# Hello',
+      eol: 'lf',
+      savedAt: 12345,
+      tabs: [
+        {
+          id: '1',
+          document: {
+            id: 'doc-1',
+            path: '/a.md',
+            content: 'a',
+            savedContent: 'a',
+            encoding: 'utf-8',
+            eol: 'lf',
+            lastSavedAt: 12345,
+          },
+        },
+        {
+          id: '2',
+          document: {
+            id: 'doc-2',
+            path: '/b.md',
+            content: 'b',
+            savedContent: 'b',
+            encoding: 'utf-8',
+            eol: 'lf',
+            lastSavedAt: 12345,
+          },
+        },
+      ],
+      activeTabId: '2',
+    };
+    writeSession(session);
+    const read = readSession();
+    expect(read).toMatchObject({
+      path: '/home/test.md',
+      content: '# Hello',
+      eol: 'lf',
+      savedAt: 12345,
+      tabs: [
+        {
+          id: '1',
+          document: { path: '/a.md', content: 'a', eol: 'lf' },
+        },
+        {
+          id: '2',
+          document: { path: '/b.md', content: 'b', eol: 'lf' },
+        },
+      ],
+      activeTabId: '2',
+    });
+  });
+
   it('returns null for invalid stored data', () => {
     sessionStorage.setItem('bruma.session', 'not-json');
     expect(readSession()).toBeNull();

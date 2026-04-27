@@ -198,6 +198,7 @@ export const MarkdownEditor = forwardRef<
       editor.destroy();
       editorRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ariaLabel, placeholder]);
 
   useEffect(() => {
@@ -310,7 +311,7 @@ export const MarkdownEditor = forwardRef<
   return (
     <div
       ref={containerRef}
-      className="bruma-editor h-full min-h-0 bg-[rgb(var(--color-editor))]"
+      className="bruma-editor h-full min-h-0 bg-background"
       style={fontStyle}
     />
   );

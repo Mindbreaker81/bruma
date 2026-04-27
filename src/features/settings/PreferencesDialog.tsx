@@ -1,4 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
+import { Button } from '../../components/ui/button';
 
 type PreferencesDialogProps = {
   open: boolean;
@@ -48,138 +55,166 @@ export function PreferencesDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-black/35 px-4">
-      <section
-        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] shadow-lg"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="prefs-dialog-title"
-      >
-        <div className="flex items-center justify-between border-b border-[rgb(var(--color-border))] px-5 py-3">
-          <h2 className="text-base font-semibold" id="prefs-dialog-title">
-            {t('preferences.title')}
-          </h2>
-          <button
-            className="rounded-md px-2 py-1 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-            type="button"
-            onClick={onClose}
-          >
-            {t('preferences.close')}
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t('preferences.title')}</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <fieldset className="mb-5">
-            <legend className="mb-2 text-sm font-medium">
+        <div className="mt-4 flex flex-1 flex-col gap-6 overflow-y-auto px-1 py-1">
+          {/* General Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               {t('preferences.general')}
-            </legend>
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={autosaveEnabled}
-                  onChange={(e) => onAutosaveEnabledChange(e.target.checked)}
-                />
-                {t('preferences.autosaveEnabled')}
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                {t('preferences.autosaveDelay')}
-                <input
-                  type="range"
-                  min={500}
-                  max={30000}
-                  step={500}
-                  value={autosaveDelayMs}
-                  onChange={(e) =>
-                    onAutosaveDelayMsChange(Number(e.target.value))
-                  }
-                  disabled={!autosaveEnabled}
-                />
-                <span className="tabular-nums">{autosaveDelayMs}ms</span>
-              </label>
-            </div>
-          </fieldset>
+            </h3>
 
-          <fieldset className="mb-5">
-            <legend className="mb-2 text-sm font-medium">
-              {t('preferences.editor')}
-            </legend>
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
-                {t('preferences.fontFamily')}
-                <select
-                  value={editorFontFamily}
-                  onChange={(e) => onEditorFontFamilyChange(e.target.value)}
-                  className="rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
-                >
-                  <option value="sans">{t('preferences.fontSans')}</option>
-                  <option value="serif">{t('preferences.fontSerif')}</option>
-                  <option value="mono">{t('preferences.fontMono')}</option>
-                </select>
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-autosave" className="text-sm font-medium">
+                {t('autosave.toggle')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                {t('preferences.tabSize')}
+              <input
+                id="pref-autosave"
+                type="checkbox"
+                checked={autosaveEnabled}
+                onChange={(e) => onAutosaveEnabledChange(e.target.checked)}
+                className="size-4"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-autosave-delay" className="text-sm font-medium">
+                {t('autosave.delay')}
+              </label>
+              <div className="flex items-center gap-2">
                 <input
+                  id="pref-autosave-delay"
                   type="number"
-                  min={1}
-                  max={16}
-                  value={editorTabSize}
+                  min="1"
+                  max="60"
+                  value={autosaveDelayMs / 1000}
                   onChange={(e) =>
-                    onEditorTabSizeChange(Number(e.target.value))
+                    onAutosaveDelayMsChange(Number(e.target.value) * 1000)
                   }
-                  className="w-16 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
+                  className="w-16 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
+                <span className="text-sm text-muted-foreground">{t('autosave.seconds')}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Editor Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('preferences.editor')}
+            </h3>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-font" className="text-sm font-medium">
+                {t('preferences.fontFamily')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={editorWrap}
-                  onChange={(e) => onEditorWrapChange(e.target.checked)}
-                />
-                {t('preferences.wrapLines')}
+              <select
+                id="pref-font"
+                value={editorFontFamily}
+                onChange={(e) =>
+                  onEditorFontFamilyChange(e.target.value as 'sans' | 'mono')
+                }
+                className="rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <option value="sans">{t('preferences.fontFamilySans')}</option>
+                <option value="mono">{t('preferences.fontFamilyMono')}</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-tabsize" className="text-sm font-medium">
+                {t('preferences.tabSize')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={editorShowGutter}
-                  onChange={(e) => onEditorShowGutterChange(e.target.checked)}
-                />
+              <input
+                id="pref-tabsize"
+                type="number"
+                min="2"
+                max="8"
+                step="2"
+                value={editorTabSize}
+                onChange={(e) =>
+                  onEditorTabSizeChange(Number(e.target.value))
+                }
+                className="w-16 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-gutter" className="text-sm font-medium">
                 {t('preferences.showGutter')}
               </label>
+              <input
+                id="pref-gutter"
+                type="checkbox"
+                checked={editorShowGutter}
+                onChange={(e) =>
+                  onEditorShowGutterChange(e.target.checked)
+                }
+                className="size-4"
+              />
             </div>
-          </fieldset>
 
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">
-              {t('preferences.preview')}
-            </legend>
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
-                {t('preferences.maxWidth')}
-                <input
-                  type="range"
-                  min={20}
-                  max={200}
-                  step={1}
-                  value={previewMaxWidth}
-                  onChange={(e) =>
-                    onPreviewMaxWidthChange(Number(e.target.value))
-                  }
-                />
-                <span className="tabular-nums">{previewMaxWidth}ch</span>
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-wrap" className="text-sm font-medium">
+                {t('preferences.wordWrap')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={previewShowToc}
-                  onChange={(e) => onPreviewShowTocChange(e.target.checked)}
-                />
+              <input
+                id="pref-wrap"
+                type="checkbox"
+                checked={editorWrap}
+                onChange={(e) => onEditorWrapChange(e.target.checked)}
+                className="size-4"
+              />
+            </div>
+          </section>
+
+          {/* Preview Section */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('preferences.preview')}
+            </h3>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-max-width" className="text-sm font-medium">
+                {t('preferences.maxWidth')}
+              </label>
+              <input
+                id="pref-max-width"
+                type="range"
+                min="20"
+                max="200"
+                step="1"
+                value={previewMaxWidth}
+                onChange={(e) =>
+                  onPreviewMaxWidthChange(Number(e.target.value))
+                }
+              />
+              <span className="tabular-nums">{previewMaxWidth}ch</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="pref-show-toc" className="text-sm font-medium">
                 {t('preferences.showToc')}
               </label>
+              <input
+                id="pref-show-toc"
+                type="checkbox"
+                checked={previewShowToc}
+                onChange={(e) => onPreviewShowTocChange(e.target.checked)}
+                className="size-4"
+              />
             </div>
-          </fieldset>
+          </section>
         </div>
-      </section>
-    </div>
+
+        <div className="mt-6 flex justify-end">
+          <Button onClick={onClose}>{t('preferences.close')}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

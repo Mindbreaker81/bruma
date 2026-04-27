@@ -21,10 +21,16 @@ export function TabBar({
 }: TabBarProps) {
   const { t } = useTranslation();
   const dragOverIndex = useRef<number | null>(null);
+  const draggedTabId = useRef<string | null>(null);
 
-  function handleDragStart(event: DragEvent<HTMLButtonElement>, id: string) {
-    event.dataTransfer.setData('text/plain', id);
-    event.dataTransfer.effectAllowed = 'move';
+  function handleDragStart(
+    event: React.DragEvent<HTMLDivElement | HTMLButtonElement>,
+    tabId: string
+  ) {
+    draggedTabId.current = tabId;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
   }
 
   function handleDragOver(event: DragEvent<HTMLDivElement>, index: number) {
@@ -49,7 +55,7 @@ export function TabBar({
 
   return (
     <div
-      className="flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] px-2 text-xs"
+      className="flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto border-b bg-card px-2 text-xs"
       role="tablist"
       aria-label={t('tabs.label')}
     >
@@ -60,16 +66,16 @@ export function TabBar({
         return (
           <div
             key={tab.id}
+            role="presentation"
             className={`flex shrink-0 items-center gap-1.5 rounded-t-md px-3 py-1.5 transition ${
               active
-                ? 'bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text))]'
-                : 'text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]'
+                ? 'bg-background text-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
             }`}
-            role="tab"
-            aria-selected={active}
             draggable
-            onDragOver={(event) => handleDragOver(event, tabs.indexOf(tab))}
-            onDrop={(event) => handleDrop(event, tab.id)}
+            onDragStart={(e) => handleDragStart(e, tab.id)}
+            onDragOver={(e) => handleDragOver(e, tabs.indexOf(tab))}
+            onDrop={(e) => handleDrop(e, tab.id)}
           >
             <button
               className="flex items-center gap-1.5"
@@ -88,11 +94,12 @@ export function TabBar({
             </button>
             {tabs.length > 1 ? (
               <button
-                className="inline-flex size-4 items-center justify-center rounded text-[rgb(var(--color-muted))] transition hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))]"
+                className="inline-flex size-4 items-center justify-center rounded text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 type="button"
                 aria-label={t('tabs.close', { name })}
-                onClick={(event) => {
-                  event.stopPropagation();
+                title={t('tabs.close', { name })}
+                onClick={(e) => {
+                  e.stopPropagation();
                   onClose(tab.id);
                 }}
               >

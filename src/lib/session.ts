@@ -24,6 +24,8 @@ export function readSession(): PendingSession | null {
       content: parsed.content,
       eol: parsed.eol,
       savedAt: parsed.savedAt,
+      tabs: parsed.tabs,
+      activeTabId: parsed.activeTabId,
     };
   } catch {
     return null;
