@@ -222,7 +222,9 @@ fn is_allowed_path(path: &Path) -> bool {
         return false;
     };
 
-    path.starts_with(&canonical_home)
+    let candidate = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+
+    candidate.starts_with(&canonical_home)
 }
 
 fn user_home_dir() -> Option<PathBuf> {
