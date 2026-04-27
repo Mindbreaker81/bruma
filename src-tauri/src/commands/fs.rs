@@ -343,9 +343,9 @@ mod tests {
     #[test]
     fn accepts_valid_user_paths_for_reads() {
         let home = user_home_dir().expect("home directory should exist");
-        let file_path = create_test_path(home.join(".bruma-security-tests").join("read-ok.md"));
-
-        fs::create_dir_all(file_path.parent().expect("parent should exist")).unwrap();
+        let dir = create_test_path(home.join(".bruma-security-tests").join("read-ok"));
+        fs::create_dir_all(&dir).unwrap();
+        let file_path = dir.join("note.md");
         fs::write(&file_path, "# Bruma").unwrap();
 
         let result = read_file(file_path.to_string_lossy().into_owned()).unwrap();
@@ -359,8 +359,7 @@ mod tests {
                 .into_owned()
         );
 
-        fs::remove_file(&file_path).unwrap();
-        fs::remove_dir_all(file_path.parent().unwrap()).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -380,9 +379,9 @@ mod tests {
     #[test]
     fn accepts_new_markdown_paths_inside_home_on_write() {
         let home = user_home_dir().expect("home directory should exist");
-        let target = create_test_path(home.join(".bruma-security-tests").join("write-ok.md"));
-
-        fs::create_dir_all(target.parent().expect("parent should exist")).unwrap();
+        let dir = create_test_path(home.join(".bruma-security-tests").join("write-ok"));
+        fs::create_dir_all(&dir).unwrap();
+        let target = dir.join("note.md");
 
         let result = save_file(
             target.to_string_lossy().into_owned(),
@@ -396,8 +395,7 @@ mod tests {
         assert!(Path::new(&result.path).exists());
         assert_eq!(fs::read_to_string(&target).unwrap(), "# Bruma");
 
-        fs::remove_file(&target).unwrap();
-        fs::remove_dir_all(target.parent().unwrap()).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     fn create_test_path(base: PathBuf) -> PathBuf {
@@ -443,10 +441,8 @@ mod tests {
     #[test]
     fn reads_image_as_data_url_for_valid_file() {
         let home = user_home_dir().expect("home directory should exist");
-        let base_dir = home.join(".bruma-security-tests").join("img-ok");
-        fs::create_dir_all(&base_dir).unwrap();
-        let dir = create_test_path(base_dir);
-        fs::create_dir(&dir).unwrap();
+        let dir = create_test_path(home.join(".bruma-security-tests").join("img-ok"));
+        fs::create_dir_all(&dir).unwrap();
         let image = dir.join("logo.png");
         // 1x1 transparent PNG
         let png: [u8; 67] = [
