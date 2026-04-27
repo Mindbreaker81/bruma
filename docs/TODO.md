@@ -1,6 +1,6 @@
 # TODO — Bruma
 
-- **Estado:** `v1.1-block-a` (rama feature con bloques A, B, C completados; D y E pendientes).
+- **Estado:** `v1.1-block-a` (rama feature con bloques A, B, C, D, E completados).
 - **Último release:** `v1.0.1` (2026-04-26).
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
@@ -269,27 +269,27 @@
 - [x] Bloque A: word count, font zoom, focus mode, outline sidebar (`60b87f7`).
 - [x] Bloque B: scroll sync, link confirm, export HTML/PDF, imágenes locales (`ed10586`).
 - [x] Bloque C: replace text, frontmatter YAML toggle (`3f1c938`).
-- [ ] Bloque D: autoguardado, recuperación de sesión, plantillas.
-- [ ] Bloque E: pestañas, preferencias avanzadas, atajos configurables.
+- [x] Bloque D: autoguardado, recuperación de sesión, plantillas.
+- [x] Bloque E: pestañas, preferencias avanzadas, atajos configurables.
 
 ### Bloque D — Sesión y robustez (v1.2)
 
 #### D.1 Autoguardado opcional
 
-- [ ] Añadir `autosaveEnabled` y `autosaveDelayMs` a `AppConfig` (CONFIG_VERSION v5).
-- [ ] Hook `useEffect` debounced que dispara `handleSave()` cuando `(autosaveEnabled && isDirty && document.path)` cambia.
-- [ ] Toggle en toolbar y panel de preferencias.
-- [ ] Indicador visual en footer ("Guardando…" / "Guardado a las HH:MM").
+- [x] Añadir `autosaveEnabled` y `autosaveDelayMs` a `AppConfig` (CONFIG_VERSION v5).
+- [x] Hook `useEffect` debounced que dispara `handleSave()` cuando `(autosaveEnabled && isDirty && document.path)` cambia.
+- [x] Toggle en toolbar y panel de preferencias.
+- [x] Indicador visual en footer ("Guardando…" / "Guardado a las HH:MM").
 
 #### D.2 Recuperación de sesión
 
-- [ ] Añadir `pendingSession` al config con path, content, eol, savedAt.
-- [ ] Persistir `pendingSession` con debounce en `useFileStore.updateContent`.
-- [ ] Diálogo `<RestoreSessionDialog />` con Recuperar / Descartar.
+- [x] Añadir `pendingSession` al config con path, content, eol, savedAt.
+- [x] Persistir `pendingSession` con debounce en `useFileStore.updateContent`.
+- [x] Diálogo `<RestoreSessionDialog />` con Recuperar / Descartar.
 
 #### D.3 Plantillas de documentos
 
-- [ ] Built-ins: nota vacía, post de blog, reunión, README mínimo.
+- [x] Built-ins: nota vacía, post de blog, reunión, README mínimo.
 - [ ] Plantillas custom en `~/.config/bruma/templates/*.md`.
 - [ ] Submenú en botón "Nuevo" con built-ins + custom.
 
@@ -297,21 +297,21 @@
 
 #### E.1 Pestañas múltiples
 
-- [ ] Refactor `useFileStore` con `tabs[]`, `activeTabId`.
-- [ ] Component `<TabBar />` con drag-to-reorder.
-- [ ] Atajos: `Cmd/Ctrl+T` nueva, `Cmd/Ctrl+W` cerrar, `Cmd/Ctrl+Tab` siguiente.
+- [x] Refactor `useFileStore` con `tabs[]`, `activeTabId`.
+- [x] Component `<TabBar />` con drag-to-reorder.
+- [x] Atajos: `Cmd/Ctrl+T` nueva, `Cmd/Ctrl+W` cerrar, `Cmd/Ctrl+Tab` siguiente.
 
 #### E.2 Preferencias avanzadas
 
-- [ ] Component `<PreferencesDialog />` accesible desde menú y `Cmd/Ctrl+,`.
-- [ ] Secciones: aspecto, editor, preview, atajos.
-- [ ] Schema config con `editorFontFamily`, `editorTabSize`, etc.
+- [x] Component `<PreferencesDialog />` accesible desde menú y `Cmd/Ctrl+,`.
+- [x] Secciones: aspecto, editor, preview, atajos.
+- [x] Schema config con `editorFontFamily`, `editorTabSize`, etc.
 
 #### E.3 Atajos configurables
 
-- [ ] Registro central de comandos con bindings mutables.
-- [ ] Hook `useShortcut(commandId, handler)` global.
-- [ ] UI en preferencias con tabla de comandos y captura de bindings.
+- [x] Registro central de comandos con bindings mutables.
+- [x] Hook `useShortcut(commandId, handler)` global.
+- [x] UI en preferencias con tabla de comandos y captura de bindings.
 
 ---
 
@@ -339,16 +339,17 @@
 
 ---
 
-## Sugerencia de orden para retomar v1.1
+## Pendientes v1.1 (items menores)
 
-1. **D.1 Autoguardado** (1-2 h, aislado, alto valor).
-2. **D.2 Recuperación de sesión** (3-4 h, sinergias con D.1, debe ir antes de E.1).
-3. **D.3 Plantillas** (2-3 h, aislado).
-4. **E.1 Pestañas** (1-2 días — refactor del store; rehacer D.2 para persistir todas las tabs).
-5. **E.2 Preferencias** (medio día, tras E.1 para incluir override de atajos).
-6. **E.3 Atajos configurables** (medio día, depende de E.2 para UI).
+- [ ] Plantillas custom en `~/.config/bruma/templates/*.md` (D.3).
+- [ ] Submenú en botón "Nuevo" con built-ins + custom (D.3).
 
-Antes de E.1, hacer merge de la rama `feature/v1.1-block-a` a `main` y crear `feature/v1.2-tabs` para aislar el refactor.
+## Sugerencia de orden para v1.2
+
+Los bloques A-E de v1.1 están completados. Pendientes menores:
+- Completar integración de plantillas custom en UI
+- Validación manual en macOS y Windows
+- Considerar bump a v1.1.0 para release
 
 ---
 
