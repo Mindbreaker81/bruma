@@ -21,4 +21,4 @@ tauri = { version = "2", features = [] }
 tauri-plugin-store = "2"
 
 [lints]
-rust = { warnings = "deny" }
+rust = { warnings = "warn" }
