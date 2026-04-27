@@ -82,17 +82,6 @@ jobs:
       - name: Tauri build
         run: pnpm tauri build
 
-      - name: Upload unsigned bundles
-        uses: actions/upload-artifact@v4
-        with:
-          name: bruma-v${{ steps.app_version.outputs.value }}-${{ matrix.platform }}-unsigned
-          path: |
-            src-tauri/target/release/bundle/**/*.dmg
-            src-tauri/target/release/bundle/**/*.app.tar.gz
-            src-tauri/target/release/bundle/**/*.msi
-            src-tauri/target/release/bundle/**/*.exe
-          if-no-files-found: error
-
       - name: Upload to draft release
         uses: softprops/action-gh-release@v2
         with:

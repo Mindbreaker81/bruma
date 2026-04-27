@@ -53,6 +53,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './components/ui/dialog';
+import { Switch } from './components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1127,13 +1128,15 @@ export default function App() {
               label={t('actions.markSaved')}
               onClick={() => void handleSave()}
             />
-            <IconButton
-              icon={Save}
-              label={t('autosave.toggle')}
-              onClick={() => setAutosaveEnabled(!autosaveEnabled)}
-              active={autosaveEnabled}
-              className={autosaveEnabled ? 'text-primary' : ''}
-            />
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={autosaveEnabled}
+                onCheckedChange={setAutosaveEnabled}
+              />
+              <span className="text-sm text-muted-foreground">
+                {t('autosave.toggle')}
+              </span>
+            </div>
             <IconButton
               icon={Moon}
               label={t('theme.toggle')}
