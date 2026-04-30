@@ -77,6 +77,56 @@ jobs:
         if: startsWith(matrix.platform, 'macos-')
         run: pnpm tauri build
 
+      - name: Prefetch NSIS tools (retry)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          function Invoke-DownloadWithRetry {
+            param(
+              [Parameter(Mandatory = $true)][string]$Uri,
+              [Parameter(Mandatory = $true)][string]$OutFile,
+              [int]$Attempts = 5
+            )
+            for ($i = 1; $i -le $Attempts; $i++) {
+              try {
+                Write-Host "Downloading ($i/$Attempts): $Uri"
+                Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing
+                return
+              } catch {
+                Write-Host "Download failed: $($_.Exception.Message)"
+                if ($i -eq $Attempts) { throw }
+                Start-Sleep -Seconds (5 * $i)
+              }
+            }
+          }
+
+          $nsisCache = Join-Path $env:LOCALAPPDATA "tauri\\NSIS"
+          New-Item -ItemType Directory -Force -Path $nsisCache | Out-Null
+
+          $zip = Join-Path $nsisCache "nsis-3.11.zip"
+          Invoke-DownloadWithRetry `
+            -Uri "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.11/nsis-3.11.zip" `
+            -OutFile $zip
+
+          # Extract into cache if makensis.exe not present yet.
+          $makensis = Join-Path $nsisCache "makensis.exe"
+          if (-not (Test-Path $makensis)) {
+            $tmp = Join-Path $nsisCache "tmp"
+            Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+            Expand-Archive -Path $zip -DestinationPath $tmp -Force
+
+            $inner = Get-ChildItem -Path $tmp | Select-Object -First 1
+            if ($inner -and (Test-Path (Join-Path $inner.FullName "makensis.exe"))) {
+              Copy-Item -Path (Join-Path $inner.FullName "*") -Destination $nsisCache -Recurse -Force
+            } else {
+              Copy-Item -Path (Join-Path $tmp "*") -Destination $nsisCache -Recurse -Force
+            }
+
+            Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+          }
+
       - name: Build unsigned bundle (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         run: pnpm tauri build
