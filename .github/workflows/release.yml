@@ -280,6 +280,8 @@ jobs:
           files: |
             release-assets/*
           body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('draft-v{0}-{1}', steps.app_version.outputs.value, github.run_id) || github.ref_name }}
+          name: ${{ github.event_name == 'workflow_dispatch' && format('draft bruma v{0} ({1})', steps.app_version.outputs.value, github.run_id) || github.ref_name }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
