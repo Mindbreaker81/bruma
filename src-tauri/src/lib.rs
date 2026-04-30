@@ -1,7 +1,32 @@
 mod commands;
 mod menu;
 
+#[cfg(target_os = "windows")]
+fn configure_fixed_webview2_runtime_if_present() {
+    use std::path::PathBuf;
+
+    if std::env::var_os("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER").is_some() {
+        return;
+    }
+
+    let exe_dir: PathBuf = match std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf()))
+    {
+        Some(dir) => dir,
+        None => return,
+    };
+
+    let fixed_runtime_dir = exe_dir.join("WebView2");
+    if fixed_runtime_dir.is_dir() {
+        std::env::set_var("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", fixed_runtime_dir);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn configure_fixed_webview2_runtime_if_present() {}
+
 pub fn run() {
+    configure_fixed_webview2_runtime_if_present();
+
     tauri::Builder::default()
         .manage(menu::RecentFilesMenuState::default())
         .plugin(tauri_plugin_store::Builder::new().build())

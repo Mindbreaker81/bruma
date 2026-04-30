@@ -43,6 +43,23 @@ El workflow CI sube bundles sin firmar por plataforma.
 
 El nombre del artifact se genera automaticamente desde `package.json`.
 
+## Descargas (GitHub Releases)
+
+Para usuarios finales, usamos **GitHub Releases** con archivos listos para descargar por plataforma.
+
+- **macOS**:
+  - `bruma-vX.Y.Z-macos-x64.dmg` (Intel)
+  - `bruma-vX.Y.Z-macos-aarch64.dmg` (Apple Silicon)
+- **Windows (instaladores)**:
+  - `bruma-vX.Y.Z-windows-x64.msi`
+  - `bruma-vX.Y.Z-windows-x64-setup.exe`
+- **Windows (portable-full)**:
+  - `bruma-vX.Y.Z-windows-x64-portable-full.zip`
+  - `bruma-vX.Y.Z-windows-arm64-portable-full.zip`
+  - Incluye **Fixed WebView2 Runtime**, pensado para arrancar incluso si falta WebView2 en el sistema.
+- **Linux**:
+  - `bruma-vX.Y.Z-linux-x86_64.AppImage`
+
 ## Ejecutar builds en macOS y Windows
 
 ### macOS
@@ -74,6 +91,8 @@ open "/Applications/Bruma.app"
 
 Las builds actuales de CI son internas y sin firma/notarizacion, por eso ambos sistemas pueden mostrar avisos de seguridad incluso cuando el bundle es valido.
 
+Nota: los bundles de **GitHub Releases** tambien pueden disparar advertencias (SmartScreen/Gatekeeper) mientras no haya firma/notarizacion.
+
 ## Desarrollo local
 
 Requisitos:
@@ -97,6 +116,14 @@ pnpm test
 pnpm test:e2e
 pnpm build
 pnpm tauri build
+```
+
+### Nota Playwright (primer uso)
+
+Si `pnpm test:e2e` falla con un error tipo “Executable doesn't exist…”, instala los navegadores:
+
+```bash
+pnpm exec playwright install chromium
 ```
 
 Nota para entorno Linux de desarrollo: `cargo check/test` y `pnpm tauri build` pueden fallar si faltan librerias GTK/WebKit (`glib-2.0`, `gobject-2.0`, `gio-2.0`, `gdk-3.0`).

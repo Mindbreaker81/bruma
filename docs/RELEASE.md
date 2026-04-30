@@ -1,15 +1,29 @@
-# Release v1.0.1
+# Release
 
 ## Objetivo
 
 Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el camino de firma para distribucion publica.
 
-## Builds internos
+## Publicación (GitHub Releases)
 
-1. Crear el tag `v1.0.1`.
-2. Ejecutar el workflow `Release`.
-3. Descargar artefactos `bruma-v1.0.1-macos-latest-unsigned` y `bruma-v1.0.1-windows-latest-unsigned`.
-4. Probar los bundles en maquinas reales antes de publicar.
+1. Crear y pushear el tag `vX.Y.Z` (ej. `v1.1.0`).
+2. Ejecutar el workflow `Release` (o esperar a que se dispare por tag).
+3. Verificar que la GitHub Release contiene los assets esperados.
+4. Probar los bundles en maquinas reales antes de anunciar/publicar ampliamente.
+
+### Assets esperados (por release `vX.Y.Z`)
+
+- **macOS**:
+  - `bruma-vX.Y.Z-macos-x64.dmg`
+  - `bruma-vX.Y.Z-macos-aarch64.dmg`
+- **Windows x64 (instaladores)**:
+  - `bruma-vX.Y.Z-windows-x64.msi`
+  - `bruma-vX.Y.Z-windows-x64-setup.exe`
+- **Windows portable-full**:
+  - `bruma-vX.Y.Z-windows-x64-portable-full.zip`
+  - `bruma-vX.Y.Z-windows-arm64-portable-full.zip` (fase 1: sin instalador ARM64)
+- **Linux**:
+  - `bruma-vX.Y.Z-linux-x86_64.AppImage`
 
 ## Firma macOS
 

@@ -53,6 +53,12 @@ src-tauri/WixTools/
 *.tmp
 *.temp
 
+# Release packaging temp (portable-full)
+release-assets/
+portable-full*/
+webview2pkg/
+webview2-runtime-*.nupkg
+
 # Backup files
 *.bak
 *.backup

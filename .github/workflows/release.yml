@@ -3,19 +3,26 @@ name: Release
 on:
   push:
     tags:
-      - 'v1.0.0'
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build ${{ matrix.platform }}
+    name: Build ${{ matrix.platform }}${{ matrix.win_arch && format(' ({0})', matrix.win_arch) || '' }}
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, windows-latest]
+        include:
+          - platform: macos-13
+          - platform: macos-14
+          - platform: ubuntu-latest
+          - platform: windows-latest
+            win_arch: x64
+          - platform: windows-latest
+            win_arch: arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +46,11 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Add Rust target (Windows arm64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        shell: pwsh
+        run: rustup target add aarch64-pc-windows-msvc
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -49,27 +61,133 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
-      - name: Build unsigned bundle (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: pnpm tauri build --bundles app
-
-      - name: Build unsigned bundle (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: pnpm tauri build --bundles nsis
-
-      - name: Archive macOS .app
-        if: matrix.platform == 'macos-latest'
+      - name: Install Linux dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
         shell: bash
-        working-directory: src-tauri/target/release/bundle/macos
-        run: tar -czf "Bruma_${{ steps.app_version.outputs.value }}_macos.app.tar.gz" Bruma.app
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libsoup-3.0-dev \
+            libwebkit2gtk-4.1-dev
+
+      - name: Build unsigned bundle (macOS)
+        if: startsWith(matrix.platform, 'macos-')
+        run: pnpm tauri build
+
+      - name: Build unsigned bundle (Windows x64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        run: pnpm tauri build
+
+      - name: Build unsigned app (Windows arm64, no bundle)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        run: pnpm tauri build --target aarch64-pc-windows-msvc --no-bundle
+
+      - name: Build unsigned bundle (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: pnpm tauri build --bundles appimage
+
+      - name: Collect release assets (macOS)
+        if: matrix.platform == 'macos-13' || matrix.platform == 'macos-14'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          arch="x64"
+          if [[ "${{ matrix.platform }}" == "macos-14" ]]; then
+            arch="aarch64"
+          fi
+          shopt -s nullglob
+          dmg_files=(src-tauri/target/release/bundle/dmg/*.dmg)
+          if [[ ${#dmg_files[@]} -lt 1 ]]; then
+            echo "No .dmg found in src-tauri/target/release/bundle/dmg/"
+            exit 1
+          fi
+          cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-${arch}.dmg"
+
+      - name: Collect release assets (Windows x64 installers)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $version = "${{ steps.app_version.outputs.value }}"
+
+          $msi = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\msi\\*.msi" | Select-Object -First 1
+          if (-not $msi) { throw "No .msi found under src-tauri\\target\\release\\bundle\\msi\\" }
+          Copy-Item $msi.FullName "release-assets\\bruma-v$version-windows-x64.msi" -Force
+
+          $nsisExe = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\nsis\\*.exe" | Select-Object -First 1
+          if (-not $nsisExe) { throw "No NSIS .exe found under src-tauri\\target\\release\\bundle\\nsis\\" }
+          Copy-Item $nsisExe.FullName "release-assets\\bruma-v$version-windows-x64-setup.exe" -Force
+
+      - name: Build portable-full (Windows x64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $version = "${{ steps.app_version.outputs.value }}"
+
+          $portableDir = "portable-full"
+          Remove-Item -Recurse -Force $portableDir -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$portableDir\\WebView2" | Out-Null
+
+          $appExe = "src-tauri\\target\\release\\bruma.exe"
+          if (-not (Test-Path $appExe)) { throw "Expected app exe not found: $appExe" }
+          Copy-Item $appExe "$portableDir\\Bruma.exe" -Force
+
+          $webview2Version = "147.0.3912.86"
+          $nupkg = "webview2-runtime-x64.$webview2Version.nupkg"
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/WebView2.Runtime.X64/$webview2Version" -OutFile $nupkg
+          Expand-Archive -Path $nupkg -DestinationPath "webview2pkg" -Force
+          Copy-Item "webview2pkg\\contentFiles\\any\\any\\WebView2\\*" "$portableDir\\WebView2" -Recurse -Force
+
+          Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-x64-portable-full.zip" -Force
+
+      - name: Build portable-full (Windows arm64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $version = "${{ steps.app_version.outputs.value }}"
+
+          $portableDir = "portable-full-arm64"
+          Remove-Item -Recurse -Force $portableDir -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$portableDir\\WebView2" | Out-Null
+
+          $appExe = "src-tauri\\target\\aarch64-pc-windows-msvc\\release\\bruma.exe"
+          if (-not (Test-Path $appExe)) { throw "Expected ARM64 app exe not found: $appExe" }
+          Copy-Item $appExe "$portableDir\\Bruma.exe" -Force
+
+          $webview2Version = "147.0.3912.86"
+          $nupkg = "webview2-runtime-arm64.$webview2Version.nupkg"
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/WebView2.Runtime.ARM64/$webview2Version" -OutFile $nupkg
+          Expand-Archive -Path $nupkg -DestinationPath "webview2pkg" -Force
+          Copy-Item "webview2pkg\\contentFiles\\any\\any\\WebView2\\*" "$portableDir\\WebView2" -Recurse -Force
+
+          Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
+
+      - name: Collect release assets (Linux AppImage)
+        if: matrix.platform == 'ubuntu-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          shopt -s nullglob
+          appimages=(src-tauri/target/release/bundle/appimage/*.AppImage)
+          if [[ ${#appimages[@]} -lt 1 ]]; then
+            echo "No .AppImage found in src-tauri/target/release/bundle/appimage/"
+            exit 1
+          fi
+          cp "${appimages[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            src-tauri/target/release/bundle/**/*.app.tar.gz
-            src-tauri/target/release/bundle/**/*.msi
-            src-tauri/target/release/bundle/**/*.exe
+            release-assets/*
           body_path: CHANGELOG.md
           draft: false
           prerelease: false
