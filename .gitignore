@@ -41,6 +41,8 @@ Thumbs.db
 .todos/
 .factory/
 .cursor/mcp.json
+.cursor/
+.codex/
 
 # Rust
 **/*.rs.bk
