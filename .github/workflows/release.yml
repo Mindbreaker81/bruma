@@ -70,7 +70,8 @@ jobs:
             libglib2.0-dev \
             libgtk-3-dev \
             libsoup-3.0-dev \
-            libwebkit2gtk-4.1-dev
+            libwebkit2gtk-4.1-dev \
+            libfuse2 || true
 
       - name: Build unsigned bundle (macOS)
         if: startsWith(matrix.platform, 'macos-')
@@ -86,7 +87,47 @@ jobs:
 
       - name: Build unsigned bundle (Linux)
         if: matrix.platform == 'ubuntu-latest'
-        run: pnpm tauri build --bundles appimage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Tauri's AppImage bundling can fail on environments that can't execute
+          # AppImages reliably. Use a fallback path that runs linuxdeploy directly.
+          if pnpm tauri build --bundles appimage; then
+            exit 0
+          fi
+
+          echo "Tauri AppImage bundling failed; running linuxdeploy fallback..."
+
+          pnpm tauri build --no-bundle
+
+          app_dir="src-tauri/target/release/bundle/appimage/Bruma.AppDir"
+          if [[ ! -d "$app_dir" ]]; then
+            echo "Expected AppDir not found: $app_dir"
+            exit 1
+          fi
+
+          linuxdeploy="$HOME/.cache/tauri/linuxdeploy-x86_64.AppImage"
+          plugin_appimage="$HOME/.cache/tauri/linuxdeploy-plugin-appimage.AppImage"
+          plugin_gtk="$HOME/.cache/tauri/linuxdeploy-plugin-gtk.sh"
+          plugin_gstreamer="$HOME/.cache/tauri/linuxdeploy-plugin-gstreamer.sh"
+
+          chmod +x "$linuxdeploy" "$plugin_appimage" "$plugin_gtk" "$plugin_gstreamer" || true
+
+          (
+            cd src-tauri
+            APPIMAGE_EXTRACT_AND_RUN=1 \
+              LINUXDEPLOY_PLUGIN_APPIMAGE="$plugin_appimage" \
+              LINUXDEPLOY_PLUGIN_GTK="$plugin_gtk" \
+              LINUXDEPLOY_PLUGIN_GSTREAMER="$plugin_gstreamer" \
+              "$linuxdeploy" \
+              --appdir "target/release/bundle/appimage/Bruma.AppDir" \
+              --output appimage \
+              -d "target/release/bundle/appimage/Bruma.AppDir/usr/share/applications/Bruma.desktop" \
+              -i "target/release/bundle/appimage/Bruma.AppDir/Bruma.png"
+          )
 
       - name: Collect release assets (macOS)
         if: matrix.platform == 'macos-13' || matrix.platform == 'macos-14'
@@ -176,7 +217,7 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           shopt -s nullglob
-          appimages=(src-tauri/target/release/bundle/appimage/*.AppImage)
+          appimages=(src-tauri/target/release/bundle/appimage/*.AppImage src-tauri/*.AppImage)
           if [[ ${#appimages[@]} -lt 1 ]]; then
             echo "No .AppImage found in src-tauri/target/release/bundle/appimage/"
             exit 1
