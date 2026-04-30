@@ -46,6 +46,18 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Linux dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libsoup-3.0-dev \
+            libwebkit2gtk-4.1-dev \
+            libfuse2 || true
+
       - name: Add Rust target (Windows arm64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
         shell: pwsh
@@ -60,18 +72,6 @@ jobs:
       - name: Test Rust
         working-directory: src-tauri
         run: cargo test
-
-      - name: Install Linux dependencies (Ubuntu)
-        if: matrix.platform == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libglib2.0-dev \
-            libgtk-3-dev \
-            libsoup-3.0-dev \
-            libwebkit2gtk-4.1-dev \
-            libfuse2 || true
 
       - name: Build unsigned bundle (macOS)
         if: startsWith(matrix.platform, 'macos-')
