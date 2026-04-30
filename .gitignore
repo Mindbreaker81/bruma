@@ -37,6 +37,11 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
+# Local tooling / CLI state (machine-specific)
+.todos/
+.factory/
+.cursor/mcp.json
+
 # Rust
 **/*.rs.bk
 *.pdb

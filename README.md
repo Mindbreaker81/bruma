@@ -212,6 +212,16 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 - `v1.2`: pestanas, preferencias avanzadas, modo enfoque, autoguardado
 - `v2.0`: soporte Linux oficial (Ubuntu/Debian/Fedora)
 
+## Sitio web
+
+Hay una pagina de presentacion minima en [`landing/`](landing/) para desplegar en **Vercel**. En cada deploy, el build incorpora el `README.md` y `CHANGELOG.md` de la raiz del mismo commit.
+
+1. En Vercel: importar el repo y fijar **Root Directory** a `landing`.
+2. Build: `npm run build`; salida: `dist`.
+3. La URL de produccion aparece en el dashboard de Vercel tras el primer deploy.
+
+Enlace al codigo y releases: [github.com/Mindbreaker81/bruma](https://github.com/Mindbreaker81/bruma).
+
 ## Documentacion
 
 - `docs/PRDv2.md`: PRD vigente
@@ -220,6 +230,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 - `docs/TODO.md`: estado por sprints
 - `docs/RELEASE.md`: checklist de release/firma/QA
 - `CHANGELOG.md`: historial de cambios
+- `landing/README.md`: sitio de presentacion (Vercel)
 
 ## Licencia
 

@@ -6,7 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
-_Sin cambios todavía._
+### Added
+
+- Sitio web de presentacion en `landing/` para Vercel: pagina estatica generada en build leyendo `README.md` y `CHANGELOG.md` del repo; configurar el proyecto con **Root Directory** `landing` (ver `landing/README.md`).
+
+### Docs
+
+- `docs/SECURITY.md`: seccion de revision pre-publica (gitleaks, trufflehog, `pnpm audit`, notas de CI).
 
 ## [1.3.0] - 2026-05-01
 

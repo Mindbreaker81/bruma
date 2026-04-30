@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="{{description}}" />
+    <title>Bruma — editor Markdown local-first</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <header class="hero" role="banner">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="hero__inner">
+        <div class="hero__brand">
+          <img
+            class="hero__logo"
+            src="/icon.svg"
+            width="72"
+            height="72"
+            alt=""
+            decoding="async"
+          />
+          <div class="hero__titles">
+            <h1 class="hero__title">Bruma</h1>
+            <p class="hero__tagline">
+              Editor Markdown de escritorio, local-first, enfocado en lo
+              esencial.
+            </p>
+            <p class="hero__meta">
+              <span class="badge">v{{version}}</span>
+              <span class="hero__build">Generado el {{buildDate}}</span>
+            </p>
+          </div>
+        </div>
+        <div class="hero__actions">
+          <a
+            class="btn btn--primary"
+            href="https://github.com/Mindbreaker81/bruma"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Repositorio en GitHub</a
+          >
+          <a
+            class="btn btn--secondary"
+            href="https://github.com/Mindbreaker81/bruma/releases"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Descargas (Releases)</a
+          >
+          <button
+            type="button"
+            class="btn btn--ghost"
+            id="theme-toggle"
+            aria-pressed="false"
+          >
+            Tema
+          </button>
+        </div>
+        <nav class="hero__nav" aria-label="Secciones">
+          <a href="#caracteristicas">Características</a>
+          <a href="#seguridad">Seguridad</a>
+          <a href="#descargas">Descargas</a>
+          <a href="#cambios">Últimos cambios</a>
+          <a href="#readme">README completo</a>
+          <a href="#changelog">Changelog completo</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido" class="main">
+      <section
+        id="caracteristicas"
+        class="section section--surface"
+        aria-labelledby="h-caracteristicas"
+      >
+        <div class="section__inner">
+          <h2 id="h-caracteristicas">Qué incluye la versión actual</h2>
+          <ul class="feature-grid">
+            <li>
+              Nuevo, abrir, guardar y guardar como (<code>.md</code> /
+              <code>.markdown</code>)
+            </li>
+            <li>Editor Markdown (CodeMirror 6)</li>
+            <li>Vista previa en tiempo real (markdown-it + DOMPurify)</li>
+            <li>Modos: editor, vista previa, dividido</li>
+            <li>Búsqueda con contador y navegación</li>
+            <li>Protección ante cambios sin guardar</li>
+            <li>Arrastrar y soltar archivos Markdown</li>
+            <li>Recientes persistidos con menú nativo</li>
+            <li>Tema claro / oscuro / sistema</li>
+            <li>Interfaz bilingüe <code>es</code> / <code>en</code></li>
+            <li>Menú nativo de aplicación</li>
+            <li>Carga diferida de módulos pesados</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="seguridad" class="section" aria-labelledby="h-seguridad">
+        <div class="section__inner">
+          <h2 id="h-seguridad">Seguridad y privacidad</h2>
+          <ul class="list-check">
+            <li>Local-first estricto: sin nube y sin telemetría</li>
+            <li>Sanitización del HTML de la vista previa</li>
+            <li>CSP de Tauri endurecida en el build de escritorio</li>
+            <li>
+              Lectura/escritura Markdown restringida al home del usuario tras
+              canonicalización de rutas
+            </li>
+          </ul>
+          <p class="muted">
+            Más detalle en el repositorio:
+            <a
+              href="https://github.com/Mindbreaker81/bruma/blob/main/docs/SECURITY.md"
+              >docs/SECURITY.md</a
+            >
+          </p>
+        </div>
+      </section>
+
+      <section
+        id="descargas"
+        class="section section--surface"
+        aria-labelledby="h-descargas"
+      >
+        <div class="section__inner">
+          <h2 id="h-descargas">Descargas</h2>
+          <p>
+            Builds firmadas y artefactos de CI en
+            <a href="https://github.com/Mindbreaker81/bruma/releases"
+              >GitHub Releases</a
+            >
+            y
+            <a href="https://github.com/Mindbreaker81/bruma/actions">Actions</a
+            >.
+          </p>
+          <p class="muted">
+            Ejemplos de nombres: <code>bruma-vX.Y.Z-macos-aarch64.dmg</code>,
+            <code>bruma-vX.Y.Z-windows-x64.msi</code>,
+            <code>bruma-vX.Y.Z-linux-x86_64.AppImage</code> — ver README del
+            repo para la lista completa.
+          </p>
+        </div>
+      </section>
+
+      <section id="cambios" class="section" aria-labelledby="h-cambios">
+        <div class="section__inner">
+          <h2 id="h-cambios">Últimos cambios</h2>
+          <div class="md-content md-content--latest">
+            {{latestChangelogHtml}}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="readme"
+        class="section section--surface"
+        aria-labelledby="h-readme"
+      >
+        <div class="section__inner">
+          <details
+            class="details-block"
+            id="details-readme"
+            aria-labelledby="h-readme"
+          >
+            <summary class="details-block__summary">
+              <span id="h-readme" class="details-block__title"
+                >README completo</span
+              >
+            </summary>
+            <div class="md-content">{{readmeHtml}}</div>
+          </details>
+        </div>
+      </section>
+
+      <section id="changelog" class="section" aria-labelledby="h-changelog">
+        <div class="section__inner">
+          <details
+            class="details-block"
+            id="details-changelog"
+            aria-labelledby="h-changelog"
+          >
+            <summary class="details-block__summary">
+              <span id="h-changelog" class="details-block__title"
+                >Changelog completo</span
+              >
+            </summary>
+            <div class="md-content">{{changelogHtml}}</div>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        <a href="https://github.com/Mindbreaker81/bruma">mindbreaker81/bruma</a>
+        · Licencia
+        <a href="https://github.com/Mindbreaker81/bruma/blob/main/LICENSE"
+          >MIT</a
+        >
+        · <span id="footer-year"></span>
+      </p>
+      <p class="footer__note">
+        Contenido de README y CHANGELOG generado en build desde el mismo commit.
+      </p>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
