@@ -14,6 +14,11 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 - `docs/SECURITY.md`: seccion de revision pre-publica (gitleaks, trufflehog, `pnpm audit`, notas de CI).
 
+### Fixed
+
+- Deploy en Vercel: `vercel.json` en la raiz del monorepo con `installCommand` / `buildCommand` en `landing/` y salida `landing/dist`, para que el build tenga acceso a `README.md` y `CHANGELOG.md` (un proyecto con Root Directory solo `landing/` fallaba).
+- `.vercelignore` en la raiz para que la CLI no suba `node_modules`, `src-tauri/target` ni otros artefactos pesados.
+
 ## [1.3.0] - 2026-05-01
 
 ### Added

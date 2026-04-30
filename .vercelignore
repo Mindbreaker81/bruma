@@ -1,0 +1,19 @@
+# Evita subir artefactos pesados con `vercel` (el build solo necesita landing/ + README/CHANGELOG/package en raiz).
+node_modules
+**/node_modules
+dist
+landing/dist
+src-tauri/target
+src-tauri/gen
+src-tauri/WixTools
+playwright-report
+test-results
+coverage
+.worktrees
+release-assets
+portable-full*
+webview2pkg
+*.log
+.cache
+.vite
+.eslintcache

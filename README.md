@@ -216,11 +216,15 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 
 Hay una pagina de presentacion minima en [`landing/`](landing/) para desplegar en **Vercel**. En cada deploy, el build incorpora el `README.md` y `CHANGELOG.md` de la raiz del mismo commit.
 
-1. En Vercel: importar el repo y fijar **Root Directory** a `landing`.
-2. Build: `npm run build`; salida: `dist`.
-3. La URL de produccion aparece en el dashboard de Vercel tras el primer deploy.
+La configuracion vive en [`vercel.json`](vercel.json) en la **raiz del repo** (contexto completo del monorepo), no en `landing/` aislada.
+
+1. **Dashboard:** importar el repo con raiz del proyecto en el repositorio (sin subcarpeta `landing` como Root Directory), o Root Directory vacio.
+2. **CLI:** desde la raiz del repo, `vercel` / `vercel --prod` (ver `landing/README.md`).
+3. La URL de produccion aparece en el dashboard tras el primer deploy (dominio `*.vercel.app` o alias del proyecto).
 
 Enlace al codigo y releases: [github.com/Mindbreaker81/bruma](https://github.com/Mindbreaker81/bruma).
+
+Sitio desplegado (produccion): [bruma-sigma.vercel.app](https://bruma-sigma.vercel.app).
 
 ## Documentacion
 
