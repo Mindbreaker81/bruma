@@ -192,5 +192,27 @@
       "preview": "Preview",
       "split": "Dividido"
     }
+  },
+  "toolbar": {
+    "file": "Archivo",
+    "write": "Escritura",
+    "view": "Vista",
+    "zoom": "Zoom",
+    "export": "Exportar"
+  },
+  "welcome": {
+    "eyebrow": "Espacio de trabajo",
+    "title": "Escribe, revisa y exporta sin pelearte con la interfaz.",
+    "body": "Bruma está lista para abrir una nota local, arrancar un borrador rápido o volver a un archivo reciente. El editor sigue siendo ligero, pero ahora tiene un punto de entrada más claro.",
+    "startWriting": "Empezar a escribir",
+    "openDocument": "Abrir archivo",
+    "recentLabel": "Continuar",
+    "noRecent": "Todavía no hay archivos recientes en esta instalación.",
+    "shortcutsTitle": "Atajos visibles",
+    "shortcutsBody": "Abre el panel de atajos desde la toolbar y ajusta el flujo al teclado sin salir del editor.",
+    "searchTitle": "Búsqueda integrada",
+    "searchBody": "La búsqueda queda anclada al área de trabajo para revisar coincidencias sin tapar el documento.",
+    "previewTitle": "Vista dividida",
+    "previewBody": "Cambia entre editor, preview o vista partida para revisar el Markdown sin cambiar de contexto."
   }
 }

@@ -1,7 +1,7 @@
 # TODO — Bruma
 
-- **Estado:** `v1.1-block-a` (rama feature con bloques A, B, C, D, E completados).
-- **Último release:** `v1.0.1` (2026-04-26).
+- **Estado:** `v1.3.0` (bundle optimization + versionado sincronizado).
+- **Último release:** `v1.3.0` (2026-05-01).
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
@@ -215,7 +215,7 @@
 
 - [x] Iconos finales (macOS `.icns`, Windows `.ico`).
 - [x] Metadata de la app (nombre, identificador, versión, descripción) en `tauri.conf.json`.
-- [x] Version v1.0.0 sincronizada en `package.json`, `src-tauri/Cargo.toml`, `Cargo.lock` y `tauri.conf.json`.
+- [x] Version inicial sincronizada en `package.json`, `src-tauri/Cargo.toml`, `Cargo.lock` y `tauri.conf.json`.
 - [x] CSP estricta verificada en configuracion Tauri.
 - [~] Builds de release sin firmar para QA interno (macOS + Windows): workflow listo; artefactos pendientes al crear/pushear tag `v1.0.0`.
 - [x] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
@@ -251,6 +251,21 @@
 - [x] Restaurar item nativo `Quit` en macOS para que `Cmd+Q` cierre la app.
 - [x] Sincronizar version `1.0.1` en frontend, paquete npm y crate Rust.
 - [x] Validar con `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`, `cargo fmt --check` y `cargo test`.
+
+---
+
+## Release v1.3.0 — Bundle y versionado
+
+- [x] Añadir `rollup-plugin-visualizer` y `pnpm build:analyze` para generar `dist/stats.html`.
+- [x] Lazy-load de dialogos, busqueda, tabla de contenidos, preview, export HTML y editor.
+- [x] Separar chunks de `markdown`, `codemirror`, `lezer` y runtime del editor.
+- [x] Reducir el chunk inicial a menos de 500 kB minificados.
+- [x] Cambiar iconos Lucide a imports directos para evitar transformar el barrel completo.
+- [x] Crear `pnpm sync:version` con `package.json` como fuente unica editable.
+- [x] Crear `pnpm check:version` para detectar drift de metadata generada.
+- [x] Enganchar sincronizacion de version en `predev`, `prebuild` y `pretauri`.
+- [x] Actualizar README, CHANGELOG y checklist de release.
+- [x] Validar con `npm test`, `npm run lint`, `npm run build` y `npm run build:analyze`.
 
 ---
 
@@ -334,16 +349,18 @@
 - [ ] Mantener `ARCHITECTURE.md` cuando cambien decisiones técnicas.
 - [ ] Revisión periódica de dependencias (Renovate / Dependabot).
 - [ ] Auditoría de seguridad de dependencias (`npm audit`, `cargo audit`).
-- [ ] Revisión de bundle size en cada release.
+- [x] Revisión de bundle size en release v1.3.0.
+- [ ] Revisión de bundle size en cada release futura.
 - [ ] Verificar `cargo test` en CI macOS/Windows (tests de `image_mime_for_path`, `ensure_extension`, `read_image_as_data_url`, `accepts_new_markdown_paths_inside_home_on_write`).
 
 ---
 
-## Sugerencia de orden para v1.2
+## Siguiente orden sugerido
 
-Los bloques A-E de v1.1 están completados. Pendientes:
+Pendientes:
 - Validación manual en macOS y Windows
-- Considerar bump a v1.1.0 para release
+- QA de artifacts publicados por tag `vX.Y.Z`
+- Seguimiento de tamaño de bundle en cada release
 
 ---
 

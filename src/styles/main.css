@@ -34,7 +34,10 @@
   --color-muted: 82 82 91;
   --color-border: 228 228 231;
   --color-control-hover: 244 244 245;
+  --shadow-color: 15 23 42;
   font-family:
+    'Aptos',
+    'Segoe UI Variable',
     Inter,
     ui-sans-serif,
     system-ui,
@@ -74,6 +77,7 @@
   --color-muted: 161 161 170;
   --color-border: 63 63 70;
   --color-control-hover: 63 63 70;
+  --shadow-color: 2 6 23;
 }
 
 @layer base {
@@ -87,6 +91,28 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(circle at top, rgb(209 250 229 / 0.65), transparent 28%),
+    rgb(var(--color-bg));
+  font-feature-settings: 'ss01' 1, 'cv05' 1;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+.bruma-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.3), transparent 70%);
+  opacity: 0.2;
 }
 
 button,
@@ -96,7 +122,8 @@ textarea {
 
 .bruma-editor .cm-editor {
   height: 100%;
-  background: rgb(var(--color-editor));
+  background:
+    linear-gradient(180deg, rgb(var(--color-editor) / 0.98), rgb(var(--color-editor)));
   color: rgb(var(--color-text));
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
@@ -114,7 +141,7 @@ textarea {
 
 .bruma-editor .cm-content {
   min-height: 100%;
-  padding: 1rem 1.25rem;
+  padding: 1.5rem 1.5rem 6rem;
 }
 
 .bruma-editor .cm-line {
@@ -138,6 +165,9 @@ textarea {
 .bruma-preview {
   color: rgb(var(--color-text));
   font-size: calc(1rem * var(--bruma-font-scale));
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120 113 108 / 0.7) transparent;
+  text-wrap: pretty;
 }
 
 .bruma-preview :where(h1, h2, h3, h4, h5, h6) {
@@ -147,15 +177,18 @@ textarea {
 }
 
 .bruma-preview h1 {
-  font-size: 1.75rem;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
 }
 
 .bruma-preview h2 {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
 }
 
 .bruma-preview h3 {
   font-size: 1.1rem;
+  letter-spacing: -0.02em;
 }
 
 .bruma-preview :where(p, ul, ol, blockquote, pre, table) {
@@ -177,9 +210,10 @@ textarea {
 }
 
 .bruma-preview blockquote {
-  border-left: 3px solid rgb(var(--color-border));
+  border-left: 3px solid rgb(5 150 105 / 0.45);
   color: rgb(var(--color-muted));
   padding-left: 1rem;
+  font-style: italic;
 }
 
 .bruma-preview :where(code, pre) {
@@ -198,9 +232,14 @@ textarea {
 .bruma-preview pre {
   overflow: auto;
   border: 1px solid rgb(var(--color-border));
-  border-radius: 8px;
-  background: rgb(var(--color-panel));
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--color-panel) / 0.96),
+    rgb(var(--color-panel))
+  );
   padding: 1rem;
+  box-shadow: 0 20px 40px rgb(var(--shadow-color) / 0.06);
 }
 
 .bruma-preview table {
@@ -228,6 +267,21 @@ textarea {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+.bruma-preview::-webkit-scrollbar {
+  width: 10px;
+}
+
+.bruma-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bruma-preview::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+  background-color: rgb(120 113 108 / 0.55);
 }
 
 @media print {

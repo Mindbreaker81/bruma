@@ -1,10 +1,8 @@
-import {
-  CaseSensitive,
-  ChevronRight,
-  ArrowDown,
-  ArrowUp,
-  X,
-} from 'lucide-react';
+import ArrowDown from 'lucide-react/dist/esm/icons/arrow-down.js';
+import ArrowUp from 'lucide-react/dist/esm/icons/arrow-up.js';
+import CaseSensitive from 'lucide-react/dist/esm/icons/case-sensitive.js';
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right.js';
+import X from 'lucide-react/dist/esm/icons/x.js';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -53,7 +51,7 @@ export function SearchPanel({
 
   return (
     <form
-      className="absolute right-4 top-3 z-10 flex flex-col gap-1 rounded-md border bg-card p-1 shadow-sm"
+      className="absolute inset-x-4 top-4 z-10 flex max-w-4xl flex-col gap-2 rounded-[1.25rem] border border-white/60 bg-white/90 p-2 shadow-[0_20px_50px_rgba(15,23,42,0.12)] ring-1 ring-emerald-950/5 backdrop-blur animate-in fade-in slide-in-from-top-2 duration-200 dark:border-white/10 dark:bg-zinc-950/80 dark:ring-white/10"
       role="search"
       onSubmit={(event) => {
         event.preventDefault();
@@ -66,10 +64,10 @@ export function SearchPanel({
         }
       }}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
           aria-pressed={replaceMode}
           aria-label={t('search.toggleReplace')}
           title={t('search.toggleReplace')}
@@ -82,12 +80,12 @@ export function SearchPanel({
         <input
           ref={inputRef}
           type="text"
-          className="h-8 w-56 rounded bg-background px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+          className="h-10 min-w-[14rem] flex-1 rounded-full border border-transparent bg-background/90 px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground transition focus-visible:border-emerald-800/10 focus-visible:ring-2 focus-visible:ring-primary"
           placeholder={t('search.placeholder')}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
-        <span className="min-w-14 text-center text-xs tabular-nums text-muted-foreground">
+        <span className="min-w-16 text-center text-xs tabular-nums text-muted-foreground">
           {matchCount > 0
             ? `${activeIndex + 1} / ${matchCount}`
             : t('search.noMatches')}
@@ -95,7 +93,7 @@ export function SearchPanel({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label={t('search.previous')}
             title={t('search.previous')}
             onClick={onPrevious}
@@ -104,7 +102,7 @@ export function SearchPanel({
           </button>
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label={t('search.next')}
             title={t('search.next')}
             onClick={onNext}
@@ -113,7 +111,7 @@ export function SearchPanel({
           </button>
           <button
             type="button"
-            className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
             aria-pressed={caseSensitive}
             aria-label={t('search.caseSensitive')}
             title={t('search.caseSensitive')}
@@ -124,7 +122,7 @@ export function SearchPanel({
         </div>
         <button
           type="button"
-          className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           aria-label={t('search.close')}
           title={t('search.close')}
           onClick={onClose}
@@ -133,10 +131,10 @@ export function SearchPanel({
         </button>
       </div>
       {replaceMode && (
-        <div className="flex items-center gap-1 pl-9">
+        <div className="flex flex-wrap items-center gap-2 pl-11">
           <input
             type="text"
-            className="h-8 w-56 rounded bg-background px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+            className="h-10 min-w-[14rem] flex-1 rounded-full border border-transparent bg-background/90 px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground transition focus-visible:border-emerald-800/10 focus-visible:ring-2 focus-visible:ring-primary"
             placeholder={t('search.replacePlaceholder')}
             value={replaceQuery}
             onChange={(e) => onReplaceQueryChange(e.target.value)}
@@ -149,19 +147,19 @@ export function SearchPanel({
           />
           <button
             type="button"
-            className="inline-flex h-8 items-center justify-center gap-1 rounded px-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-1 rounded-full bg-stone-100/80 px-4 text-xs font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 dark:bg-white/5"
             onClick={onReplaceOne}
             disabled={matchCount === 0}
           >
-            {t('search.replace')}
+            {t('search.replaceOneShort')}
           </button>
           <button
             type="button"
-            className="inline-flex h-8 items-center justify-center gap-1 rounded px-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-1 rounded-full bg-stone-100/80 px-4 text-xs font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 dark:bg-white/5"
             onClick={onReplaceAll}
             disabled={matchCount === 0}
           >
-            {t('search.replaceAll')}
+            {t('search.replaceAllShort')}
           </button>
         </div>
       )}

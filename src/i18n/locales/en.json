@@ -192,5 +192,27 @@
       "preview": "Preview",
       "split": "Split"
     }
+  },
+  "toolbar": {
+    "file": "File",
+    "write": "Write",
+    "view": "View",
+    "zoom": "Zoom",
+    "export": "Export"
+  },
+  "welcome": {
+    "eyebrow": "Workspace",
+    "title": "Write, review, and export without fighting the interface.",
+    "body": "Bruma is ready to open a local note, start a quick draft, or jump back into a recent file. The editor stays lightweight, but the entry point is now much clearer.",
+    "startWriting": "Start writing",
+    "openDocument": "Open file",
+    "recentLabel": "Continue",
+    "noRecent": "There are no recent files in this installation yet.",
+    "shortcutsTitle": "Visible shortcuts",
+    "shortcutsBody": "Open the shortcuts panel from the toolbar and shape the workflow around your keyboard without leaving the editor.",
+    "searchTitle": "Integrated search",
+    "searchBody": "Search now stays anchored to the workspace so you can inspect matches without covering the document.",
+    "previewTitle": "Split preview",
+    "previewBody": "Switch between editor, preview, or split mode to review Markdown without losing context."
   }
 }

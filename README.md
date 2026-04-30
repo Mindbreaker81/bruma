@@ -4,12 +4,12 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
 ## Estado actual
 
-- Version de app: `1.2.0`
+- Version de app: se lee desde `package.json` y se sincroniza con Tauri/Rust con `npm run sync:version`.
 - Plataformas objetivo MVP: macOS, Windows y Linux
 - Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
 - Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
-## Que incluye v1.2.0
+## Que incluye la version actual
 
 - Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
 - Editor Markdown (CodeMirror 6)
@@ -23,6 +23,8 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
 - Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
 - Soporte restaurado de cierre nativo con `Cmd+Q` en macOS
+- Carga diferida de editor, preview, busqueda, dialogos y export para reducir el JS inicial
+- Reporte de bundle local con `npm run build:analyze`
 
 ## Seguridad y privacidad
 
@@ -115,9 +117,30 @@ pnpm format:check
 pnpm test
 pnpm test:e2e
 pnpm test:tauri:e2e
+pnpm check:version
 pnpm build
+pnpm build:analyze
 pnpm tauri build
 ```
+
+### Versionado
+
+`package.json` es la fuente unica editable para la version de Bruma. Para preparar una nueva version:
+
+```bash
+pnpm version minor --no-git-tag-version
+pnpm sync:version
+pnpm check:version
+```
+
+`pnpm sync:version` actualiza automaticamente:
+
+- `src-tauri/tauri.conf.json`
+- `src-tauri/Cargo.toml`
+- `src-tauri/Cargo.lock`
+
+Los comandos `pnpm dev`, `pnpm build` y `pnpm tauri ...` ejecutan esa sincronizacion antes de arrancar.
+`pnpm check:version` falla si algun archivo generado quedo desincronizado.
 
 ### Tests E2E nativos (Tauri)
 
@@ -164,11 +187,13 @@ En Ubuntu 24.04, `cargo test` ya fue verificado correctamente tras instalar:
 
 ## Release interno
 
-El workflow de release se dispara con el tag `v1.0.1`.
+El workflow de release se dispara con un tag SemVer `vX.Y.Z`. El valor `X.Y.Z` debe coincidir con `package.json`.
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+VERSION=$(node -p "require('./package.json').version")
+pnpm sync:version
+git tag "v$VERSION"
+git push origin "v$VERSION"
 ```
 
 El detalle operativo de firma y QA esta en `docs/RELEASE.md`.

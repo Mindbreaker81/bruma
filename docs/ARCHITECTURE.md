@@ -429,6 +429,15 @@ Para que el cambio sea barato cuando llegue:
 | 6   | Persistencia de configuración           | **`tauri-plugin-store`**            |
 | 7   | Versionado y commits                    | **SemVer estricto + Conventional Commits** |
 
+### Versionado de app
+
+`package.json` es la fuente unica editable de version. La metadata que Tauri y Cargo requieren en archivos propios se trata como salida sincronizada:
+
+- `pnpm sync:version` propaga `package.json.version` a `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` y `src-tauri/Cargo.lock`.
+- `pnpm check:version` falla si alguno de esos archivos queda desincronizado.
+- `pnpm dev`, `pnpm build` y `pnpm tauri ...` ejecutan la sincronizacion antes de arrancar.
+- El frontend expone la version con `__APP_VERSION__`, definido desde `package.json` en Vite/Vitest.
+
 ### Pendientes (no bloqueantes para arrancar)
 
 - Librería de primitivas accesibles (Radix UI, Headless UI o componentes propios).

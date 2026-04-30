@@ -6,6 +6,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+_Sin cambios todavía._
+
+## [1.3.0] - 2026-05-01
+
+### Added
+
+- Reporte de bundle bajo demanda con `rollup-plugin-visualizer` y `npm run build:analyze`, generado en `dist/stats.html`.
+- Script `npm run sync:version` para sincronizar la version desde `package.json` hacia Tauri, Cargo y `Cargo.lock`.
+- Script `npm run check:version` para fallar si la metadata generada queda desincronizada.
+
+### Changed
+
+- Version de app actualizada a `1.3.0`; `package.json` queda como fuente unica de version editable.
+- `build`, `dev` y `tauri` ejecutan sincronizacion de version antes de arrancar para evitar drift entre frontend, Tauri y Rust.
+- Optimizacion de bundle: dialogs, busqueda, tabla de contenidos, preview, export HTML y editor se cargan bajo demanda.
+- Separacion de chunks para `markdown`, `codemirror`, `lezer` y runtime del editor; el chunk inicial queda por debajo del limite de advertencia de Vite.
+- Importaciones de iconos Lucide cambiadas a modulos directos para reducir modulos transformados y ruido en el reporte.
+
+### Docs
+
+- README, release checklist y backlog actualizados con el flujo de versionado automatico y los nuevos tamanos de bundle.
+
+### Fixed
+
+- Eliminadas referencias operativas antiguas a tags `v1.0.1` en la documentacion de release.
+
+## [1.2.0] - 2026-04-30
+
 ### Changed
 
 - Etiqueta de autoguardado acortada (`es`/`en`) y texto del toolbar enlazado al interruptor con `label`/`htmlFor` para accesibilidad.
@@ -16,8 +44,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Fixed Prettier formatting issues in 7 files to resolve CI format check failures.
 - Fixed Rust test `reads_image_as_data_url_for_valid_file` by properly creating directory structure.
 - Fixed Windows test failure in `accepts_new_markdown_paths_inside_home_on_write` by avoiding exact path comparison on Windows (canonicalize() can return NT paths).
-
-## [1.2.0] - 2026-04-30
 
 ### Added
 

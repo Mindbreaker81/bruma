@@ -1,5 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
 
+function isTauriAvailable(): boolean {
+  return (
+    typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+  );
+}
+
 export type Template = {
   id: string;
   name: string;
@@ -82,6 +88,10 @@ npm start
 ];
 
 export async function listCustomTemplates(): Promise<Template[]> {
+  if (!isTauriAvailable()) {
+    return [];
+  }
+
   try {
     const customTemplates = await invoke<{ id: string; name: string }[]>(
       'list_custom_templates'
@@ -99,6 +109,10 @@ export async function listCustomTemplates(): Promise<Template[]> {
 }
 
 export async function loadCustomTemplate(id: string): Promise<string> {
+  if (!isTauriAvailable()) {
+    throw new Error('Custom templates are only available in Tauri runtime.');
+  }
+
   try {
     return await invoke<string>('read_custom_template', { id });
   } catch (error) {

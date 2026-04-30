@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import FileText from 'lucide-react/dist/esm/icons/file-text.js';
+import X from 'lucide-react/dist/esm/icons/x.js';
 import { type DragEvent, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Tab } from './document';
@@ -55,7 +56,7 @@ export function TabBar({
 
   return (
     <div
-      className="flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto border-b bg-card px-2 text-xs"
+      className="flex h-12 shrink-0 items-center gap-1 overflow-x-auto border-b border-white/50 bg-white/70 px-3 text-xs backdrop-blur dark:border-white/10 dark:bg-zinc-950/70"
       role="tablist"
       aria-label={t('tabs.label')}
     >
@@ -67,10 +68,10 @@ export function TabBar({
           <div
             key={tab.id}
             role="presentation"
-            className={`flex shrink-0 items-center gap-1.5 rounded-t-md px-3 py-1.5 transition ${
+            className={`group relative flex shrink-0 items-center gap-1.5 rounded-2xl px-3 py-2 transition ${
               active
-                ? 'bg-background text-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-background text-foreground shadow-sm ring-1 ring-emerald-950/5 dark:ring-white/10'
+                : 'text-muted-foreground hover:bg-white hover:text-accent-foreground dark:hover:bg-white/5'
             }`}
             draggable
             onDragStart={(e) => handleDragStart(e, tab.id)}
@@ -78,7 +79,7 @@ export function TabBar({
             onDrop={(e) => handleDrop(e, tab.id)}
           >
             <button
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-2"
               type="button"
               draggable
               onDragStart={(event) => handleDragStart(event, tab.id)}
@@ -87,17 +88,18 @@ export function TabBar({
               aria-selected={active}
               tabIndex={active ? 0 : -1}
             >
+              <FileText className="size-3.5 opacity-70" aria-hidden />
               <span className="max-w-[12ch] truncate">{name}</span>
               {dirty ? (
                 <span
-                  className="inline-block size-1.5 rounded-full bg-amber-500"
+                  className="inline-block size-1.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.16)]"
                   aria-label={t('tabs.unsaved')}
                 />
               ) : null}
             </button>
             {tabs.length > 1 ? (
               <button
-                className="inline-flex size-4 items-center justify-center rounded text-muted-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground opacity-0 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary group-hover:opacity-100"
                 type="button"
                 aria-label={t('tabs.close', { name })}
                 title={t('tabs.close', { name })}

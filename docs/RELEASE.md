@@ -6,10 +6,27 @@ Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el c
 
 ## Publicación (GitHub Releases)
 
-1. Crear y pushear el tag `vX.Y.Z` (ej. `v1.2.0`).
-2. Ejecutar el workflow `Release` (o esperar a que se dispare por tag).
-3. Verificar que la GitHub Release contiene los assets esperados.
-4. Probar los bundles en maquinas reales antes de anunciar/publicar ampliamente.
+1. Actualizar la version en `package.json` con SemVer y sincronizar metadata:
+
+```bash
+pnpm version patch --no-git-tag-version
+pnpm sync:version
+pnpm check:version
+```
+
+2. Crear y pushear el tag `vX.Y.Z` desde la version sincronizada:
+
+```bash
+VERSION=$(node -p "require('./package.json').version")
+git tag "v$VERSION"
+git push origin "v$VERSION"
+```
+
+3. Ejecutar el workflow `Release` (o esperar a que se dispare por tag).
+4. Verificar que la GitHub Release contiene los assets esperados.
+5. Probar los bundles en maquinas reales antes de anunciar/publicar ampliamente.
+
+`package.json` es la fuente unica editable de version. `pnpm sync:version` actualiza automaticamente `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` y `src-tauri/Cargo.lock`. `pnpm check:version` falla si alguno queda desincronizado.
 
 ### Assets esperados (por release `vX.Y.Z`)
 
