@@ -39,6 +39,7 @@ pub fn run() {
             commands::fs::save_file_dialog,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
+            commands::e2e::e2e_emit_recent_open,
             commands::recent::sync_recent_files_menu
         ])
         .setup(|app| {

@@ -114,9 +114,36 @@ pnpm lint
 pnpm format:check
 pnpm test
 pnpm test:e2e
+pnpm test:tauri:e2e
 pnpm build
 pnpm tauri build
 ```
+
+### Tests E2E nativos (Tauri)
+
+El repo tiene dos suites E2E:
+
+- **Web (Playwright)**: `pnpm test:e2e` (corre contra `pnpm dev`).
+- **Nativo (Tauri WebDriver / tauri-driver)**: `pnpm test:tauri:e2e` (corre la app Tauri y automatiza el WebView).
+
+#### Requisitos
+
+- **macOS / Windows**:
+  - `tauri-driver` instalado en el PATH:
+
+```bash
+cargo install tauri-driver --locked
+```
+
+- **Windows**: Edge Driver en el PATH (en CI se instala con `msedgedriver-tool`).
+
+- **Linux**:
+  - `tauri-driver` necesita `WebKitWebDriver` disponible en PATH.
+  - Por defecto, `pnpm test:tauri:e2e` **se salta en Linux** para evitar falsos negativos (ver `tests-tauri/run.js`).
+
+#### Nota sobre CI
+
+Los E2E nativos están pensados para correr en **macOS + Windows** (matriz del job `Tauri` en `.github/workflows/ci.yml`).
 
 ### Nota Playwright (primer uso)
 

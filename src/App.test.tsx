@@ -64,7 +64,7 @@ describe('App', () => {
     );
 
     const recentItem = screen.getByRole('menuitem', {
-      name: `${basename}${path}`,
+      name: `${basename} ${path}`,
     });
 
     expect(screen.getByText('ideas.md')).toBeInTheDocument();

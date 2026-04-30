@@ -1,7 +1,9 @@
-import DOMPurify from 'dompurify';
+import createDOMPurify from 'dompurify';
 import hljs from 'highlight.js/lib/common';
 import MarkdownIt from 'markdown-it';
 import taskLists from 'markdown-it-task-lists';
+
+const DOMPurify = createDOMPurify(window);
 
 function escapeHtml(value: string): string {
   return value
@@ -74,17 +76,55 @@ const ALLOWED_ATTR = [
   'type',
 ];
 
+let hooksInstalled = false;
+
+function installPurifyHooksOnce() {
+  if (hooksInstalled) return;
+  hooksInstalled = true;
+
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    // Defense-in-depth: ensure javascript: URLs are never emitted, regardless of
+    // DOM implementation used by tests.
+    if (
+      !node ||
+      typeof (node as unknown as { getAttribute?: unknown }).getAttribute !==
+        'function'
+    ) {
+      return;
+    }
+
+    const stripIfDangerous = (attr: 'href' | 'src') => {
+      const value = (node as unknown as Element).getAttribute(attr);
+      if (!value) return;
+      if (/^\s*(?:javascript|vbscript):/i.test(value)) {
+        (node as unknown as Element).removeAttribute(attr);
+      }
+    };
+
+    stripIfDangerous('href');
+    stripIfDangerous('src');
+  });
+}
+
 export function renderMarkdown(source: string): string {
   return markdown.render(source);
 }
 
 export function sanitizeMarkdownHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+  installPurifyHooksOnce();
+  const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_ATTR,
     ALLOWED_TAGS,
     ALLOW_DATA_ATTR: false,
     FORBID_ATTR: ['style'],
   });
+
+  // Defense-in-depth: strip dangerous javascript: / vbscript: URLs even if a given
+  // DOM implementation doesn't apply DOMPurify URL checks consistently.
+  return sanitized.replace(
+    /\s(?:href|src)\s*=\s*(["'])\s*(?:javascript|vbscript):[\s\S]*?\1/gi,
+    ''
+  );
 }
 
 export function renderSafeMarkdown(source: string): string {
