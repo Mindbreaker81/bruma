@@ -4,12 +4,12 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
 ## Estado actual
 
-- Version de app: `1.0.1`
-- Plataformas objetivo MVP: macOS y Windows
+- Version de app: `1.2.0`
+- Plataformas objetivo MVP: macOS, Windows y Linux
 - Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
 - Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
-## Que incluye v1.0.1
+## Que incluye v1.2.0
 
 - Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
 - Editor Markdown (CodeMirror 6)

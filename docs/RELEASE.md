@@ -6,7 +6,7 @@ Generar builds sin firmar para QA interno en macOS y Windows, y dejar listo el c
 
 ## Publicación (GitHub Releases)
 
-1. Crear y pushear el tag `vX.Y.Z` (ej. `v1.1.0`).
+1. Crear y pushear el tag `vX.Y.Z` (ej. `v1.2.0`).
 2. Ejecutar el workflow `Release` (o esperar a que se dispare por tag).
 3. Verificar que la GitHub Release contiene los assets esperados.
 4. Probar los bundles en maquinas reales antes de anunciar/publicar ampliamente.

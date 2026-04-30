@@ -10,7 +10,6 @@ jobs:
   build:
     name: Build ${{ matrix.platform }}${{ matrix.win_arch && format(' ({0})', matrix.win_arch) || '' }}
     runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.optional || false }}
     permissions:
       contents: write
     strategy:
@@ -18,7 +17,6 @@ jobs:
       matrix:
         include:
           - platform: macos-13
-            optional: true
           - platform: macos-14
           - platform: ubuntu-latest
           - platform: windows-latest
