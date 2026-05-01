@@ -14,7 +14,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 ### Top 5 quick wins
 - [x] **QW1** — `index.html`: theme-color, favicon y carga real de Inter (o quitarla)
 - [x] **QW2** — Landing: OG tags + Twitter card + canonical
-- [ ] **QW3** — Welcome con `inert/aria-hidden` o no montar Editor debajo
+- [x] **QW3** — Welcome con `inert/aria-hidden` o no montar Editor debajo
 - [ ] **QW4** — `prefers-reduced-motion` global en `main.css`
 - [ ] **QW5** — `transition-colors duration-200` global (cubre A7)
 

@@ -1439,31 +1439,39 @@ export default function App() {
                       onOpenRecent={handleOpenRecent}
                     />
                   ) : null}
-                  <Suspense
-                    fallback={
-                      <div
-                        role="textbox"
-                        aria-label={t('editor.label')}
-                        className="bruma-editor h-full min-h-0 bg-background"
-                      />
-                    }
+                  <div
+                    className="contents"
+                    aria-hidden={showWelcomeState || undefined}
+                    {...(showWelcomeState
+                      ? ({ inert: '' } as Record<string, string>)
+                      : {})}
                   >
-                    <MarkdownEditor
-                      ref={editorRef}
-                      activeSearchIndex={searchActiveIndex}
-                      ariaLabel={t('editor.label')}
-                      placeholder={t('editor.placeholder')}
-                      searchMatches={searchMatches}
-                      value={document.content}
-                      onChange={(nextValue) => {
-                        setWelcomeDismissed(true);
-                        updateContent(nextValue);
-                      }}
-                      tabSize={editorTabSize}
-                      lineWrapping={editorWrap}
-                      fontFamily={editorFontFamily}
-                    />
-                  </Suspense>
+                    <Suspense
+                      fallback={
+                        <div
+                          role="textbox"
+                          aria-label={t('editor.label')}
+                          className="bruma-editor h-full min-h-0 bg-background"
+                        />
+                      }
+                    >
+                      <MarkdownEditor
+                        ref={editorRef}
+                        activeSearchIndex={searchActiveIndex}
+                        ariaLabel={t('editor.label')}
+                        placeholder={t('editor.placeholder')}
+                        searchMatches={searchMatches}
+                        value={document.content}
+                        onChange={(nextValue) => {
+                          setWelcomeDismissed(true);
+                          updateContent(nextValue);
+                        }}
+                        tabSize={editorTabSize}
+                        lineWrapping={editorWrap}
+                        fontFamily={editorFontFamily}
+                      />
+                    </Suspense>
+                  </div>
                 </div>
               ) : null}
               {viewMode !== 'editor' ? (
