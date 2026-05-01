@@ -90,6 +90,1211 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 
 ---
 
+## Recetas paso a paso para los pendientes
+
+> Esta sección está pensada para que cualquier desarrollador (incluso poco familiarizado con el repo) pueda completar los ítems pendientes sin equivocarse. Cada receta indica archivos exactos, código a aplicar y cómo verificar.
+>
+> **Reglas comunes para todas las recetas:**
+> 1. Trabaja en la rama `claude/security-audit-design-review-csbqz` (o crea una nueva desde ella).
+> 2. Antes de empezar, asegúrate de que `pnpm install` está al día y `pnpm test`, `pnpm lint`, `pnpm build` pasan en limpio.
+> 3. Después de cada receta corre los **tres** comandos:
+>    ```sh
+>    pnpm lint && pnpm test && pnpm build
+>    ```
+>    Si alguno falla: arregla antes de commitear; nunca uses `--no-verify`.
+> 4. **commitlint** exige que el subject del commit empiece en minúscula y siga `tipo(scope): texto`. Si tu commit es rechazado por sentence-case, baja la primera letra del subject.
+> 5. Marca el checkbox correspondiente en el bloque "Checklist de implementación" arriba en el mismo commit.
+> 6. Un ítem = un commit (excepto los marcados como "puede unirse con ...").
+
+---
+
+### Receta M12 — Recent empty state focusable
+
+**Esfuerzo:** S · **Riesgo:** muy bajo
+
+**Objetivo:** cuando no hay archivos recientes, el menú desplegable Recent debe contener un item disabled en lugar de un `<div>` no-focusable, para que Radix DropdownMenu no caiga el foco en `body` al abrir con teclado.
+
+**Archivo a tocar:** `src/App.tsx` (línea ~1136-1140 — busca `recent.empty`).
+
+**Pasos:**
+
+1. Localiza el bloque actual:
+   ```tsx
+   ) : (
+     <div className="px-2 py-1.5 text-sm text-muted-foreground">
+       {t('recent.empty')}
+     </div>
+   )}
+   ```
+2. Reemplázalo por:
+   ```tsx
+   ) : (
+     <DropdownMenuItem disabled>
+       {t('recent.empty')}
+     </DropdownMenuItem>
+   )}
+   ```
+3. Verifica que `DropdownMenuItem` ya está importado en App.tsx (líneas 45-67 de imports). Si no, añade `DropdownMenuItem` al import existente desde `'./components/ui/dropdown-menu'`.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual (opcional, en `pnpm dev`): abre File → Recent sin tener archivos abiertos antes; el placeholder ahora se ve "atenuado" pero el foco permanece dentro del menú al pulsar Tab.
+
+**Commit:**
+```
+fix(m12): item disabled en lugar de div no focusable en Recent vacio
+```
+
+---
+
+### Receta M10 — Tokens semánticos de z-index
+
+**Esfuerzo:** S · **Riesgo:** muy bajo (cambio cosmético)
+
+**Objetivo:** Centralizar la escala de z-index en variables CSS para evitar colisiones futuras.
+
+**Archivos a tocar:**
+- `src/styles/main.css` (declarar variables)
+- `src/App.tsx`, `src/features/shell/WelcomeState.tsx`, `src/features/search/SearchPanel.tsx`, `src/features/settings/ShortcutsDialog.tsx` (usar variables)
+
+**Pasos:**
+
+1. En `src/styles/main.css`, dentro del bloque `:root` (línea ~5), añade al final:
+   ```css
+   /* Z-index scale (M10) */
+   --z-base: 0;
+   --z-shell: 10;
+   --z-overlay: 20;
+   --z-modal: 50;
+   --z-toast: 60;
+   ```
+2. En `tailwind.config.ts`, dentro de `theme.extend`, añade:
+   ```ts
+   zIndex: {
+     base: 'var(--z-base)',
+     shell: 'var(--z-shell)',
+     overlay: 'var(--z-overlay)',
+     modal: 'var(--z-modal)',
+     toast: 'var(--z-toast)',
+   },
+   ```
+3. Reemplaza ocurrencias en TSX:
+   - `z-10` que sea de header/section → `z-shell`
+   - `z-20` que sea overlay (Welcome, ShortcutsDialog, SearchPanel) → `z-overlay`
+   - `z-50` que pertenezca al focus-mode-button (App.tsx ~1284) → `z-overlay` (no es modal)
+   - **NO toques** los `z-50` que vienen de los componentes shadcn de Dialog/AlertDialog (están en `src/components/ui/`).
+
+   Comando de búsqueda:
+   ```sh
+   grep -rn "z-10\|z-20\|z-50" src/App.tsx src/features
+   ```
+   Itera caso por caso, no uses replace-all.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Visual: abre cada modal (About, Preferences, Shortcuts, External link) y confirma que ningún overlay queda detrás del contenido.
+
+**Commit:**
+```
+refactor(m10): tokens semanticos de z-index en main.css y tailwind
+```
+
+---
+
+### Receta M8 — Overlay decorativo opt-in / `focusMode`
+
+**Esfuerzo:** S · **Riesgo:** bajo
+
+**Objetivo:** El grid pattern decorativo de fondo (`bruma-shell::after`) compite con el texto en sesiones largas. Solución mínima: que se desactive automáticamente en focus-mode.
+
+**Archivos a tocar:**
+- `src/styles/main.css` (regla ~112)
+- `src/App.tsx` (al `<main>`/`<div>` que tiene clase `bruma-shell`, añadir `data-focus`)
+
+**Pasos:**
+
+1. En `src/App.tsx`, busca el contenedor que aplica la clase `bruma-shell` (es el wrapper más exterior del shell, contiene el `::after` decorativo). Añade un atributo `data-focus`:
+   ```tsx
+   <div className="bruma-shell ..." data-focus={focusMode ? 'on' : 'off'}>
+   ```
+2. En `src/styles/main.css`, modifica la regla del overlay (línea ~112):
+   ```css
+   .bruma-shell::after {
+     content: '';
+     /* … resto igual … */
+     opacity: 0.2;
+     transition: opacity 200ms ease;
+   }
+
+   .bruma-shell[data-focus='on']::after {
+     opacity: 0;
+   }
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: activa focus-mode (`Mod+Shift+M`) y comprueba que el grid se desvanece.
+
+**Commit:**
+```
+feat(m8): oculta overlay decorativo en focus-mode
+```
+
+---
+
+### Receta M6 — CTA download con detección de OS en la landing
+
+**Esfuerzo:** M · **Riesgo:** bajo (es JS de cliente, sin afectar build)
+
+**Objetivo:** En la landing, mostrar un botón "Descargar para macOS / Windows / Linux" que apunte directo al asset adecuado de la última release.
+
+**Archivos a tocar:**
+- `landing/src/template.html` (sustituir el bloque `hero__actions`)
+- `landing/src/app.js` (añadir lógica)
+
+**Pasos:**
+
+1. En `landing/src/template.html` reemplaza el bloque `<div class="hero__actions">` (líneas ~44-67) por:
+   ```html
+   <div class="hero__actions">
+     <a
+       class="btn btn--primary"
+       id="download-cta"
+       href="https://github.com/Mindbreaker81/bruma/releases"
+       rel="noopener noreferrer"
+       target="_blank"
+       data-default-label="Descargas"
+     >Descargas</a>
+     <a
+       class="btn btn--secondary"
+       href="https://github.com/Mindbreaker81/bruma"
+       rel="noopener noreferrer"
+       target="_blank"
+     >Repositorio en GitHub</a>
+     <button type="button" class="btn btn--ghost" id="theme-toggle" aria-pressed="false">Tema</button>
+   </div>
+   ```
+
+2. En `landing/src/app.js` añade al final del archivo:
+   ```js
+   (async function setupDownloadCta() {
+     const cta = document.getElementById('download-cta');
+     if (!cta) return;
+
+     const ua = navigator.userAgent || '';
+     let os = null;
+     if (/Mac|iPhone|iPad/.test(ua)) os = 'macos';
+     else if (/Windows/.test(ua)) os = 'windows';
+     else if (/Linux/.test(ua)) os = 'linux';
+
+     const labelMap = {
+       macos: 'Descargar para macOS',
+       windows: 'Descargar para Windows',
+       linux: 'Descargar para Linux',
+     };
+     if (os && labelMap[os]) cta.textContent = labelMap[os];
+
+     try {
+       const res = await fetch(
+         'https://api.github.com/repos/Mindbreaker81/bruma/releases/latest',
+         { headers: { Accept: 'application/vnd.github+json' } }
+       );
+       if (!res.ok) return;
+       const release = await res.json();
+       const matchers = {
+         macos: /\.(dmg|app\.tar\.gz)$/i,
+         windows: /\.(msi|exe)$/i,
+         linux: /\.(AppImage|deb|rpm)$/i,
+       };
+       const asset = (release.assets || []).find((a) => os && matchers[os].test(a.name));
+       if (asset && asset.browser_download_url) cta.href = asset.browser_download_url;
+     } catch {
+       /* fallback al link de releases */
+     }
+   })();
+   ```
+
+3. **CSP:** revisa `vercel.json` (línea ~27). Necesitas añadir `https://api.github.com` en `connect-src`. Cambia:
+   ```
+   default-src 'self'; img-src 'self' data:; ...
+   ```
+   por:
+   ```
+   default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data:; ...
+   ```
+
+**Verificación:** Build de la landing:
+```sh
+cd landing && npm install && npm run build
+```
+Abre `landing/dist/index.html` en un navegador. El CTA debería decir "Descargar para macOS/Windows/Linux" según tu OS.
+
+**Commit:**
+```
+feat(m6): cta de descarga con deteccion de OS en la landing
+```
+
+---
+
+### Receta M7 — Self-host Inter en la landing
+
+**Esfuerzo:** S · **Riesgo:** bajo
+
+**Objetivo:** Eliminar la dependencia de Google Fonts en la landing. Usa `@fontsource/inter` igual que la app desktop.
+
+**Archivos a tocar:** `landing/package.json`, `landing/build.mjs`, `landing/src/template.html`, `landing/src/styles.css`, `vercel.json`.
+
+**Pasos:**
+
+1. Añade el paquete a `landing/package.json` en `dependencies`:
+   ```json
+   "@fontsource-variable/inter": "^5.2.8",
+   ```
+
+2. En `landing/build.mjs`, dentro de la función `main()`, añade después del bloque que copia los assets estáticos:
+   ```js
+   // Copia los archivos de la fuente Inter al dist
+   const interSrc = path.join(__dirname, 'node_modules', '@fontsource-variable', 'inter', 'files');
+   const interDist = path.join(distDir, 'fonts', 'inter');
+   fs.mkdirSync(interDist, { recursive: true });
+   for (const file of fs.readdirSync(interSrc)) {
+     fs.copyFileSync(path.join(interSrc, file), path.join(interDist, file));
+   }
+   ```
+
+3. En `landing/src/template.html` elimina las 4 líneas de Google Fonts (preconnects + `<link>` con `fonts.googleapis.com`).
+
+4. En `landing/src/styles.css` añade al inicio:
+   ```css
+   @font-face {
+     font-family: 'Inter Variable';
+     font-style: normal;
+     font-display: swap;
+     font-weight: 100 900;
+     src: url('/fonts/inter/inter-latin-wght-normal.woff2') format('woff2-variations');
+   }
+   ```
+   y cambia el `font-family` base a:
+   ```css
+   font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+   ```
+
+5. En `vercel.json` simplifica el CSP eliminando los hosts de Google:
+   - Quita `https://fonts.googleapis.com` de `style-src`.
+   - Quita `https://fonts.gstatic.com` de `font-src`.
+
+**Verificación:** `cd landing && npm install && npm run build`. Sirve `landing/dist/` con cualquier static server (`npx serve dist`) y comprueba en DevTools → Network que ya no hay requests a `fonts.googleapis.com`.
+
+**Commit:**
+```
+feat(m7): self-host de Inter en la landing
+```
+
+---
+
+### Receta M3 — `ShortcutsDialog` a shadcn `<Dialog>`
+
+**Esfuerzo:** M · **Riesgo:** medio (refactor amplio del componente)
+
+**Objetivo:** Reemplazar el modal ad-hoc de `ShortcutsDialog.tsx` por el componente `<Dialog>` de shadcn (que ya está en el repo y se usa en Preferences/About). Beneficios: focus trap, restore focus, Esc handling, consistencia visual.
+
+**Archivos a tocar:** `src/features/settings/ShortcutsDialog.tsx`, `src/i18n/locales/{es,en}.json`.
+
+**Pasos:**
+
+1. Añade keys i18n para los strings hardcodeados en inglés. En `src/i18n/locales/es.json`, dentro del namespace `shortcuts` (línea ~85 aprox), añade:
+   ```json
+   "pressKeys": "Pulsa la combinacion...",
+   "cancel": "Cancelar",
+   "record": "Grabar",
+   "reset": "Restablecer",
+   "resetTooltip": "Restablecer al valor por defecto"
+   ```
+   En `src/i18n/locales/en.json` el equivalente:
+   ```json
+   "pressKeys": "Press keys...",
+   "cancel": "Cancel",
+   "record": "Record",
+   "reset": "Reset",
+   "resetTooltip": "Reset to default"
+   ```
+
+2. Reescribe completamente `src/features/settings/ShortcutsDialog.tsx`:
+   ```tsx
+   import { useEffect, useMemo, useState } from 'react';
+   import { useTranslation } from 'react-i18next';
+
+   import {
+     Dialog,
+     DialogContent,
+     DialogDescription,
+     DialogFooter,
+     DialogHeader,
+     DialogTitle,
+   } from '../../components/ui/dialog';
+   import { Button } from '../../components/ui/button';
+   import {
+     COMMAND_REGISTRY,
+     type CommandId,
+     detectConflicts,
+     normalizeBinding,
+   } from '../../lib/shortcuts';
+
+   type ShortcutsDialogProps = {
+     open: boolean;
+     onClose: () => void;
+     shortcuts: Partial<Record<CommandId, string | null>>;
+     onChange: (shortcuts: Partial<Record<CommandId, string | null>>) => void;
+   };
+
+   function eventToBinding(event: KeyboardEvent): string {
+     const parts: string[] = [];
+     if (event.metaKey || event.ctrlKey) parts.push('Mod');
+     if (event.shiftKey) parts.push('Shift');
+     if (event.altKey) parts.push('Alt');
+     if (
+       event.key &&
+       !['Meta', 'Control', 'Shift', 'Alt'].includes(event.key)
+     ) {
+       parts.push(event.key);
+     }
+     return parts.join('+');
+   }
+
+   export function ShortcutsDialog({
+     open,
+     onClose,
+     shortcuts,
+     onChange,
+   }: ShortcutsDialogProps) {
+     const { t } = useTranslation();
+     const [editingId, setEditingId] = useState<CommandId | null>(null);
+     const [isCapturing, setIsCapturing] = useState(false);
+     const [capturedBinding, setCapturedBinding] = useState('');
+     const conflicts = useMemo(() => detectConflicts(shortcuts), [shortcuts]);
+
+     useEffect(() => {
+       if (!isCapturing || !editingId) return;
+       const handleKeyDown = (event: KeyboardEvent) => {
+         event.preventDefault();
+         event.stopPropagation();
+         if (event.key === 'Escape') {
+           setIsCapturing(false);
+           setCapturedBinding('');
+           return;
+         }
+         if (event.key === 'Backspace' || event.key === 'Delete') {
+           onChange({ ...shortcuts, [editingId]: null });
+           setIsCapturing(false);
+           setCapturedBinding('');
+           setEditingId(null);
+           return;
+         }
+         const binding = eventToBinding(event);
+         setCapturedBinding(binding);
+         onChange({ ...shortcuts, [editingId]: binding });
+         setIsCapturing(false);
+         setCapturedBinding('');
+       };
+       window.addEventListener('keydown', handleKeyDown);
+       return () => window.removeEventListener('keydown', handleKeyDown);
+     }, [isCapturing, editingId, shortcuts, onChange]);
+
+     return (
+       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+         <DialogContent className="max-w-lg">
+           <DialogHeader>
+             <DialogTitle>{t('shortcuts.title')}</DialogTitle>
+             <DialogDescription className="sr-only">
+               {t('shortcuts.title')}
+             </DialogDescription>
+           </DialogHeader>
+
+           <div className="max-h-[60vh] overflow-y-auto">
+             <table className="w-full text-sm">
+               <thead>
+                 <tr className="border-b border-border">
+                   <th className="py-2 text-left">{t('shortcuts.command')}</th>
+                   <th className="py-2 text-left">{t('shortcuts.binding')}</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {Object.values(COMMAND_REGISTRY).map((cmd) => {
+                   const binding = shortcuts[cmd.id] ?? cmd.defaultShortcut;
+                   const conflict = binding
+                     ? (conflicts.get(normalizeBinding(binding)) ?? [])
+                     : [];
+                   const hasConflict = conflict.length > 1;
+                   return (
+                     <tr key={cmd.id} className="border-b border-border">
+                       <td className="py-2">{t(`shortcuts.${cmd.id}`)}</td>
+                       <td className="py-2">
+                         {editingId === cmd.id ? (
+                           <div className="flex items-center gap-2">
+                             <input
+                               className="w-32 rounded border border-border bg-background px-2 py-1 text-sm"
+                               autoFocus
+                               value={isCapturing ? capturedBinding : (binding ?? '')}
+                               onChange={(e) => {
+                                 setIsCapturing(false);
+                                 const val = e.target.value.trim() || null;
+                                 onChange({ ...shortcuts, [cmd.id]: val });
+                               }}
+                               onBlur={() => {
+                                 setIsCapturing(false);
+                                 setEditingId(null);
+                               }}
+                               onKeyDown={(e) => {
+                                 if (e.key === 'Enter') setEditingId(null);
+                               }}
+                               placeholder={isCapturing ? t('shortcuts.pressKeys') : ''}
+                             />
+                             <Button
+                               size="sm"
+                               variant="secondary"
+                               type="button"
+                               onClick={() => setIsCapturing(!isCapturing)}
+                             >
+                               {isCapturing ? t('shortcuts.cancel') : t('shortcuts.record')}
+                             </Button>
+                             {shortcuts[cmd.id] !== undefined && shortcuts[cmd.id] !== null && (
+                               <Button
+                                 size="sm"
+                                 variant="destructive"
+                                 type="button"
+                                 title={t('shortcuts.resetTooltip')}
+                                 onClick={() => {
+                                   onChange({ ...shortcuts, [cmd.id]: null });
+                                   setIsCapturing(false);
+                                 }}
+                               >
+                                 {t('shortcuts.reset')}
+                               </Button>
+                             )}
+                           </div>
+                         ) : (
+                           <button
+                             className={`rounded px-2 py-1 text-sm ${
+                               hasConflict
+                                 ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200'
+                                 : 'bg-background hover:bg-accent'
+                             }`}
+                             type="button"
+                             onClick={() => setEditingId(cmd.id)}
+                           >
+                             {binding ?? t('shortcuts.unbound')}
+                           </button>
+                         )}
+                       </td>
+                     </tr>
+                   );
+                 })}
+               </tbody>
+             </table>
+           </div>
+
+           <DialogFooter>
+             <Button variant="outline" onClick={onClose}>
+               {t('preferences.close')}
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+     );
+   }
+   ```
+
+3. Verifica que en `src/components/ui/dialog.tsx` existe `DialogFooter` (lo exporta shadcn por defecto). Si no, sustitúyelo por un `<div className="mt-4 flex justify-end">`.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual en `pnpm dev`: abre Preferences → Shortcuts. El modal ahora respeta Esc y restaura foco al cerrar.
+
+**Commit:**
+```
+refactor(m3): migra ShortcutsDialog a shadcn Dialog
+```
+
+---
+
+### Receta M2 — `PreferencesDialog`: shadcn Checkbox / Select / Slider
+
+**Esfuerzo:** M · **Riesgo:** medio
+
+**Objetivo:** Sustituir los `<input type="checkbox/number/range">` y `<select>` nativos por las primitivas shadcn correspondientes para coherencia visual y dark mode.
+
+**Pre-requisitos:**
+
+1. Instala las dependencias Radix:
+   ```sh
+   pnpm add @radix-ui/react-checkbox @radix-ui/react-select @radix-ui/react-slider
+   ```
+
+2. Añade los componentes shadcn al repo. **Si tienes red e internet en la máquina:**
+   ```sh
+   pnpm dlx shadcn@latest add checkbox select slider
+   ```
+   Esto crea `src/components/ui/{checkbox,select,slider}.tsx`.
+
+   **Si NO tienes acceso al CLI shadcn**, copia manualmente las plantillas oficiales para `style: new-york` desde https://ui.shadcn.com/docs/components a esos paths. Asegúrate de que importan `cn` desde `'@/lib/utils'`.
+
+**Pasos de migración** (en `src/features/settings/PreferencesDialog.tsx`):
+
+3. Importa los nuevos componentes:
+   ```tsx
+   import { Checkbox } from '../../components/ui/checkbox';
+   import {
+     Select,
+     SelectContent,
+     SelectItem,
+     SelectTrigger,
+     SelectValue,
+   } from '../../components/ui/select';
+   import { Slider } from '../../components/ui/slider';
+   ```
+
+4. Reemplaza cada `<input type="checkbox" checked={x} onChange={(e) => setX(e.target.checked)} />` por:
+   ```tsx
+   <Checkbox checked={x} onCheckedChange={(v) => setX(Boolean(v))} />
+   ```
+
+5. Reemplaza el `<select>` por:
+   ```tsx
+   <Select value={fontFamily} onValueChange={setFontFamily}>
+     <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+     <SelectContent>
+       <SelectItem value="sans">{t('preferences.fontSans')}</SelectItem>
+       <SelectItem value="serif">{t('preferences.fontSerif')}</SelectItem>
+       <SelectItem value="mono">{t('preferences.fontMono')}</SelectItem>
+     </SelectContent>
+   </Select>
+   ```
+
+6. Reemplaza cada `<input type="number">` (tabSize, etc.) por:
+   ```tsx
+   <input
+     type="number"
+     className="h-9 w-20 rounded-md border border-input bg-background px-2 text-sm"
+     value={tabSize}
+     onChange={(e) => setTabSize(Number(e.target.value))}
+   />
+   ```
+   (Para number-input pulido, considera usar `Input` de shadcn si lo añades, pero un input estilizado vale.)
+
+7. Si hay un `<input type="range">` (zoom/font size), reemplázalo por:
+   ```tsx
+   <Slider
+     value={[fontScale]}
+     min={0.6}
+     max={2.0}
+     step={0.05}
+     onValueChange={([v]) => setFontScale(v)}
+     aria-valuetext={`${Math.round(fontScale * 100)}%`}
+   />
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: abre Preferences y prueba cada control.
+
+**Commit:**
+```
+refactor(m2): migra PreferencesDialog a primitivas shadcn (checkbox/select/slider)
+```
+
+---
+
+### Receta M13 — View-mode bar con Radix Tabs
+
+**Esfuerzo:** M · **Riesgo:** medio
+
+**Objetivo:** Reemplazar los 3 `<button aria-pressed>` de view-mode por un `<Tabs>` de Radix para tener navegación por flechas, Home/End y un indicator activo unificado.
+
+**Pre-requisitos:**
+
+1. Instala Radix tabs:
+   ```sh
+   pnpm add @radix-ui/react-tabs
+   ```
+2. Añade el componente shadcn:
+   ```sh
+   pnpm dlx shadcn@latest add tabs
+   ```
+   o copia manualmente la plantilla en `src/components/ui/tabs.tsx`.
+
+**Pasos:**
+
+3. En `src/App.tsx` (líneas ~1313-1328), localiza el bloque:
+   ```tsx
+   <div className="flex items-center gap-1">
+     {VIEW_MODES.map((mode) => (
+       <button … aria-pressed={viewMode === mode} …>{t(`view.mode.${mode}`)}</button>
+     ))}
+   </div>
+   ```
+
+4. Reemplázalo por:
+   ```tsx
+   <Tabs
+     value={viewMode}
+     onValueChange={(v) => setViewMode(v as ViewMode)}
+     className="inline-flex"
+   >
+     <TabsList>
+       {VIEW_MODES.map((mode) => (
+         <TabsTrigger key={mode} value={mode}>
+           {t(`view.mode.${mode}`)}
+         </TabsTrigger>
+       ))}
+     </TabsList>
+   </Tabs>
+   ```
+   Importa `Tabs, TabsList, TabsTrigger` desde `'./components/ui/tabs'`.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: focus en uno de los tres tabs, pulsa flecha derecha/izquierda → debería navegar entre modos.
+
+**Commit:**
+```
+refactor(m13): view-mode bar usa Radix Tabs
+```
+
+---
+
+### Receta B1 — Lucide imports canónicos
+
+**Esfuerzo:** S · **Riesgo:** bajo (verificable con `pnpm build:analyze`)
+
+**Objetivo:** Verificar si los imports `lucide-react/dist/esm/icons/*.js` realmente reducen bundle, o si se pueden cambiar al import canónico `import { X } from 'lucide-react'`.
+
+**Pasos:**
+
+1. Anota el tamaño actual del bundle principal:
+   ```sh
+   pnpm build 2>&1 | grep "index-.*\.js"
+   ```
+   Anota el `gzip:` del bundle más grande.
+
+2. Crea una rama de prueba (o stash) y aplica el cambio en un archivo, p.ej. `src/App.tsx`:
+   ```tsx
+   // Antes:
+   import Columns2 from 'lucide-react/dist/esm/icons/columns-2.js';
+
+   // Después:
+   import { Columns2 } from 'lucide-react';
+   ```
+3. Vuelve a buildear y comparar.
+
+4. Si el tamaño es **igual o menor**, aplica el cambio a TODOS los archivos:
+   ```sh
+   grep -rln "lucide-react/dist/esm/icons" src/
+   ```
+   Para cada archivo, agrupa todos los imports lucide en uno solo.
+
+   Pista para automatizar (revisa el resultado a mano antes de ejecutar):
+   ```sh
+   # No hagas un find/replace ciego — los nombres pasan de PascalCase
+   # archivo a PascalCase nombrado (column-2.js → Columns2). Ya están así
+   # los locales import default, así que la forma rápida es aplicarlo
+   # archivo por archivo con un editor.
+   ```
+
+5. Si el tamaño **aumenta**, NO apliques el cambio. Documenta el motivo con un comentario en el primer import:
+   ```tsx
+   // Imports per-icon de lucide para mantener bundle bajo (verificado YYYY-MM-DD).
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`.
+
+**Commit (si aplica):**
+```
+refactor(b1): imports canonicos de lucide-react
+```
+
+---
+
+### Receta B3 — `<kbd>` con shortcuts en Welcome
+
+**Esfuerzo:** S · **Riesgo:** muy bajo
+
+**Objetivo:** Mostrar atajos de teclado descubribles en las 3 tarjetas del onboarding.
+
+**Archivo:** `src/features/shell/WelcomeState.tsx` (líneas 76-110).
+
+**Pasos:**
+
+1. En la parte superior del archivo, importa el registry:
+   ```tsx
+   import { COMMAND_REGISTRY } from '../../lib/shortcuts';
+   ```
+
+2. Antes del `return`, dentro del componente, calcula:
+   ```tsx
+   const shortcuts = {
+     newDocument: COMMAND_REGISTRY.newDocument.defaultShortcut,
+     toggleSearch: COMMAND_REGISTRY.toggleSearch.defaultShortcut,
+     toggleViewMode: COMMAND_REGISTRY.toggleViewMode.defaultShortcut,
+   };
+   ```
+
+3. Crea un helper local (arriba del componente, fuera de él):
+   ```tsx
+   function Kbd({ value }: { value: string | null }) {
+     if (!value) return null;
+     const parts = value.replace('Mod', '⌘').split('+');
+     return (
+       <span className="ml-1 inline-flex items-center gap-1">
+         {parts.map((p) => (
+           <kbd
+             key={p}
+             className="rounded border border-emerald-950/10 bg-white/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground shadow-sm dark:border-white/10 dark:bg-white/10"
+           >
+             {p}
+           </kbd>
+         ))}
+       </span>
+     );
+   }
+   ```
+
+4. En cada una de las 3 tarjetas, añade un `<Kbd>` al final del párrafo descriptivo:
+   - Tarjeta Shortcuts: `<Kbd value={shortcuts.newDocument} />`
+   - Tarjeta Search: `<Kbd value={shortcuts.toggleSearch} />`
+   - Tarjeta Preview: `<Kbd value={shortcuts.toggleViewMode} />`
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: abre la app sin documento previo y revisa que las tarjetas muestran las teclas.
+
+**Commit:**
+```
+feat(b3): muestra atajos de teclado en las tarjetas de Welcome
+```
+
+---
+
+### Receta B4 — Actualizar `FRONTEND_IMPROVEMENTS.md`
+
+**Esfuerzo:** S · **Riesgo:** ninguno
+
+**Objetivo:** El punto 9 ("Status bar básica") está obsoleto: ya tiene iconos.
+
+**Archivo:** `FRONTEND_IMPROVEMENTS.md`.
+
+**Pasos:**
+
+1. Localiza el punto "### 9. Status bar basica".
+2. Reemplaza su contenido por:
+   ```md
+   ### 9. ✅ Status bar — RESUELTO
+
+   `StatusBar.tsx:34-78` ya muestra iconos (`Type`, `Languages`, `MoonStar`, `CheckCheck`, `CircleDot`) junto a cada métrica. Pendiente de futuro: icono animado para autosave activo (ver punto 5 de DESIGN_REVIEW.md, sin priorizar).
+   ```
+
+**Verificación:** `pnpm lint && pnpm test`.
+
+**Commit:**
+```
+docs(b4): marca punto 9 de FRONTEND_IMPROVEMENTS como resuelto
+```
+
+---
+
+### Receta B5 — ErrorBoundary en root
+
+**Esfuerzo:** S · **Riesgo:** bajo
+
+**Objetivo:** Que una excepción de render no mate la app entera; en su lugar, mostrar pantalla degradada con botón Reload.
+
+**Archivos:** crear `src/components/ErrorBoundary.tsx`, modificar `src/main.tsx`.
+
+**Pasos:**
+
+1. Crea `src/components/ErrorBoundary.tsx`:
+   ```tsx
+   import { Component, type ErrorInfo, type ReactNode } from 'react';
+
+   type Props = { children: ReactNode };
+   type State = { error: Error | null };
+
+   export class ErrorBoundary extends Component<Props, State> {
+     state: State = { error: null };
+
+     static getDerivedStateFromError(error: Error): State {
+       return { error };
+     }
+
+     componentDidCatch(error: Error, info: ErrorInfo): void {
+       // Local-first: solo console, sin telemetria
+       // eslint-disable-next-line no-console
+       console.error('[ErrorBoundary]', error, info);
+     }
+
+     render(): ReactNode {
+       if (this.state.error) {
+         return (
+           <div className="grid min-h-dvh place-items-center bg-background p-6 text-foreground">
+             <div className="max-w-md text-center">
+               <h1 className="text-xl font-semibold">Algo se rompio</h1>
+               <p className="mt-2 text-sm text-muted-foreground">
+                 La aplicacion encontro un error inesperado. Recarga para
+                 reintentar.
+               </p>
+               <pre className="mt-4 max-h-40 overflow-auto rounded bg-muted p-2 text-left text-xs">
+                 {this.state.error.message}
+               </pre>
+               <button
+                 type="button"
+                 className="mt-4 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                 onClick={() => window.location.reload()}
+               >
+                 Recargar
+               </button>
+             </div>
+           </div>
+         );
+       }
+       return this.props.children;
+     }
+   }
+   ```
+
+2. En `src/main.tsx` envuelve `<App />`:
+   ```tsx
+   import { ErrorBoundary } from './components/ErrorBoundary';
+
+   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+     <React.StrictMode>
+       <ErrorBoundary>
+         <App />
+       </ErrorBoundary>
+       <Toaster />
+     </React.StrictMode>
+   );
+   ```
+
+3. (Opcional) Añade un test que renderice un componente que tira: `tests/error-boundary.test.tsx`. Mantén el test simple, no lo dejes tirado si no añade valor obvio.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`.
+
+**Commit:**
+```
+feat(b5): error boundary en root para errores de render
+```
+
+---
+
+### Receta B8 — Drag-over feedback en TabBar
+
+**Esfuerzo:** S · **Riesgo:** bajo
+
+**Objetivo:** Cuando arrastras una pestaña sobre otra, mostrar dónde caerá.
+
+**Archivo:** `src/features/files/TabBar.tsx`.
+
+**Pasos:**
+
+1. Cambia el `useRef<number | null>(null)` por `useState`:
+   ```tsx
+   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+   const draggedTabId = useRef<string | null>(null);
+   ```
+2. En `handleDragOver` reemplaza la asignación `dragOverIndex.current = index` por `setDragOverIndex(index)`.
+3. En `handleDrop` añade `setDragOverIndex(null)` al final.
+4. Añade un `onDragLeave` al wrapper o un `onDragEnd` que limpie:
+   ```tsx
+   onDragEnd={() => setDragOverIndex(null)}
+   ```
+5. En el render del `<div>` por pestaña, añade clase condicional:
+   ```tsx
+   className={`group relative flex shrink-0 items-center gap-1.5 rounded-2xl px-3 py-2 transition ${
+     active ? '...' : '...'
+   } ${
+     dragOverIndex === tabs.indexOf(tab) ? 'border-l-2 border-primary' : ''
+   }`}
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: arrastra una pestaña, deberías ver un borde primary en la posición destino.
+
+**Commit:**
+```
+feat(b8): feedback visual de drag-over en TabBar
+```
+
+---
+
+### Receta B9 — Botón de zoom con icono visible
+
+**Esfuerzo:** S · **Riesgo:** muy bajo
+
+**Objetivo:** El botón "100%" actual oculta su acción de reset. Mostrar un icono cuando el scale ≠ 1 para que sea descubrible.
+
+**Archivo:** `src/App.tsx` (líneas ~1228-1240).
+
+**Pasos:**
+
+1. Importa el icono:
+   ```tsx
+   import RotateCcw from 'lucide-react/dist/esm/icons/rotate-ccw.js';
+   ```
+   (o usa `import { RotateCcw } from 'lucide-react'` si ya hiciste B1).
+
+2. Modifica el bloque del botón de zoom:
+   ```tsx
+   <Tooltip>
+     <TooltipTrigger asChild>
+       <Button
+         variant={fontScale === 1 ? 'ghost' : 'outline'}
+         size="sm"
+         onClick={resetFontScaleStore}
+         className="h-9 min-w-14 rounded-full px-3 text-xs font-semibold tabular-nums"
+       >
+         {fontScale !== 1 && (
+           <RotateCcw className="mr-1 size-3" aria-hidden />
+         )}
+         {Math.round(fontScale * 100)}%
+       </Button>
+     </TooltipTrigger>
+     <TooltipContent>{t('zoom.reset')}</TooltipContent>
+   </Tooltip>
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: cambia el zoom y comprueba que aparece el icono de reset.
+
+**Commit:**
+```
+feat(b9): icono de reset visible cuando el zoom no esta a 100%
+```
+
+---
+
+### Receta B10 — Fallback "desktop only" en `<md` para la app web
+
+**Esfuerzo:** S · **Riesgo:** bajo
+
+**Objetivo:** Si alguien abre `bruma-sigma.vercel.app` en móvil, mostrar mensaje en lugar de la UI rota. Solo aplica fuera de Tauri.
+
+**Archivos:** `src/App.tsx` (cabeza del componente App), `src/i18n/locales/{es,en}.json`.
+
+**Pasos:**
+
+1. Añade keys i18n. En `es.json`:
+   ```json
+   "mobileFallback": {
+     "title": "Bruma esta optimizado para escritorio",
+     "body": "Para una experiencia completa, abre Bruma en una ventana mas ancha o instala la aplicacion de escritorio."
+   }
+   ```
+   En `en.json` el equivalente.
+
+2. En `src/App.tsx`, dentro del componente `App`, antes del `return` principal, añade:
+   ```tsx
+   const isTauri =
+     typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+   const [isNarrow, setIsNarrow] = useState(
+     typeof window !== 'undefined' && window.innerWidth < 768
+   );
+   useEffect(() => {
+     if (isTauri) return;
+     const onResize = () => setIsNarrow(window.innerWidth < 768);
+     window.addEventListener('resize', onResize);
+     return () => window.removeEventListener('resize', onResize);
+   }, [isTauri]);
+
+   if (!isTauri && isNarrow) {
+     return (
+       <div className="grid min-h-dvh place-items-center bg-background p-6 text-foreground">
+         <div className="max-w-sm text-center">
+           <h1 className="text-lg font-semibold">{t('mobileFallback.title')}</h1>
+           <p className="mt-2 text-sm text-muted-foreground">
+             {t('mobileFallback.body')}
+           </p>
+         </div>
+       </div>
+     );
+   }
+   ```
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual con `pnpm preview`: redimensiona la ventana a <768px → debe mostrar el fallback.
+
+**Commit:**
+```
+feat(b10): fallback desktop-only en la app servida por web
+```
+
+---
+
+### Receta A5 — Extraer Toolbar / AppShell de `App.tsx` ⚠ requiere QA visual
+
+**Esfuerzo:** L · **Riesgo:** alto (no implementar sin poder probar la UI)
+
+**Objetivo:** Romper el monolito de `App.tsx` (1638 líneas) en subcomponentes para que sea mantenible.
+
+**Pre-requisito:** acceso a `pnpm tauri dev` o al menos `pnpm dev` en navegador para validar visualmente.
+
+**Estrategia incremental** (no hagas todo en un commit; uno por extracción):
+
+1. **Commit 1 — extraer ViewModeBar:**
+   - Crea `src/features/shell/ViewModeBar.tsx`.
+   - Mueve el bloque del view-mode bar (App.tsx ~1310-1340) ahí, recibiendo `viewMode`, `setViewMode`, `showFrontmatter`, `setShowFrontmatter` como props.
+
+2. **Commit 2 — extraer cinco subcomponentes de Toolbar:**
+   - `src/features/shell/toolbar/ToolbarFile.tsx` → grupo File.
+   - `src/features/shell/toolbar/ToolbarWrite.tsx` → grupo Edit.
+   - `src/features/shell/toolbar/ToolbarView.tsx` → grupo View.
+   - `src/features/shell/toolbar/ToolbarZoom.tsx` → grupo Zoom.
+   - `src/features/shell/toolbar/ToolbarExport.tsx` → grupo Export.
+   - Cada uno recibe los handlers/state que necesita como props.
+
+3. **Commit 3 — extraer hook `useTauriMenuBridge`:**
+   - Mueve los `useEffect` de `listenToMenuActions` y `listenToRecentOpen` a `src/hooks/useTauriMenuBridge.ts`.
+   - Llamada en App: `useTauriMenuBridge({ handlers, setIsRecentMenuOpen })`.
+
+4. **Commit 4 — extraer `<AppShell>`:**
+   - Crea `src/features/shell/AppShell.tsx` que reciba props/slots `header`, `tabs`, `main`, `status`.
+   - App pasa a ser orquestador delgado.
+
+**Verificación CRÍTICA:** Después de cada commit:
+- `pnpm test` (102/102).
+- `pnpm dev` y prueba a mano: nuevo, abrir, guardar, cambiar view-mode, alternar tema, alternar TOC, focus mode.
+- `pnpm tauri dev` si tienes Rust instalado.
+
+**Riesgo principal:** los handlers se construyen con muchas dependencias del store; si extraes mal, romperás callbacks. Pasa siempre por props, no leas stores en los hijos hasta haber estabilizado.
+
+**Si en algún paso fallan tests sin razón obvia, REVERT y abre issue antes de seguir.**
+
+**Commits sugeridos:**
+```
+refactor(a5.1): extrae ViewModeBar a su propio componente
+refactor(a5.2): extrae los 5 ToolbarGroup a subcomponentes
+refactor(a5.3): mueve listeners de menu Tauri a useTauriMenuBridge
+refactor(a5.4): introduce AppShell para alojar header/tabs/main/status
+```
+
+---
+
+### Receta A6 — `useShallow` en selectores Zustand ⚠ requiere QA visual
+
+**Esfuerzo:** M · **Riesgo:** alto
+
+**Objetivo:** Reducir re-renders del componente raíz agrupando selectores con shallow comparison.
+
+**Pre-requisito:** completa A5 antes de hacer A6 — con subcomponentes ya extraídos, A6 es trivial dentro de cada uno; sin extraer, romper selectores en el monolito puede causar bugs sutiles.
+
+**Pasos:**
+
+1. En cada subcomponente (post-A5), agrupa selectores:
+   ```tsx
+   import { useShallow } from 'zustand/react/shallow';
+
+   const { viewMode, setViewMode, focusMode, toggleFocusMode } = useThemeStore(
+     useShallow((s) => ({
+       viewMode: s.viewMode,
+       setViewMode: s.setViewMode,
+       focusMode: s.focusMode,
+       toggleFocusMode: s.toggleFocusMode,
+     }))
+   );
+   ```
+
+2. **Test cuidadoso:** después del cambio, escribe rápido en el editor y observa con React DevTools que el shell **no** re-renderiza por keystroke. Si lo hace, hay un selector que aún devuelve referencia nueva.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual con React DevTools Profiler.
+
+**Commit:**
+```
+perf(a6): useShallow en selectores Zustand para evitar re-renders
+```
+
+---
+
+### Receta B6 — Tests de regresión visual (Playwright snapshots) ⚠ requiere setup
+
+**Esfuerzo:** M · **Riesgo:** bajo (no afecta runtime)
+
+**Objetivo:** Capturar snapshots de pantallas clave para detectar regresiones visuales en CI.
+
+**Pre-requisito:** El primero que ejecute esto debe generar la baseline de snapshots a mano (`--update-snapshots`), commitearlos, y a partir de ahí CI los compara.
+
+**Pasos:**
+
+1. Verifica que `playwright.config.ts` tiene la baseURL apuntando a `pnpm preview` o al dev server.
+
+2. Crea `tests/visual.spec.ts`:
+   ```ts
+   import { expect, test } from '@playwright/test';
+
+   test('Welcome state — light', async ({ page }) => {
+     await page.goto('/');
+     // Aqui ajusta para que el tema sea light explicitamente:
+     await page.evaluate(() => localStorage.setItem('theme', 'light'));
+     await page.reload();
+     await expect(page).toHaveScreenshot('welcome-light.png', {
+       maxDiffPixelRatio: 0.01,
+     });
+   });
+
+   test('Welcome state — dark', async ({ page }) => {
+     await page.goto('/');
+     await page.evaluate(() => localStorage.setItem('theme', 'dark'));
+     await page.reload();
+     await expect(page).toHaveScreenshot('welcome-dark.png');
+   });
+   ```
+
+3. Genera la baseline:
+   ```sh
+   pnpm test:e2e --update-snapshots
+   ```
+   Commitea los `.png` generados en `tests/visual.spec.ts-snapshots/`.
+
+4. Añade a `.github/workflows/ci.yml` un step:
+   ```yaml
+   - name: Visual tests
+     run: pnpm test:e2e
+   ```
+
+**Verificación:** corre `pnpm test:e2e` localmente; debe pasar contra los snapshots commiteados.
+
+**Commit:**
+```
+test(b6): tests de regresion visual con Playwright snapshots
+```
+
+---
+
+### Receta B7 — Tema CodeMirror coherente con la marca ⚠ requiere QA visual
+
+**Esfuerzo:** M · **Riesgo:** bajo
+
+**Objetivo:** El editor CodeMirror usa colores default. Crear un tema coherente con esmeralda + niebla.
+
+**Pre-requisito:** familiaridad con `@codemirror/view` `EditorView.theme()`.
+
+**Pasos:**
+
+1. Crea `src/features/editor/theme.ts`:
+   ```ts
+   import { EditorView } from '@codemirror/view';
+
+   export const brumaLightTheme = EditorView.theme(
+     {
+       '&': { color: 'hsl(var(--foreground))', backgroundColor: 'transparent' },
+       '.cm-content': { caretColor: 'hsl(var(--primary))' },
+       '.cm-cursor': { borderLeftColor: 'hsl(var(--primary))' },
+       '.cm-selectionBackground': { backgroundColor: 'hsl(var(--accent))' },
+       '.cm-line .ͼ1': { color: '#047857' /* keywords */ },
+       // Marca headings, code, etc. — ajusta a gusto.
+     },
+     { dark: false }
+   );
+
+   export const brumaDarkTheme = EditorView.theme(
+     {
+       /* equivalente con tokens dark */
+     },
+     { dark: true }
+   );
+   ```
+
+2. En `src/features/editor/MarkdownEditor.tsx`, importa el tema y añádelo al array de extensions de CodeMirror, condicionando por `theme === 'dark'`.
+
+**Verificación:** `pnpm lint && pnpm test && pnpm build`. **Visual en `pnpm dev`** — ajusta selectores hasta que la sintaxis Markdown se vea integrada.
+
+**Commit:**
+```
+style(b7): tema CodeMirror coherente con la marca
+```
+
+---
+
 ## Índice
 
 1. [Impresión general](#impresión-general)
