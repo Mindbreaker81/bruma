@@ -26,7 +26,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [ ] **A5** — Extraer Toolbar/AppShell de `App.tsx` ⚠ requiere QA visual
 - [ ] **A6** — `useShallow` en selectores Zustand ⚠ requiere QA visual
 - [x] **A7** — Cubierto por QW5
-- [ ] **A8** — Contraste del badge "tagline"
+- [x] **A8** — Contraste del badge "tagline"
 
 ### Prioridad media
 - [ ] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`

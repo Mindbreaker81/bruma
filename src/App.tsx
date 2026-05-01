@@ -1075,7 +1075,7 @@ export default function App() {
               </div>
             </div>
             <div className="hidden items-center gap-2 lg:flex">
-              <span className="rounded-full border border-emerald-950/10 bg-emerald-50/80 px-3 py-1 text-[11px] font-medium text-emerald-800 dark:border-white/10 dark:bg-emerald-500/10 dark:text-emerald-200">
+              <span className="rounded-full border border-emerald-700/20 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-900 dark:border-emerald-300/30 dark:bg-emerald-400/15 dark:text-emerald-50">
                 {t('app.tagline')}
               </span>
             </div>
