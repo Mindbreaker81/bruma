@@ -18,6 +18,8 @@ import {
 
 import type { SearchMatch } from '../search/search';
 import { useScrollSyncStore } from '../preview/scrollSync';
+import { useThemeStore } from '../settings/state';
+import { brumaDarkTheme, brumaLightTheme } from './theme';
 
 type MarkdownEditorProps = {
   value: string;
@@ -96,6 +98,7 @@ export const MarkdownEditor = forwardRef<
   const searchCompartmentRef = useRef(new Compartment());
   const tabSizeCompartmentRef = useRef(new Compartment());
   const lineWrappingCompartmentRef = useRef(new Compartment());
+  const themeCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
     searchMatches.length > 0
       ? Math.min(activeSearchIndex, searchMatches.length - 1)
@@ -154,6 +157,7 @@ export const MarkdownEditor = forwardRef<
               role: 'textbox',
             })
           ),
+          themeCompartmentRef.current.of(brumaLightTheme),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) {
               return;
@@ -266,6 +270,30 @@ export const MarkdownEditor = forwardRef<
       ),
     });
   }, [lineWrapping]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const resolvedTheme = useThemeStore.getState().resolvedTheme;
+    if (!editor) return;
+    editor.dispatch({
+      effects: themeCompartmentRef.current.reconfigure(
+        resolvedTheme === 'dark' ? brumaDarkTheme : brumaLightTheme
+      ),
+    });
+  }, []);
+
+  useEffect(() => {
+    return useThemeStore.subscribe((state, prev) => {
+      if (state.resolvedTheme === prev.resolvedTheme) return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.dispatch({
+        effects: themeCompartmentRef.current.reconfigure(
+          state.resolvedTheme === 'dark' ? brumaDarkTheme : brumaLightTheme
+        ),
+      });
+    });
+  }, []);
 
   useEffect(() => {
     return useScrollSyncStore.subscribe((state, prev) => {

@@ -76,3 +76,39 @@ window.addEventListener('hashchange', openDetailsFromHash);
 document.querySelectorAll('.md-content').forEach((region) => {
   region.addEventListener('dblclick', copyPreCode);
 });
+
+(async function setupDownloadCta() {
+  const cta = document.getElementById('download-cta');
+  if (!cta) return;
+
+  const ua = navigator.userAgent || '';
+  let os = null;
+  if (/Mac|iPhone|iPad/.test(ua)) os = 'macos';
+  else if (/Windows/.test(ua)) os = 'windows';
+  else if (/Linux/.test(ua)) os = 'linux';
+
+  const labelMap = {
+    macos: 'Descargar para macOS',
+    windows: 'Descargar para Windows',
+    linux: 'Descargar para Linux',
+  };
+  if (os && labelMap[os]) cta.textContent = labelMap[os];
+
+  try {
+    const res = await fetch(
+      'https://api.github.com/repos/Mindbreaker81/bruma/releases/latest',
+      { headers: { Accept: 'application/vnd.github+json' } }
+    );
+    if (!res.ok) return;
+    const release = await res.json();
+    const matchers = {
+      macos: /\.(dmg|app\.tar\.gz)$/i,
+      windows: /\.(msi|exe)$/i,
+      linux: /\.(AppImage|deb|rpm)$/i,
+    };
+    const asset = (release.assets || []).find((a) => os && matchers[os].test(a.name));
+    if (asset && asset.browser_download_url) cta.href = asset.browser_download_url;
+  } catch {
+    /* fallback al link de releases */
+  }
+})();

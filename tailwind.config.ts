@@ -65,6 +65,13 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      zIndex: {
+        base: 'var(--z-base)',
+        shell: 'var(--z-shell)',
+        overlay: 'var(--z-overlay)',
+        modal: 'var(--z-modal)',
+        toast: 'var(--z-toast)',
+      },
     },
   },
   plugins: [animate],

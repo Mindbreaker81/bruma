@@ -167,7 +167,12 @@
     "toggleFocusMode": "Focus mode",
     "togglePreferences": "Preferences",
     "toggleTemplateMenu": "Templates",
-    "exportHtml": "Export HTML"
+    "exportHtml": "Export HTML",
+    "pressKeys": "Press keys...",
+    "cancel": "Cancel",
+    "record": "Record",
+    "reset": "Reset",
+    "resetTooltip": "Reset to default"
   },
   "preferences": {
     "title": "Preferences",
@@ -218,5 +223,9 @@
     "searchBody": "Search now stays anchored to the workspace so you can inspect matches without covering the document.",
     "previewTitle": "Split preview",
     "previewBody": "Switch between editor, preview, or split mode to review Markdown without losing context."
+  },
+  "mobileFallback": {
+    "title": "Bruma is optimized for desktop",
+    "body": "For the best experience, open Bruma in a wider window or install the desktop app."
   }
 }

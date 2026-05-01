@@ -123,6 +123,14 @@ function main() {
     fs.copyFileSync(path.join(landingSrc, file), path.join(distDir, file));
   }
 
+  // Copia los archivos de la fuente Inter al dist
+  const interSrc = path.join(__dirname, 'node_modules', '@fontsource-variable', 'inter', 'files');
+  const interDist = path.join(distDir, 'fonts', 'inter');
+  fs.mkdirSync(interDist, { recursive: true });
+  for (const file of fs.readdirSync(interSrc)) {
+    fs.copyFileSync(path.join(interSrc, file), path.join(interDist, file));
+  }
+
   console.log('landing build ok → dist/');
 }
 

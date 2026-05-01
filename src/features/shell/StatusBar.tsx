@@ -1,9 +1,5 @@
-import CheckCheck from 'lucide-react/dist/esm/icons/check-check.js';
-import CircleDot from 'lucide-react/dist/esm/icons/circle-dot.js';
-import Languages from 'lucide-react/dist/esm/icons/languages.js';
-import MoonStar from 'lucide-react/dist/esm/icons/moon-star.js';
-import Type from 'lucide-react/dist/esm/icons/type.js';
 import { useTranslation } from 'react-i18next';
+import { Type, MoonStar, Languages, CircleDot, CheckCheck } from 'lucide-react';
 
 type StatusBarProps = {
   autosaveStatus: string | null;

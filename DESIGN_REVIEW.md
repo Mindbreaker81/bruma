@@ -56,37 +56,37 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **A2** — Cubierto por QW1
 - [x] **A3** — Cubierto por QW3
 - [x] **A4** — Toolbar overflow horizontal en pantallas estrechas
-- [ ] **A5** — Extraer Toolbar/AppShell de `App.tsx` ⚠ requiere QA visual
-- [ ] **A6** — `useShallow` en selectores Zustand ⚠ requiere QA visual
+- [x] **A5** — Extraer Toolbar/AppShell de `App.tsx` ⚠ requiere QA visual
+- [x] **A6** — `useShallow` en selectores Zustand ⚠ requiere QA visual
 - [x] **A7** — Cubierto por QW5
 - [x] **A8** — Contraste del badge "tagline"
 
 ### Prioridad media
 - [x] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`
-- [ ] **M2** — `PreferencesDialog`: shadcn Checkbox/Select/Slider
-- [ ] **M3** — `ShortcutsDialog` a shadcn `<Dialog>`
+- [x] **M2** — `PreferencesDialog`: shadcn Checkbox/Select/Slider
+- [x] **M3** — `ShortcutsDialog` a shadcn `<Dialog>`
 - [x] **M4** — i18n en aria-labels de Preview/TOC
 - [x] **M5** — Cubierto por QW2
-- [ ] **M6** — CTA download con detección OS en landing
-- [ ] **M7** — Self-host Inter en landing
-- [ ] **M8** — Overlay decorativo opt-in / `focusMode`
+- [x] **M6** — CTA download con detección OS en landing
+- [x] **M7** — Self-host Inter en landing
+- [x] **M8** — Overlay decorativo opt-in / `focusMode`
 - [x] **M9** — Cubierto por QW4
-- [ ] **M10** — Tokens semánticos de z-index
+- [x] **M10** — Tokens semánticos de z-index
 - [x] **M11** — `<DialogDescription>` con `<p>` anidados (About)
-- [ ] **M12** — Recent empty state focusable
-- [ ] **M13** — View-mode bar con Radix Tabs
+- [x] **M12** — Recent empty state focusable
+- [x] **M13** — View-mode bar con Radix Tabs
 
 ### Prioridad baja / nice-to-have
-- [ ] **B1** — Lucide imports canónicos (verificar bundle)
+- [x] **B1** — Lucide imports canónicos (verificar bundle)
 - [x] **B2** — Cubierto por QW1
-- [ ] **B3** — `<kbd>` con shortcuts en Welcome
-- [ ] **B4** — Actualizar `FRONTEND_IMPROVEMENTS.md` (punto 9 obsoleto)
-- [ ] **B5** — ErrorBoundary en root
-- [ ] **B6** — Tests de regresión visual (Playwright snapshots) ⚠ requiere baseline
-- [ ] **B7** — Tema CodeMirror coherente con marca ⚠ requiere QA visual
-- [ ] **B8** — Drag-over feedback en TabBar
-- [ ] **B9** — Botón de zoom con icono visible
-- [ ] **B10** — Fallback "desktop only" en `<md` para la app web
+- [x] **B3** — `<kbd>` con shortcuts en Welcome
+- [x] **B4** — Actualizar `FRONTEND_IMPROVEMENTS.md` (punto 9 obsoleto)
+- [x] **B5** — ErrorBoundary en root
+- [x] **B6** — Tests de regresión visual (Playwright snapshots) ⚠ requiere baseline
+- [x] **B7** — Tema CodeMirror coherente con marca ⚠ requiere QA visual
+- [x] **B8** — Drag-over feedback en TabBar
+- [x] **B9** — Botón de zoom con icono visible
+- [x] **B10** — Fallback "desktop only" en `<md` para la app web
 
 ---
 

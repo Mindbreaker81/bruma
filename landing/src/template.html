@@ -26,12 +26,6 @@
     <meta name="twitter:image" content="https://bruma-sigma.vercel.app/og-image.svg" />
     <meta name="twitter:image:alt" content="Bruma — editor Markdown de escritorio" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -64,18 +58,18 @@
         <div class="hero__actions">
           <a
             class="btn btn--primary"
-            href="https://github.com/Mindbreaker81/bruma"
-            rel="noopener noreferrer"
-            target="_blank"
-            >Repositorio en GitHub</a
-          >
-          <a
-            class="btn btn--secondary"
+            id="download-cta"
             href="https://github.com/Mindbreaker81/bruma/releases"
             rel="noopener noreferrer"
             target="_blank"
-            >Descargas (Releases)</a
-          >
+            data-default-label="Descargas"
+          >Descargas</a>
+          <a
+            class="btn btn--secondary"
+            href="https://github.com/Mindbreaker81/bruma"
+            rel="noopener noreferrer"
+            target="_blank"
+          >Repositorio en GitHub</a>
           <button
             type="button"
             class="btn btn--ghost"

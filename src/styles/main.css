@@ -26,6 +26,12 @@
   --bruma-font-scale: 1;
   color-scheme: light;
   --shadow-color: 15 23 42;
+  /* Z-index scale (M10) */
+  --z-base: 0;
+  --z-shell: 10;
+  --z-overlay: 20;
+  --z-modal: 50;
+  --z-toast: 60;
   font-family:
     'Inter Variable',
     'Aptos',
@@ -102,6 +108,11 @@ body {
   background-size: 32px 32px;
   mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.3), transparent 70%);
   opacity: 0.2;
+  transition: opacity 300ms ease;
+}
+
+.bruma-shell[data-focus='on']::after {
+  opacity: 0;
 }
 
 button,
