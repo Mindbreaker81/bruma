@@ -1,9 +1,8 @@
-import FileText from 'lucide-react/dist/esm/icons/file-text.js';
-import X from 'lucide-react/dist/esm/icons/x.js';
-import { type DragEvent, useRef } from 'react';
+import { type DragEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Tab } from './document';
 import { getDocumentDisplayName, isDirty } from './document';
+import { X, FileText } from 'lucide-react';
 
 type TabBarProps = {
   tabs: Tab[];
@@ -21,7 +20,7 @@ export function TabBar({
   onMove,
 }: TabBarProps) {
   const { t } = useTranslation();
-  const dragOverIndex = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggedTabId = useRef<string | null>(null);
 
   function handleDragStart(
@@ -37,7 +36,7 @@ export function TabBar({
   function handleDragOver(event: DragEvent<HTMLDivElement>, index: number) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    dragOverIndex.current = index;
+    setDragOverIndex(index);
   }
 
   function handleDrop(event: DragEvent<HTMLDivElement>, id: string) {
@@ -47,7 +46,7 @@ export function TabBar({
     if (draggedId && toIndex >= 0) {
       onMove(draggedId, toIndex);
     }
-    dragOverIndex.current = null;
+    setDragOverIndex(null);
   }
 
   if (tabs.length <= 1 && !tabs[0]?.document.path) {
@@ -72,10 +71,11 @@ export function TabBar({
               active
                 ? 'bg-background text-foreground shadow-sm ring-1 ring-emerald-950/5 dark:ring-white/10'
                 : 'text-muted-foreground hover:bg-white hover:text-accent-foreground dark:hover:bg-white/5'
-            }`}
+            } ${dragOverIndex === tabs.indexOf(tab) ? 'ring-1 ring-primary/40 bg-primary/5' : ''}`}
             draggable
             onDragStart={(e) => handleDragStart(e, tab.id)}
             onDragOver={(e) => handleDragOver(e, tabs.indexOf(tab))}
+            onDragLeave={() => setDragOverIndex(null)}
             onDrop={(e) => handleDrop(e, tab.id)}
           >
             <button

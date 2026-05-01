@@ -1,10 +1,12 @@
-import ArrowDown from 'lucide-react/dist/esm/icons/arrow-down.js';
-import ArrowUp from 'lucide-react/dist/esm/icons/arrow-up.js';
-import CaseSensitive from 'lucide-react/dist/esm/icons/case-sensitive.js';
-import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right.js';
-import X from 'lucide-react/dist/esm/icons/x.js';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  X,
+  ChevronRight,
+  CaseSensitive,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 
 type SearchPanelProps = {
   activeIndex: number;
@@ -51,7 +53,7 @@ export function SearchPanel({
 
   return (
     <form
-      className="absolute inset-x-4 top-4 z-10 flex max-w-4xl flex-col gap-2 rounded-[1.25rem] border border-white/60 bg-white/90 p-2 shadow-[0_20px_50px_rgba(15,23,42,0.12)] ring-1 ring-emerald-950/5 backdrop-blur animate-in fade-in slide-in-from-top-2 duration-200 dark:border-white/10 dark:bg-zinc-950/80 dark:ring-white/10"
+      className="absolute inset-x-4 top-4 z-overlay flex max-w-4xl flex-col gap-2 rounded-[1.25rem] border border-white/60 bg-white/90 p-2 shadow-[0_20px_50px_rgba(15,23,42,0.12)] ring-1 ring-emerald-950/5 backdrop-blur animate-in fade-in slide-in-from-top-2 duration-200 dark:border-white/10 dark:bg-zinc-950/80 dark:ring-white/10"
       role="search"
       onSubmit={(event) => {
         event.preventDefault();

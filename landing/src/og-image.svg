@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Bruma">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#022c22" />
+      <stop offset="60%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.1" r="0.7">
+      <stop offset="0%" stop-color="#a7f3d0" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#a7f3d0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#glow)" />
+  <g transform="translate(96 168)">
+    <rect width="160" height="160" rx="32" fill="#047857" stroke="#a7f3d0" stroke-width="2" stroke-opacity="0.4" />
+    <path
+      fill="#f8fafc"
+      transform="translate(8 8) scale(0.281)"
+      d="M136 118h142c55 0 91 30 91 76 0 28-15 51-41 63 33 11 52 35 52 69 0 50-39 82-99 82H136V118Zm62 48v72h70c25 0 40-14 40-36 0-23-15-36-41-36h-69Zm0 116v78h78c27 0 43-15 43-39 0-25-16-39-45-39h-76Z"
+    />
+  </g>
+  <g transform="translate(304 192)" font-family="'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif" fill="#ecfdf5">
+    <text x="0" y="48" font-size="84" font-weight="700" letter-spacing="-2">Bruma</text>
+    <text x="0" y="124" font-size="36" font-weight="500" fill="#a7f3d0">Editor Markdown de escritorio</text>
+    <text x="0" y="172" font-size="28" font-weight="400" fill="#d1fae5" opacity="0.85">Local-first · Tauri · sin telemetría</text>
+  </g>
+  <g transform="translate(96 540)" font-family="'Inter Variable', Inter, system-ui, sans-serif" fill="#a7f3d0" opacity="0.9">
+    <text x="0" y="0" font-size="22" font-weight="500">github.com/Mindbreaker81/bruma</text>
+  </g>
+</svg>

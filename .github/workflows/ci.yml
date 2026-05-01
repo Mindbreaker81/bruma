@@ -36,6 +36,12 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium
+
+      - name: Visual tests
+        run: pnpm test:e2e
+
       - name: Build frontend
         run: pnpm build
 
@@ -94,6 +100,7 @@ jobs:
         run: tar -czf "Bruma_${{ steps.app_version.outputs.value }}_macos.app.tar.gz" Bruma.app
 
       - name: Upload to draft release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           files: |

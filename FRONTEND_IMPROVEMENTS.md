@@ -54,11 +54,9 @@ Apps de escritorio modernas tipicamente tienen una barra lateral con iconos para
 
 **Sugerencia**: Evaluar si una activity bar vertical (iconos: archivos, buscar, TOC, ajustes) aportaria valor, o si el layout actual es suficiente para un editor minimalista.
 
-### 9. Status bar basica
+### 9. ✅ Status bar — RESUELTO
 
-La barra inferior muestra informacion util pero es visualmente minimal sin iconos contextuales ni indicadores visuales mas ricos.
-
-**Sugerencia**: Añadir iconos junto a cada metrica (palabras, caracteres, encoding), indicador visual de sincronizacion de scroll, y destacar el estado de autosave con un icono animado.
+StatusBar.tsx:34-78 ya muestra iconos (Type, Languages, MoonStar, CheckCheck, CircleDot) junto a cada métrica. Pendiente de futuro: icono animado para autosave activo (ver punto 5 de DESIGN_REVIEW.md, sin priorizar).
 
 ### 10. Event listeners duplicados
 

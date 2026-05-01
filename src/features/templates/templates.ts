@@ -1,9 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 
 function isTauriAvailable(): boolean {
-  return (
-    typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-  );
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
 export type Template = {

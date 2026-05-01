@@ -5,20 +5,27 @@ import { resolve } from 'node:path';
 test('shows the Bruma shell', async ({ page }) => {
   await page.goto('/');
 
-  const editor = page.getByRole('textbox', {
-    name: /Editor Markdown|Markdown editor/i,
-  });
   const fixture = readFileSync(resolve('tests/fixtures/search.md'), 'utf8');
 
   await expect(page.getByRole('heading', { name: 'Bruma' })).toBeVisible();
+
+  // Dismiss welcome state to reveal the editor
+  await page
+    .getByRole('button', { name: /Start writing|Empezar a escribir/i })
+    .click();
+
+  const editor = page.getByRole('textbox', {
+    name: /Editor Markdown|Markdown editor/i,
+  });
   await expect(editor).toBeVisible();
 
-  await page.getByRole('button', { name: /language|idioma/i }).click();
+  // Switch language via toolbar
+  await page
+    .getByRole('button', { name: /Change language|Cambiar idioma/i })
+    .click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-  await expect(
-    page.getByRole('button', { name: /Cambiar idioma/i })
-  ).toBeVisible();
 
+  // Drop a file
   const dataTransfer = await page.evaluateHandle((content) => {
     const data = new DataTransfer();
     data.items.add(
@@ -30,43 +37,56 @@ test('shows the Bruma shell', async ({ page }) => {
     return data;
   }, fixture);
 
-  await page.locator('main').dispatchEvent('drop', { dataTransfer });
+  await page.locator('.bruma-shell').dispatchEvent('drop', { dataTransfer });
   await expect(page.locator('footer').getByText('search.md')).toBeVisible();
 
-  await page.getByRole('button', { name: /Dividido|Split/i }).click();
-
-  await expect(page.getByRole('article', { name: /preview/i })).toContainText(
-    'Bruma'
-  );
-
-  await page.getByRole('button', { name: /Buscar|Search/i }).click();
+  // Cycle view mode from editor → split
   await page
-    .getByLabel(/Buscar en el documento|Search document/i)
+    .getByRole('button', { name: /Change view mode|Cambiar modo de vista/i })
+    .click();
+
+  const preview = page.getByRole('article', {
+    name: /Markdown preview|Vista previa/i,
+  });
+  await expect(preview).toBeVisible({ timeout: 10000 });
+  await expect(preview).toContainText('Bruma');
+
+  // Open search
+  await page.getByRole('button', { name: /^Buscar$|^Search$/ }).click();
+  await page
+    .getByPlaceholder(/Search|Buscar/)
+    .first()
     .fill('bruma');
 
-  await expect(page.getByText('1/2')).toBeVisible();
+  await expect(page.getByText('1 / 2')).toBeVisible();
 
   await page
-    .getByRole('button', { name: /Distinguir mayúsculas|Match case/i })
+    .getByRole('button', { name: /Match case|Distinguir mayúsculas/i })
     .click();
 
   await expect(page.getByText('0/0')).toBeVisible();
 
   await page.keyboard.press('Escape');
 
-  await expect(
-    page.getByLabel(/Buscar en el documento|Search document/i)
-  ).toBeHidden();
+  await expect(page.getByRole('search')).toBeHidden();
 
-  await editor.fill('# Cambio sin guardar');
+  await editor.click();
+  await page.keyboard.press('Meta+a');
+  await page.keyboard.type('# Cambio sin guardar');
   await expect(page.getByText(/^(Sin guardar|Unsaved)$/i)).toBeVisible();
 
+  // New document triggers unsaved changes dialog
   await page
-    .getByRole('button', { name: /Nuevo documento|New document/i })
+    .locator(
+      'button[aria-label="New document"], button[aria-label="Nuevo documento"]'
+    )
     .click();
+  await page.getByRole('menuitem', { name: /Empty note|Nota vacía/i }).click();
 
   await expect(
-    page.getByRole('dialog', { name: /Cambios sin guardar|Unsaved changes/i })
+    page.getByRole('alertdialog', {
+      name: /Cambios sin guardar|Unsaved changes/i,
+    })
   ).toBeVisible();
 
   await page.getByRole('button', { name: /Descartar|Discard/i }).click();
@@ -75,8 +95,11 @@ test('shows the Bruma shell', async ({ page }) => {
     page.locator('footer').getByText(/Sin titulo|Untitled/i)
   ).toBeVisible();
 
+  // Open recent files
   await page
-    .getByRole('button', { name: /Archivos recientes|Recent files/i })
+    .locator(
+      'button[aria-label*="Recent files"], button[aria-label*="Archivos recientes"]'
+    )
     .click();
 
   await expect(page.getByRole('menuitem', { name: 'search.md' })).toBeVisible();

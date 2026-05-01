@@ -1,13 +1,16 @@
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right.js';
-import Clock3 from 'lucide-react/dist/esm/icons/clock-3.js';
-import Command from 'lucide-react/dist/esm/icons/command.js';
-import FileInput from 'lucide-react/dist/esm/icons/file-input.js';
-import FilePlus2 from 'lucide-react/dist/esm/icons/file-plus-2.js';
-import Search from 'lucide-react/dist/esm/icons/search.js';
-import SplitSquareVertical from 'lucide-react/dist/esm/icons/split-square-vertical.js';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../components/ui/button';
+import { COMMAND_REGISTRY } from '../../lib/shortcuts';
+import {
+  SplitSquareVertical,
+  Search,
+  FilePlus2,
+  FileInput,
+  Command,
+  Clock3,
+  ArrowRight,
+} from 'lucide-react';
 
 type WelcomeStateProps = {
   recentFiles: string[];
@@ -16,6 +19,23 @@ type WelcomeStateProps = {
   onOpenDocument: () => void;
   onOpenRecent: (path: string) => void;
 };
+
+function Kbd({ value }: { value: string | null }) {
+  if (!value) return null;
+  const parts = value.replace('Mod', '⌘').split('+');
+  return (
+    <span className="ml-1 inline-flex items-center gap-1">
+      {parts.map((p) => (
+        <kbd
+          key={p}
+          className="rounded border border-emerald-950/10 bg-white/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground shadow-sm dark:border-white/10 dark:bg-white/10"
+        >
+          {p}
+        </kbd>
+      ))}
+    </span>
+  );
+}
 
 function getPathBasename(path: string): string {
   const segments = path.split(/[\\/]/).filter(Boolean);
@@ -31,9 +51,14 @@ export function WelcomeState({
 }: WelcomeStateProps) {
   const { t } = useTranslation();
   const visibleRecentFiles = recentFiles.slice(0, 3);
+  const shortcuts = {
+    newDocument: COMMAND_REGISTRY.newDocument.defaultShortcut,
+    toggleSearch: COMMAND_REGISTRY.toggleSearch.defaultShortcut,
+    toggleViewMode: COMMAND_REGISTRY.toggleViewMode.defaultShortcut,
+  };
 
   return (
-    <div className="absolute inset-0 z-20 overflow-auto bg-background/90 p-5 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="absolute inset-0 z-overlay overflow-auto bg-background/90 p-5 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="mx-auto flex min-h-full w-full max-w-5xl items-center">
         <section className="grid w-full gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,24rem)]">
           <div className="rounded-[2rem] border border-white/50 bg-white/80 p-8 shadow-[0_30px_80px_rgba(16,24,40,0.08)] ring-1 ring-emerald-950/5 backdrop-blur dark:border-white/10 dark:bg-zinc-950/70 dark:ring-white/10">
@@ -83,6 +108,7 @@ export function WelcomeState({
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {t('welcome.shortcutsBody')}
+                  <Kbd value={shortcuts.newDocument} />
                 </p>
               </div>
               <div className="rounded-3xl border border-emerald-950/10 bg-stone-50/80 p-4 dark:border-white/10 dark:bg-white/5">
@@ -94,6 +120,7 @@ export function WelcomeState({
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {t('welcome.searchBody')}
+                  <Kbd value={shortcuts.toggleSearch} />
                 </p>
               </div>
               <div className="rounded-3xl border border-emerald-950/10 bg-zinc-50/90 p-4 dark:border-white/10 dark:bg-white/5">
@@ -105,6 +132,7 @@ export function WelcomeState({
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {t('welcome.previewBody')}
+                  <Kbd value={shortcuts.toggleViewMode} />
                 </p>
               </div>
             </div>

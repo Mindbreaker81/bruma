@@ -104,8 +104,12 @@
   },
   "toc": {
     "empty": "No hay encabezados.",
+    "label": "Tabla de contenidos",
     "title": "Indice",
     "toggle": "Mostrar u ocultar indice"
+  },
+  "preview": {
+    "label": "Vista previa de Markdown"
   },
   "zoom": {
     "decrease": "Reducir tipografia",
@@ -163,7 +167,12 @@
     "toggleFocusMode": "Modo enfoque",
     "togglePreferences": "Preferencias",
     "toggleTemplateMenu": "Plantillas",
-    "exportHtml": "Exportar HTML"
+    "exportHtml": "Exportar HTML",
+    "pressKeys": "Pulsa la combinacion...",
+    "cancel": "Cancelar",
+    "record": "Grabar",
+    "reset": "Restablecer",
+    "resetTooltip": "Restablecer al valor por defecto"
   },
   "preferences": {
     "title": "Preferencias",
@@ -214,5 +223,9 @@
     "searchBody": "La búsqueda queda anclada al área de trabajo para revisar coincidencias sin tapar el documento.",
     "previewTitle": "Vista dividida",
     "previewBody": "Cambia entre editor, preview o vista partida para revisar el Markdown sin cambiar de contexto."
+  },
+  "mobileFallback": {
+    "title": "Bruma esta optimizado para escritorio",
+    "body": "Para una experiencia completa, abre Bruma en una ventana mas ancha o instala la aplicacion de escritorio."
   }
 }

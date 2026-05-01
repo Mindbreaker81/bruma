@@ -270,8 +270,8 @@ mod tests {
     #[test]
     fn builds_recent_menu_labels_from_basename_and_parent() {
         assert_eq!(
-            recent_menu_item_label("/home/erosales/notes/todo.md"),
-            "todo.md — /home/erosales/notes"
+            recent_menu_item_label("/home/user/notes/todo.md"),
+            "todo.md — /home/user/notes"
         );
     }
 

@@ -6,6 +6,15 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import { Slider } from '../../components/ui/slider';
 import { Switch } from '../../components/ui/switch';
 
 type PreferencesDialogProps = {
@@ -116,17 +125,22 @@ export function PreferencesDialog({
               <label htmlFor="pref-font" className="text-sm font-medium">
                 {t('preferences.fontFamily')}
               </label>
-              <select
-                id="pref-font"
+              <Select
                 value={editorFontFamily}
-                onChange={(e) =>
-                  onEditorFontFamilyChange(e.target.value as 'sans' | 'mono')
-                }
-                className="rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                onValueChange={onEditorFontFamilyChange}
               >
-                <option value="sans">{t('preferences.fontFamilySans')}</option>
-                <option value="mono">{t('preferences.fontFamilyMono')}</option>
-              </select>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sans">
+                    {t('preferences.fontFamilySans')}
+                  </SelectItem>
+                  <SelectItem value="mono">
+                    {t('preferences.fontFamilyMono')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">
@@ -149,12 +163,10 @@ export function PreferencesDialog({
               <label htmlFor="pref-gutter" className="text-sm font-medium">
                 {t('preferences.showGutter')}
               </label>
-              <input
+              <Checkbox
                 id="pref-gutter"
-                type="checkbox"
                 checked={editorShowGutter}
-                onChange={(e) => onEditorShowGutterChange(e.target.checked)}
-                className="size-4"
+                onCheckedChange={(v) => onEditorShowGutterChange(Boolean(v))}
               />
             </div>
 
@@ -162,12 +174,10 @@ export function PreferencesDialog({
               <label htmlFor="pref-wrap" className="text-sm font-medium">
                 {t('preferences.wordWrap')}
               </label>
-              <input
+              <Checkbox
                 id="pref-wrap"
-                type="checkbox"
                 checked={editorWrap}
-                onChange={(e) => onEditorWrapChange(e.target.checked)}
-                className="size-4"
+                onCheckedChange={(v) => onEditorWrapChange(Boolean(v))}
               />
             </div>
           </section>
@@ -182,16 +192,15 @@ export function PreferencesDialog({
               <label htmlFor="pref-max-width" className="text-sm font-medium">
                 {t('preferences.maxWidth')}
               </label>
-              <input
-                id="pref-max-width"
-                type="range"
-                min="20"
-                max="200"
-                step="1"
-                value={previewMaxWidth}
-                onChange={(e) =>
-                  onPreviewMaxWidthChange(Number(e.target.value))
+              <Slider
+                value={[previewMaxWidth]}
+                min={20}
+                max={200}
+                step={1}
+                onValueChange={([v]) =>
+                  onPreviewMaxWidthChange(v ?? previewMaxWidth)
                 }
+                aria-valuetext={`${previewMaxWidth}ch`}
               />
               <span className="tabular-nums">{previewMaxWidth}ch</span>
             </div>
@@ -200,12 +209,10 @@ export function PreferencesDialog({
               <label htmlFor="pref-show-toc" className="text-sm font-medium">
                 {t('preferences.showToc')}
               </label>
-              <input
+              <Checkbox
                 id="pref-show-toc"
-                type="checkbox"
                 checked={previewShowToc}
-                onChange={(e) => onPreviewShowTocChange(e.target.checked)}
-                className="size-4"
+                onCheckedChange={(v) => onPreviewShowTocChange(Boolean(v))}
               />
             </div>
           </section>

@@ -25,17 +25,15 @@
   --radius: 0.5rem;
   --bruma-font-scale: 1;
   color-scheme: light;
-  --color-bg: 250 250 249;
-  --color-surface: 255 255 255;
-  --color-panel: 245 245 244;
-  --color-editor: 255 255 255;
-  --color-preview: 255 255 255;
-  --color-text: 24 24 27;
-  --color-muted: 82 82 91;
-  --color-border: 228 228 231;
-  --color-control-hover: 244 244 245;
   --shadow-color: 15 23 42;
+  /* Z-index scale (M10) */
+  --z-base: 0;
+  --z-shell: 10;
+  --z-overlay: 20;
+  --z-modal: 50;
+  --z-toast: 60;
   font-family:
+    'Inter Variable',
     'Aptos',
     'Segoe UI Variable',
     Inter,
@@ -68,15 +66,6 @@
   --input: 240 3.7% 15.9%;
   --ring: 152 76% 36%;
   color-scheme: dark;
-  --color-bg: 24 24 27;
-  --color-surface: 39 39 42;
-  --color-panel: 32 32 36;
-  --color-editor: 18 18 20;
-  --color-preview: 18 18 20;
-  --color-text: 244 244 245;
-  --color-muted: 161 161 170;
-  --color-border: 63 63 70;
-  --color-control-hover: 63 63 70;
   --shadow-color: 2 6 23;
 }
 
@@ -86,6 +75,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
   }
 }
 
@@ -93,9 +85,14 @@ body {
   margin: 0;
   background:
     radial-gradient(circle at top, rgb(209 250 229 / 0.65), transparent 28%),
-    rgb(var(--color-bg));
-  font-feature-settings: 'ss01' 1, 'cv05' 1;
+    hsl(var(--background));
+  font-feature-settings:
+    'ss01' 1,
+    'cv05' 1;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
 #root {
@@ -113,6 +110,11 @@ body {
   background-size: 32px 32px;
   mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.3), transparent 70%);
   opacity: 0.2;
+  transition: opacity 300ms ease;
+}
+
+.bruma-shell[data-focus='on']::after {
+  opacity: 0;
 }
 
 button,
@@ -122,9 +124,8 @@ textarea {
 
 .bruma-editor .cm-editor {
   height: 100%;
-  background:
-    linear-gradient(180deg, rgb(var(--color-editor) / 0.98), rgb(var(--color-editor)));
-  color: rgb(var(--color-text));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     monospace;
@@ -163,7 +164,7 @@ textarea {
 }
 
 .bruma-preview {
-  color: rgb(var(--color-text));
+  color: hsl(var(--foreground));
   font-size: calc(1rem * var(--bruma-font-scale));
   scrollbar-width: thin;
   scrollbar-color: rgb(120 113 108 / 0.7) transparent;
@@ -211,7 +212,7 @@ textarea {
 
 .bruma-preview blockquote {
   border-left: 3px solid rgb(5 150 105 / 0.45);
-  color: rgb(var(--color-muted));
+  color: hsl(var(--muted-foreground));
   padding-left: 1rem;
   font-style: italic;
 }
@@ -224,20 +225,16 @@ textarea {
 
 .bruma-preview :not(pre) > code {
   border-radius: 4px;
-  background: rgb(var(--color-panel));
+  background: hsl(var(--muted));
   padding: 0.1rem 0.25rem;
   font-size: 0.875em;
 }
 
 .bruma-preview pre {
   overflow: auto;
-  border: 1px solid rgb(var(--color-border));
+  border: 1px solid hsl(var(--border));
   border-radius: 20px;
-  background: linear-gradient(
-    180deg,
-    rgb(var(--color-panel) / 0.96),
-    rgb(var(--color-panel))
-  );
+  background: hsl(var(--muted));
   padding: 1rem;
   box-shadow: 0 20px 40px rgb(var(--shadow-color) / 0.06);
 }
@@ -249,12 +246,12 @@ textarea {
 }
 
 .bruma-preview :where(th, td) {
-  border: 1px solid rgb(var(--color-border));
+  border: 1px solid hsl(var(--border));
   padding: 0.45rem 0.6rem;
 }
 
 .bruma-preview th {
-  background: rgb(var(--color-panel));
+  background: hsl(var(--muted));
   font-weight: 600;
 }
 
@@ -282,6 +279,17 @@ textarea {
   border-radius: 999px;
   background-clip: padding-box;
   background-color: rgb(120 113 108 / 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media print {
