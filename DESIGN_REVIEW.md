@@ -19,7 +19,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **QW5** — `transition-colors duration-200` global (cubre A7)
 
 ### Prioridad alta
-- [ ] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
+- [x] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
 - [x] **A2** — Cubierto por QW1
 - [x] **A3** — Cubierto por QW3
 - [ ] **A4** — Toolbar overflow horizontal en pantallas estrechas

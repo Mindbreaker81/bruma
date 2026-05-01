@@ -1403,7 +1403,7 @@ export default function App() {
             <div
               className={
                 viewMode === 'split'
-                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
+                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-border'
                   : 'relative min-h-0'
               }
             >

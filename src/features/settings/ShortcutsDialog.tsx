@@ -80,17 +80,17 @@ export function ShortcutsDialog({
   return (
     <div className="fixed inset-0 z-20 grid place-items-center bg-black/35 px-4">
       <section
-        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] shadow-lg"
+        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg border border-border bg-card shadow-lg"
         role="dialog"
         aria-modal="true"
         aria-labelledby="shortcuts-dialog-title"
       >
-        <div className="flex items-center justify-between border-b border-[rgb(var(--color-border))] px-5 py-3">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <h2 className="text-base font-semibold" id="shortcuts-dialog-title">
             {t('shortcuts.title')}
           </h2>
           <button
-            className="rounded-md px-2 py-1 text-sm text-[rgb(var(--color-muted))] hover:bg-[rgb(var(--color-control-hover))] hover:text-[rgb(var(--color-text))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            className="rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
             type="button"
             onClick={onClose}
           >
@@ -101,7 +101,7 @@ export function ShortcutsDialog({
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[rgb(var(--color-border))]">
+              <tr className="border-b border-border">
                 <th className="py-2 text-left">{t('shortcuts.command')}</th>
                 <th className="py-2 text-left">{t('shortcuts.binding')}</th>
               </tr>
@@ -117,14 +117,14 @@ export function ShortcutsDialog({
                 return (
                   <tr
                     key={cmd.id}
-                    className="border-b border-[rgb(var(--color-border))]"
+                    className="border-b border-border"
                   >
                     <td className="py-2">{t(`shortcuts.${cmd.id}`)}</td>
                     <td className="py-2">
                       {editingId === cmd.id ? (
                         <div className="flex items-center gap-2">
                           <input
-                            className="w-32 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] px-2 py-1 text-sm"
+                            className="w-32 rounded border border-border bg-background px-2 py-1 text-sm"
                             autoFocus
                             value={
                               isCapturing ? capturedBinding : (binding ?? '')
@@ -146,7 +146,7 @@ export function ShortcutsDialog({
                             placeholder={isCapturing ? 'Press keys...' : ''}
                           />
                           <button
-                            className="rounded px-2 py-1 text-xs bg-[rgb(var(--color-control-hover))] hover:bg-[rgb(var(--color-bg))]"
+                            className="rounded px-2 py-1 text-xs bg-accent hover:bg-background"
                             type="button"
                             onClick={() => setIsCapturing(!isCapturing)}
                             title={
@@ -177,7 +177,7 @@ export function ShortcutsDialog({
                           className={`rounded px-2 py-1 text-sm ${
                             hasConflict
                               ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200'
-                              : 'bg-[rgb(var(--color-bg))] hover:bg-[rgb(var(--color-control-hover))]'
+                              : 'bg-background hover:bg-accent'
                           }`}
                           type="button"
                           onClick={() => setEditingId(cmd.id)}
