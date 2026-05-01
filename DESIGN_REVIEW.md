@@ -7,6 +7,39 @@
 
 ---
 
+## Estado de implementación (2026-05-01)
+
+Trabajo en curso en la rama `claude/security-audit-design-review-csbqz`. Cada ítem del checklist se commitea por separado.
+
+**Hecho (12/26 ítems no cubiertos por otros):**
+
+| ID | Commit (SHA corto) | Resumen |
+|----|---------------------|---------|
+| QW1 | `8292e20` | Inter via `@fontsource-variable/inter`, favicon, `theme-color` y `meta description` en `index.html` |
+| QW2 | `90b87f3` | OG tags + Twitter card + canonical + `og-image.svg` 1200×630 en landing |
+| QW3 | `c73ed92` | `inert`/`aria-hidden` en el editor cuando Welcome está visible |
+| QW4 | `f94b54a` | `@media (prefers-reduced-motion: reduce)` global |
+| QW5 / A7 | `1ef027f` | `transition: background-color/color 200ms ease` en `body` |
+| A1 | `0b85c8b` | Eliminadas variables `--color-*` duplicadas; consumidores migrados a tokens shadcn HSL |
+| A4 | `7002f42` | Toolbar con scroll horizontal en `<xl`, `flex-wrap` solo a partir de `xl` |
+| A8 | `07360b4` | Badge tagline: `text-emerald-50` sobre `bg-emerald-400/15` en dark (≥AA) |
+| M1 | `522e6ab` | `IconButton` y `ToolbarGroup` movidos a `src/components/ui/icon-button.tsx` |
+| M4 | `4466c94` | Keys `preview.label` y `toc.label` añadidas a es/en y usadas en `aria-label` |
+| M11 | `37b5cbb` | `<p>` anidados eliminados dentro de `<DialogDescription>` en About |
+
+Tras cada cambio: `pnpm test` (102/102 ✓), `pnpm lint` (0 warnings ✓), `pnpm build` (✓).
+
+**Pendiente (orden sugerido, agrupado por riesgo):**
+
+1. **Mecánicos / bajo riesgo:** M12, M10, M8, M6, M7, B1, B3, B4, B5, B8, B9, B10.
+2. **Refactors medianos / requieren añadir primitivas shadcn:** M3 (Dialog), M2 (Checkbox/Select/Slider), M13 (Tabs).
+3. **Estructurales / requieren QA visual:** A5 (extraer Toolbar/AppShell de App.tsx), A6 (`useShallow` en stores Zustand).
+4. **Requieren setup manual antes de implementar:** B6 (baseline de snapshots Playwright), B7 (tema CodeMirror — subjetivo).
+
+Para retomar: marcar cada checkbox del bloque siguiente al completarlo, hacer commit con mensaje `<tipo>(<id>): ...` (commitlint exige subject lowercase) y verificar lint/test/build.
+
+---
+
 ## Checklist de implementación
 
 Marcar al completar. Cada ítem se commitea por separado para facilitar review/revert.
