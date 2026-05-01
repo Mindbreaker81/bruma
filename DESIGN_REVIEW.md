@@ -39,7 +39,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [ ] **M8** — Overlay decorativo opt-in / `focusMode`
 - [x] **M9** — Cubierto por QW4
 - [ ] **M10** — Tokens semánticos de z-index
-- [ ] **M11** — `<DialogDescription>` con `<p>` anidados (About)
+- [x] **M11** — `<DialogDescription>` con `<p>` anidados (About)
 - [ ] **M12** — Recent empty state focusable
 - [ ] **M13** — View-mode bar con Radix Tabs
 

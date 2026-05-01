@@ -1537,11 +1537,11 @@ export default function App() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t('about.title')}</DialogTitle>
-              <DialogDescription className="space-y-1">
-                <p>{t('about.body')}</p>
-                <p>{t('about.version', { version: APP_VERSION })}</p>
-              </DialogDescription>
+              <DialogDescription>{t('about.body')}</DialogDescription>
             </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t('about.version', { version: APP_VERSION })}
+            </p>
           </DialogContent>
         </Dialog>
 
