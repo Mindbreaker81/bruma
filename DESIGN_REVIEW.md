@@ -22,7 +22,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
 - [x] **A2** — Cubierto por QW1
 - [x] **A3** — Cubierto por QW3
-- [ ] **A4** — Toolbar overflow horizontal en pantallas estrechas
+- [x] **A4** — Toolbar overflow horizontal en pantallas estrechas
 - [ ] **A5** — Extraer Toolbar/AppShell de `App.tsx` ⚠ requiere QA visual
 - [ ] **A6** — `useShallow` en selectores Zustand ⚠ requiere QA visual
 - [x] **A7** — Cubierto por QW5

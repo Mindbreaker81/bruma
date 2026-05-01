@@ -201,7 +201,7 @@ function ToolbarGroup({
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-2 py-1 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/5">
+    <div className="flex shrink-0 items-center gap-2 rounded-full border border-white/60 bg-white/80 px-2 py-1 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/5">
       <span className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </span>
@@ -1081,7 +1081,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-2">
+          <div className="-mx-1 flex w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:thin] xl:flex-wrap xl:overflow-x-visible">
             <ToolbarGroup label={t('toolbar.file')}>
               <DropdownMenu
                 open={isTemplateMenuOpen}
