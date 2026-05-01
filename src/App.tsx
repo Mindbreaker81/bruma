@@ -1097,7 +1097,7 @@ export default function App() {
               className={
                 viewMode === 'split'
                   ? 'relative grid min-h-0 grid-cols-2 divide-x divide-border'
-                  : 'relative min-h-0'
+                  : 'relative flex min-h-0 flex-col'
               }
             >
               <Suspense fallback={null}>
@@ -1122,7 +1122,7 @@ export default function App() {
                 ) : null}
               </Suspense>
               {viewMode !== 'preview' ? (
-                <div className="relative min-h-0 bg-background/60">
+                <div className="relative flex-1 min-h-0 bg-background/60">
                   {showWelcomeState ? (
                     <WelcomeState
                       recentFiles={recentFiles}
@@ -1172,7 +1172,7 @@ export default function App() {
                   fallback={
                     <div
                       aria-hidden
-                      className="h-full min-h-0 bg-background"
+                      className="flex-1 min-h-0 bg-background"
                     />
                   }
                 >
