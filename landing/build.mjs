@@ -119,7 +119,7 @@ function main() {
   fs.mkdirSync(distDir, { recursive: true });
   fs.writeFileSync(path.join(distDir, 'index.html'), template, 'utf8');
 
-  for (const file of ['styles.css', 'app.js', 'icon.svg', 'favicon.svg']) {
+  for (const file of ['styles.css', 'app.js', 'icon.svg', 'favicon.svg', 'og-image.svg']) {
     fs.copyFileSync(path.join(landingSrc, file), path.join(distDir, file));
   }
 
