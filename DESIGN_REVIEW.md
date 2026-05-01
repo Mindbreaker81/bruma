@@ -7,6 +7,56 @@
 
 ---
 
+## Checklist de implementación
+
+Marcar al completar. Cada ítem se commitea por separado para facilitar review/revert.
+
+### Top 5 quick wins
+- [ ] **QW1** — `index.html`: theme-color, favicon y carga real de Inter (o quitarla)
+- [ ] **QW2** — Landing: OG tags + Twitter card + canonical
+- [ ] **QW3** — Welcome con `inert/aria-hidden` o no montar Editor debajo
+- [ ] **QW4** — `prefers-reduced-motion` global en `main.css`
+- [ ] **QW5** — `transition-colors duration-200` global (cubre A7)
+
+### Prioridad alta
+- [ ] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
+- [x] **A2** — Cubierto por QW1
+- [x] **A3** — Cubierto por QW3
+- [ ] **A4** — Toolbar overflow horizontal en pantallas estrechas
+- [ ] **A5** — Extraer Toolbar/AppShell de `App.tsx` ⚠ requiere QA visual
+- [ ] **A6** — `useShallow` en selectores Zustand ⚠ requiere QA visual
+- [x] **A7** — Cubierto por QW5
+- [ ] **A8** — Contraste del badge "tagline"
+
+### Prioridad media
+- [ ] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`
+- [ ] **M2** — `PreferencesDialog`: shadcn Checkbox/Select/Slider
+- [ ] **M3** — `ShortcutsDialog` a shadcn `<Dialog>`
+- [ ] **M4** — i18n en aria-labels de Preview/TOC
+- [x] **M5** — Cubierto por QW2
+- [ ] **M6** — CTA download con detección OS en landing
+- [ ] **M7** — Self-host Inter en landing
+- [ ] **M8** — Overlay decorativo opt-in / `focusMode`
+- [x] **M9** — Cubierto por QW4
+- [ ] **M10** — Tokens semánticos de z-index
+- [ ] **M11** — `<DialogDescription>` con `<p>` anidados (About)
+- [ ] **M12** — Recent empty state focusable
+- [ ] **M13** — View-mode bar con Radix Tabs
+
+### Prioridad baja / nice-to-have
+- [ ] **B1** — Lucide imports canónicos (verificar bundle)
+- [x] **B2** — Cubierto por QW1
+- [ ] **B3** — `<kbd>` con shortcuts en Welcome
+- [ ] **B4** — Actualizar `FRONTEND_IMPROVEMENTS.md` (punto 9 obsoleto)
+- [ ] **B5** — ErrorBoundary en root
+- [ ] **B6** — Tests de regresión visual (Playwright snapshots) ⚠ requiere baseline
+- [ ] **B7** — Tema CodeMirror coherente con marca ⚠ requiere QA visual
+- [ ] **B8** — Drag-over feedback en TabBar
+- [ ] **B9** — Botón de zoom con icono visible
+- [ ] **B10** — Fallback "desktop only" en `<md` para la app web
+
+---
+
 ## Índice
 
 1. [Impresión general](#impresión-general)
