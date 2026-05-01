@@ -27,10 +27,7 @@ export function ToolbarExport({
 
   return (
     <ToolbarGroup label={t('toolbar.export')}>
-      <DropdownMenu
-        open={isExportMenuOpen}
-        onOpenChange={setIsExportMenuOpen}
-      >
+      <DropdownMenu open={isExportMenuOpen} onOpenChange={setIsExportMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"

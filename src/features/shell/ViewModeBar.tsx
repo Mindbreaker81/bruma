@@ -50,9 +50,7 @@ export function ViewModeBar({
           aria-pressed={!showFrontmatter}
           onClick={toggleShowFrontmatter}
         >
-          {showFrontmatter
-            ? t('frontmatter.shown')
-            : t('frontmatter.hidden')}
+          {showFrontmatter ? t('frontmatter.shown') : t('frontmatter.hidden')}
         </button>
         <span>
           {t(`theme.preference.${themePreference}`)} ·{' '}

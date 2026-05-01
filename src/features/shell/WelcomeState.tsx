@@ -2,7 +2,15 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../components/ui/button';
 import { COMMAND_REGISTRY } from '../../lib/shortcuts';
-import { SplitSquareVertical, Search, FilePlus2, FileInput, Command, Clock3, ArrowRight } from 'lucide-react';
+import {
+  SplitSquareVertical,
+  Search,
+  FilePlus2,
+  FileInput,
+  Command,
+  Clock3,
+  ArrowRight,
+} from 'lucide-react';
 
 type WelcomeStateProps = {
   recentFiles: string[];

@@ -22,14 +22,54 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 
 const SANITIZE_OPTIONS = {
   ALLOWED_TAGS: [
-    'a', 'blockquote', 'br', 'code', 'del', 'em', 'figure', 'figcaption',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'img', 'input', 'kbd', 'li',
-    'ol', 'p', 'pre', 's', 'span', 'strong', 'sub', 'sup', 'table', 'tbody',
-    'td', 'th', 'thead', 'tr', 'ul',
+    'a',
+    'blockquote',
+    'br',
+    'code',
+    'del',
+    'em',
+    'figure',
+    'figcaption',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'hr',
+    'img',
+    'input',
+    'kbd',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    's',
+    'span',
+    'strong',
+    'sub',
+    'sup',
+    'table',
+    'tbody',
+    'td',
+    'th',
+    'thead',
+    'tr',
+    'ul',
   ],
   ALLOWED_ATTR: [
-    'alt', 'aria-hidden', 'checked', 'class', 'disabled', 'href', 'id',
-    'name', 'src', 'target', 'title', 'type',
+    'alt',
+    'aria-hidden',
+    'checked',
+    'class',
+    'disabled',
+    'href',
+    'id',
+    'name',
+    'src',
+    'target',
+    'title',
+    'type',
   ],
   ALLOW_DATA_ATTR: false,
   FORBID_ATTR: ['style', 'onerror', 'onload', 'onclick'],
@@ -119,12 +159,24 @@ function main() {
   fs.mkdirSync(distDir, { recursive: true });
   fs.writeFileSync(path.join(distDir, 'index.html'), template, 'utf8');
 
-  for (const file of ['styles.css', 'app.js', 'icon.svg', 'favicon.svg', 'og-image.svg']) {
+  for (const file of [
+    'styles.css',
+    'app.js',
+    'icon.svg',
+    'favicon.svg',
+    'og-image.svg',
+  ]) {
     fs.copyFileSync(path.join(landingSrc, file), path.join(distDir, file));
   }
 
   // Copia los archivos de la fuente Inter al dist
-  const interSrc = path.join(__dirname, 'node_modules', '@fontsource-variable', 'inter', 'files');
+  const interSrc = path.join(
+    __dirname,
+    'node_modules',
+    '@fontsource-variable',
+    'inter',
+    'files'
+  );
   const interDist = path.join(distDir, 'fonts', 'inter');
   fs.mkdirSync(interDist, { recursive: true });
   for (const file of fs.readdirSync(interSrc)) {

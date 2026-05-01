@@ -29,10 +29,7 @@ function eventToBinding(event: KeyboardEvent): string {
   if (event.metaKey || event.ctrlKey) parts.push('Mod');
   if (event.shiftKey) parts.push('Shift');
   if (event.altKey) parts.push('Alt');
-  if (
-    event.key &&
-    !['Meta', 'Control', 'Shift', 'Alt'].includes(event.key)
-  ) {
+  if (event.key && !['Meta', 'Control', 'Shift', 'Alt'].includes(event.key)) {
     parts.push(event.key);
   }
   return parts.join('+');
@@ -111,7 +108,9 @@ export function ShortcutsDialog({
                           <input
                             className="w-32 rounded border border-border bg-background px-2 py-1 text-sm"
                             autoFocus
-                            value={isCapturing ? capturedBinding : (binding ?? '')}
+                            value={
+                              isCapturing ? capturedBinding : (binding ?? '')
+                            }
                             onChange={(e) => {
                               setIsCapturing(false);
                               const val = e.target.value.trim() || null;
@@ -124,7 +123,9 @@ export function ShortcutsDialog({
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') setEditingId(null);
                             }}
-                            placeholder={isCapturing ? t('shortcuts.pressKeys') : ''}
+                            placeholder={
+                              isCapturing ? t('shortcuts.pressKeys') : ''
+                            }
                           />
                           <Button
                             size="sm"
@@ -132,22 +133,25 @@ export function ShortcutsDialog({
                             type="button"
                             onClick={() => setIsCapturing(!isCapturing)}
                           >
-                            {isCapturing ? t('shortcuts.cancel') : t('shortcuts.record')}
+                            {isCapturing
+                              ? t('shortcuts.cancel')
+                              : t('shortcuts.record')}
                           </Button>
-                          {shortcuts[cmd.id] !== undefined && shortcuts[cmd.id] !== null && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              type="button"
-                              title={t('shortcuts.resetTooltip')}
-                              onClick={() => {
-                                onChange({ ...shortcuts, [cmd.id]: null });
-                                setIsCapturing(false);
-                              }}
-                            >
-                              {t('shortcuts.reset')}
-                            </Button>
-                          )}
+                          {shortcuts[cmd.id] !== undefined &&
+                            shortcuts[cmd.id] !== null && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                type="button"
+                                title={t('shortcuts.resetTooltip')}
+                                onClick={() => {
+                                  onChange({ ...shortcuts, [cmd.id]: null });
+                                  setIsCapturing(false);
+                                }}
+                              >
+                                {t('shortcuts.reset')}
+                              </Button>
+                            )}
                         </div>
                       ) : (
                         <button

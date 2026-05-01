@@ -1,7 +1,16 @@
 import { useTranslation } from 'react-i18next';
 
 import { IconButton, ToolbarGroup } from '../../../components/ui/icon-button';
-import { Columns2, Eye, LinkIcon, EyeOff, Maximize2, List, Languages, Moon } from 'lucide-react';
+import {
+  Columns2,
+  Eye,
+  LinkIcon,
+  EyeOff,
+  Maximize2,
+  List,
+  Languages,
+  Moon,
+} from 'lucide-react';
 
 type ToolbarViewProps = {
   cycleTheme: () => void;

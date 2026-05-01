@@ -123,10 +123,7 @@ export function ToolbarFile({
         onClick={handleOpenWithConfirmation}
         className="rounded-full"
       />
-      <DropdownMenu
-        open={isRecentMenuOpen}
-        onOpenChange={setIsRecentMenuOpen}
-      >
+      <DropdownMenu open={isRecentMenuOpen} onOpenChange={setIsRecentMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -159,9 +156,7 @@ export function ToolbarFile({
               </DropdownMenuItem>
             ))
           ) : (
-            <DropdownMenuItem disabled>
-              {t('recent.empty')}
-            </DropdownMenuItem>
+            <DropdownMenuItem disabled>{t('recent.empty')}</DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

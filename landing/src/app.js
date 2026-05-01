@@ -106,8 +106,11 @@ document.querySelectorAll('.md-content').forEach((region) => {
       windows: /\.(msi|exe)$/i,
       linux: /\.(AppImage|deb|rpm)$/i,
     };
-    const asset = (release.assets || []).find((a) => os && matchers[os].test(a.name));
-    if (asset && asset.browser_download_url) cta.href = asset.browser_download_url;
+    const asset = (release.assets || []).find(
+      (a) => os && matchers[os].test(a.name)
+    );
+    if (asset && asset.browser_download_url)
+      cta.href = asset.browser_download_url;
   } catch {
     /* fallback al link de releases */
   }

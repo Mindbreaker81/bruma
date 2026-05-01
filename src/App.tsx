@@ -72,10 +72,7 @@ import type { CommandId } from './lib/shortcuts';
 import { useShortcutRegistry } from './lib/useShortcut';
 import type { Template } from './features/templates/templates';
 import { X } from 'lucide-react';
-import {
-  isTauriRuntime,
-  setAppWindowTitle,
-} from './lib/tauri';
+import { isTauriRuntime, setAppWindowTitle } from './lib/tauri';
 
 const ConfirmDirtyDialog = lazy(() =>
   import('./features/files/ConfirmDirtyDialog').then((module) => ({
@@ -138,16 +135,9 @@ type MenuHandlers = {
   setViewMode: (nextViewMode: ViewMode) => void;
 };
 
-
 export default function App() {
   const { i18n, t } = useTranslation();
-  const {
-    document,
-    displayName,
-    isDirty,
-    openTab,
-    closeTab,
-  } = useFileStore(
+  const { document, displayName, isDirty, openTab, closeTab } = useFileStore(
     useShallow((state) => ({
       document: state.document,
       displayName: state.displayName,
@@ -258,15 +248,13 @@ export default function App() {
       setPreviewShowToc: state.setPreviewShowToc,
     }))
   );
-  const {
-    enabled: scrollSyncEnabled,
-    toggle: toggleScrollSync,
-  } = useScrollSyncStore(
-    useShallow((state) => ({
-      enabled: state.enabled,
-      toggle: state.toggle,
-    }))
-  );
+  const { enabled: scrollSyncEnabled, toggle: toggleScrollSync } =
+    useScrollSyncStore(
+      useShallow((state) => ({
+        enabled: state.enabled,
+        toggle: state.toggle,
+      }))
+    );
   const {
     searchActiveIndex,
     searchCaseSensitive,
@@ -1170,10 +1158,7 @@ export default function App() {
               {viewMode !== 'editor' ? (
                 <Suspense
                   fallback={
-                    <div
-                      aria-hidden
-                      className="flex-1 min-h-0 bg-background"
-                    />
+                    <div aria-hidden className="flex-1 min-h-0 bg-background" />
                   }
                 >
                   <Preview

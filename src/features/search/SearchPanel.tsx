@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, ChevronRight, CaseSensitive, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+  X,
+  ChevronRight,
+  CaseSensitive,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 
 type SearchPanelProps = {
   activeIndex: number;

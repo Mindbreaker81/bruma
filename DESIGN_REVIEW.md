@@ -13,19 +13,19 @@ Trabajo en curso en la rama `claude/security-audit-design-review-csbqz`. Cada í
 
 **Hecho (12/26 ítems no cubiertos por otros):**
 
-| ID | Commit (SHA corto) | Resumen |
-|----|---------------------|---------|
-| QW1 | `8292e20` | Inter via `@fontsource-variable/inter`, favicon, `theme-color` y `meta description` en `index.html` |
-| QW2 | `90b87f3` | OG tags + Twitter card + canonical + `og-image.svg` 1200×630 en landing |
-| QW3 | `c73ed92` | `inert`/`aria-hidden` en el editor cuando Welcome está visible |
-| QW4 | `f94b54a` | `@media (prefers-reduced-motion: reduce)` global |
-| QW5 / A7 | `1ef027f` | `transition: background-color/color 200ms ease` en `body` |
-| A1 | `0b85c8b` | Eliminadas variables `--color-*` duplicadas; consumidores migrados a tokens shadcn HSL |
-| A4 | `7002f42` | Toolbar con scroll horizontal en `<xl`, `flex-wrap` solo a partir de `xl` |
-| A8 | `07360b4` | Badge tagline: `text-emerald-50` sobre `bg-emerald-400/15` en dark (≥AA) |
-| M1 | `522e6ab` | `IconButton` y `ToolbarGroup` movidos a `src/components/ui/icon-button.tsx` |
-| M4 | `4466c94` | Keys `preview.label` y `toc.label` añadidas a es/en y usadas en `aria-label` |
-| M11 | `37b5cbb` | `<p>` anidados eliminados dentro de `<DialogDescription>` en About |
+| ID       | Commit (SHA corto) | Resumen                                                                                             |
+| -------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| QW1      | `8292e20`          | Inter via `@fontsource-variable/inter`, favicon, `theme-color` y `meta description` en `index.html` |
+| QW2      | `90b87f3`          | OG tags + Twitter card + canonical + `og-image.svg` 1200×630 en landing                             |
+| QW3      | `c73ed92`          | `inert`/`aria-hidden` en el editor cuando Welcome está visible                                      |
+| QW4      | `f94b54a`          | `@media (prefers-reduced-motion: reduce)` global                                                    |
+| QW5 / A7 | `1ef027f`          | `transition: background-color/color 200ms ease` en `body`                                           |
+| A1       | `0b85c8b`          | Eliminadas variables `--color-*` duplicadas; consumidores migrados a tokens shadcn HSL              |
+| A4       | `7002f42`          | Toolbar con scroll horizontal en `<xl`, `flex-wrap` solo a partir de `xl`                           |
+| A8       | `07360b4`          | Badge tagline: `text-emerald-50` sobre `bg-emerald-400/15` en dark (≥AA)                            |
+| M1       | `522e6ab`          | `IconButton` y `ToolbarGroup` movidos a `src/components/ui/icon-button.tsx`                         |
+| M4       | `4466c94`          | Keys `preview.label` y `toc.label` añadidas a es/en y usadas en `aria-label`                        |
+| M11      | `37b5cbb`          | `<p>` anidados eliminados dentro de `<DialogDescription>` en About                                  |
 
 Tras cada cambio: `pnpm test` (102/102 ✓), `pnpm lint` (0 warnings ✓), `pnpm build` (✓).
 
@@ -45,6 +45,7 @@ Para retomar: marcar cada checkbox del bloque siguiente al completarlo, hacer co
 Marcar al completar. Cada ítem se commitea por separado para facilitar review/revert.
 
 ### Top 5 quick wins
+
 - [x] **QW1** — `index.html`: theme-color, favicon y carga real de Inter (o quitarla)
 - [x] **QW2** — Landing: OG tags + Twitter card + canonical
 - [x] **QW3** — Welcome con `inert/aria-hidden` o no montar Editor debajo
@@ -52,6 +53,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **QW5** — `transition-colors duration-200` global (cubre A7)
 
 ### Prioridad alta
+
 - [x] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
 - [x] **A2** — Cubierto por QW1
 - [x] **A3** — Cubierto por QW3
@@ -62,6 +64,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **A8** — Contraste del badge "tagline"
 
 ### Prioridad media
+
 - [x] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`
 - [x] **M2** — `PreferencesDialog`: shadcn Checkbox/Select/Slider
 - [x] **M3** — `ShortcutsDialog` a shadcn `<Dialog>`
@@ -77,6 +80,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **M13** — View-mode bar con Radix Tabs
 
 ### Prioridad baja / nice-to-have
+
 - [x] **B1** — Lucide imports canónicos (verificar bundle)
 - [x] **B2** — Cubierto por QW1
 - [x] **B3** — `<kbd>` con shortcuts en Welcome
@@ -95,6 +99,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 > Esta sección está pensada para que cualquier desarrollador (incluso poco familiarizado con el repo) pueda completar los ítems pendientes sin equivocarse. Cada receta indica archivos exactos, código a aplicar y cómo verificar.
 >
 > **Reglas comunes para todas las recetas:**
+>
 > 1. Trabaja en la rama `claude/security-audit-design-review-csbqz` (o crea una nueva desde ella).
 > 2. Antes de empezar, asegúrate de que `pnpm install` está al día y `pnpm test`, `pnpm lint`, `pnpm build` pasan en limpio.
 > 3. Después de cada receta corre los **tres** comandos:
@@ -139,6 +144,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual (opcional, en `pnpm dev`): abre File → Recent sin tener archivos abiertos antes; el placeholder ahora se ve "atenuado" pero el foco permanece dentro del menú al pulsar Tab.
 
 **Commit:**
+
 ```
 fix(m12): item disabled en lugar de div no focusable en Recent vacio
 ```
@@ -152,6 +158,7 @@ fix(m12): item disabled en lugar de div no focusable en Recent vacio
 **Objetivo:** Centralizar la escala de z-index en variables CSS para evitar colisiones futuras.
 
 **Archivos a tocar:**
+
 - `src/styles/main.css` (declarar variables)
 - `src/App.tsx`, `src/features/shell/WelcomeState.tsx`, `src/features/search/SearchPanel.tsx`, `src/features/settings/ShortcutsDialog.tsx` (usar variables)
 
@@ -183,14 +190,17 @@ fix(m12): item disabled en lugar de div no focusable en Recent vacio
    - **NO toques** los `z-50` que vienen de los componentes shadcn de Dialog/AlertDialog (están en `src/components/ui/`).
 
    Comando de búsqueda:
+
    ```sh
    grep -rn "z-10\|z-20\|z-50" src/App.tsx src/features
    ```
+
    Itera caso por caso, no uses replace-all.
 
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Visual: abre cada modal (About, Preferences, Shortcuts, External link) y confirma que ningún overlay queda detrás del contenido.
 
 **Commit:**
+
 ```
 refactor(m10): tokens semanticos de z-index en main.css y tailwind
 ```
@@ -204,6 +214,7 @@ refactor(m10): tokens semanticos de z-index en main.css y tailwind
 **Objetivo:** El grid pattern decorativo de fondo (`bruma-shell::after`) compite con el texto en sesiones largas. Solución mínima: que se desactive automáticamente en focus-mode.
 
 **Archivos a tocar:**
+
 - `src/styles/main.css` (regla ~112)
 - `src/App.tsx` (al `<main>`/`<div>` que tiene clase `bruma-shell`, añadir `data-focus`)
 
@@ -214,6 +225,7 @@ refactor(m10): tokens semanticos de z-index en main.css y tailwind
    <div className="bruma-shell ..." data-focus={focusMode ? 'on' : 'off'}>
    ```
 2. En `src/styles/main.css`, modifica la regla del overlay (línea ~112):
+
    ```css
    .bruma-shell::after {
      content: '';
@@ -230,6 +242,7 @@ refactor(m10): tokens semanticos de z-index en main.css y tailwind
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: activa focus-mode (`Mod+Shift+M`) y comprueba que el grid se desvanece.
 
 **Commit:**
+
 ```
 feat(m8): oculta overlay decorativo en focus-mode
 ```
@@ -243,12 +256,14 @@ feat(m8): oculta overlay decorativo en focus-mode
 **Objetivo:** En la landing, mostrar un botón "Descargar para macOS / Windows / Linux" que apunte directo al asset adecuado de la última release.
 
 **Archivos a tocar:**
+
 - `landing/src/template.html` (sustituir el bloque `hero__actions`)
 - `landing/src/app.js` (añadir lógica)
 
 **Pasos:**
 
 1. En `landing/src/template.html` reemplaza el bloque `<div class="hero__actions">` (líneas ~44-67) por:
+
    ```html
    <div class="hero__actions">
      <a
@@ -258,18 +273,28 @@ feat(m8): oculta overlay decorativo en focus-mode
        rel="noopener noreferrer"
        target="_blank"
        data-default-label="Descargas"
-     >Descargas</a>
+       >Descargas</a
+     >
      <a
        class="btn btn--secondary"
        href="https://github.com/Mindbreaker81/bruma"
        rel="noopener noreferrer"
        target="_blank"
-     >Repositorio en GitHub</a>
-     <button type="button" class="btn btn--ghost" id="theme-toggle" aria-pressed="false">Tema</button>
+       >Repositorio en GitHub</a
+     >
+     <button
+       type="button"
+       class="btn btn--ghost"
+       id="theme-toggle"
+       aria-pressed="false"
+     >
+       Tema
+     </button>
    </div>
    ```
 
 2. En `landing/src/app.js` añade al final del archivo:
+
    ```js
    (async function setupDownloadCta() {
      const cta = document.getElementById('download-cta');
@@ -300,8 +325,11 @@ feat(m8): oculta overlay decorativo en focus-mode
          windows: /\.(msi|exe)$/i,
          linux: /\.(AppImage|deb|rpm)$/i,
        };
-       const asset = (release.assets || []).find((a) => os && matchers[os].test(a.name));
-       if (asset && asset.browser_download_url) cta.href = asset.browser_download_url;
+       const asset = (release.assets || []).find(
+         (a) => os && matchers[os].test(a.name)
+       );
+       if (asset && asset.browser_download_url)
+         cta.href = asset.browser_download_url;
      } catch {
        /* fallback al link de releases */
      }
@@ -318,12 +346,15 @@ feat(m8): oculta overlay decorativo en focus-mode
    ```
 
 **Verificación:** Build de la landing:
+
 ```sh
 cd landing && npm install && npm run build
 ```
+
 Abre `landing/dist/index.html` en un navegador. El CTA debería decir "Descargar para macOS/Windows/Linux" según tu OS.
 
 **Commit:**
+
 ```
 feat(m6): cta de descarga con deteccion de OS en la landing
 ```
@@ -341,14 +372,22 @@ feat(m6): cta de descarga con deteccion de OS en la landing
 **Pasos:**
 
 1. Añade el paquete a `landing/package.json` en `dependencies`:
+
    ```json
    "@fontsource-variable/inter": "^5.2.8",
    ```
 
 2. En `landing/build.mjs`, dentro de la función `main()`, añade después del bloque que copia los assets estáticos:
+
    ```js
    // Copia los archivos de la fuente Inter al dist
-   const interSrc = path.join(__dirname, 'node_modules', '@fontsource-variable', 'inter', 'files');
+   const interSrc = path.join(
+     __dirname,
+     'node_modules',
+     '@fontsource-variable',
+     'inter',
+     'files'
+   );
    const interDist = path.join(distDir, 'fonts', 'inter');
    fs.mkdirSync(interDist, { recursive: true });
    for (const file of fs.readdirSync(interSrc)) {
@@ -359,18 +398,28 @@ feat(m6): cta de descarga con deteccion de OS en la landing
 3. En `landing/src/template.html` elimina las 4 líneas de Google Fonts (preconnects + `<link>` con `fonts.googleapis.com`).
 
 4. En `landing/src/styles.css` añade al inicio:
+
    ```css
    @font-face {
      font-family: 'Inter Variable';
      font-style: normal;
      font-display: swap;
      font-weight: 100 900;
-     src: url('/fonts/inter/inter-latin-wght-normal.woff2') format('woff2-variations');
+     src: url('/fonts/inter/inter-latin-wght-normal.woff2')
+       format('woff2-variations');
    }
    ```
+
    y cambia el `font-family` base a:
+
    ```css
-   font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+   font-family:
+     'Inter Variable',
+     Inter,
+     system-ui,
+     -apple-system,
+     'Segoe UI',
+     sans-serif;
    ```
 
 5. En `vercel.json` simplifica el CSP eliminando los hosts de Google:
@@ -380,6 +429,7 @@ feat(m6): cta de descarga con deteccion de OS en la landing
 **Verificación:** `cd landing && npm install && npm run build`. Sirve `landing/dist/` con cualquier static server (`npx serve dist`) y comprueba en DevTools → Network que ya no hay requests a `fonts.googleapis.com`.
 
 **Commit:**
+
 ```
 feat(m7): self-host de Inter en la landing
 ```
@@ -397,6 +447,7 @@ feat(m7): self-host de Inter en la landing
 **Pasos:**
 
 1. Añade keys i18n para los strings hardcodeados en inglés. En `src/i18n/locales/es.json`, dentro del namespace `shortcuts` (línea ~85 aprox), añade:
+
    ```json
    "pressKeys": "Pulsa la combinacion...",
    "cancel": "Cancelar",
@@ -404,7 +455,9 @@ feat(m7): self-host de Inter en la landing
    "reset": "Restablecer",
    "resetTooltip": "Restablecer al valor por defecto"
    ```
+
    En `src/i18n/locales/en.json` el equivalente:
+
    ```json
    "pressKeys": "Press keys...",
    "cancel": "Cancel",
@@ -414,6 +467,7 @@ feat(m7): self-host de Inter en la landing
    ```
 
 2. Reescribe completamente `src/features/settings/ShortcutsDialog.tsx`:
+
    ```tsx
    import { useEffect, useMemo, useState } from 'react';
    import { useTranslation } from 'react-i18next';
@@ -528,7 +582,9 @@ feat(m7): self-host de Inter en la landing
                              <input
                                className="w-32 rounded border border-border bg-background px-2 py-1 text-sm"
                                autoFocus
-                               value={isCapturing ? capturedBinding : (binding ?? '')}
+                               value={
+                                 isCapturing ? capturedBinding : (binding ?? '')
+                               }
                                onChange={(e) => {
                                  setIsCapturing(false);
                                  const val = e.target.value.trim() || null;
@@ -541,7 +597,9 @@ feat(m7): self-host de Inter en la landing
                                onKeyDown={(e) => {
                                  if (e.key === 'Enter') setEditingId(null);
                                }}
-                               placeholder={isCapturing ? t('shortcuts.pressKeys') : ''}
+                               placeholder={
+                                 isCapturing ? t('shortcuts.pressKeys') : ''
+                               }
                              />
                              <Button
                                size="sm"
@@ -549,22 +607,25 @@ feat(m7): self-host de Inter en la landing
                                type="button"
                                onClick={() => setIsCapturing(!isCapturing)}
                              >
-                               {isCapturing ? t('shortcuts.cancel') : t('shortcuts.record')}
+                               {isCapturing
+                                 ? t('shortcuts.cancel')
+                                 : t('shortcuts.record')}
                              </Button>
-                             {shortcuts[cmd.id] !== undefined && shortcuts[cmd.id] !== null && (
-                               <Button
-                                 size="sm"
-                                 variant="destructive"
-                                 type="button"
-                                 title={t('shortcuts.resetTooltip')}
-                                 onClick={() => {
-                                   onChange({ ...shortcuts, [cmd.id]: null });
-                                   setIsCapturing(false);
-                                 }}
-                               >
-                                 {t('shortcuts.reset')}
-                               </Button>
-                             )}
+                             {shortcuts[cmd.id] !== undefined &&
+                               shortcuts[cmd.id] !== null && (
+                                 <Button
+                                   size="sm"
+                                   variant="destructive"
+                                   type="button"
+                                   title={t('shortcuts.resetTooltip')}
+                                   onClick={() => {
+                                     onChange({ ...shortcuts, [cmd.id]: null });
+                                     setIsCapturing(false);
+                                   }}
+                                 >
+                                   {t('shortcuts.reset')}
+                                 </Button>
+                               )}
                            </div>
                          ) : (
                            <button
@@ -603,6 +664,7 @@ feat(m7): self-host de Inter en la landing
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual en `pnpm dev`: abre Preferences → Shortcuts. El modal ahora respeta Esc y restaura foco al cerrar.
 
 **Commit:**
+
 ```
 refactor(m3): migra ShortcutsDialog a shadcn Dialog
 ```
@@ -618,14 +680,17 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
 **Pre-requisitos:**
 
 1. Instala las dependencias Radix:
+
    ```sh
    pnpm add @radix-ui/react-checkbox @radix-ui/react-select @radix-ui/react-slider
    ```
 
 2. Añade los componentes shadcn al repo. **Si tienes red e internet en la máquina:**
+
    ```sh
    pnpm dlx shadcn@latest add checkbox select slider
    ```
+
    Esto crea `src/components/ui/{checkbox,select,slider}.tsx`.
 
    **Si NO tienes acceso al CLI shadcn**, copia manualmente las plantillas oficiales para `style: new-york` desde https://ui.shadcn.com/docs/components a esos paths. Asegúrate de que importan `cn` desde `'@/lib/utils'`.
@@ -633,6 +698,7 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
 **Pasos de migración** (en `src/features/settings/PreferencesDialog.tsx`):
 
 3. Importa los nuevos componentes:
+
    ```tsx
    import { Checkbox } from '../../components/ui/checkbox';
    import {
@@ -646,14 +712,18 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
    ```
 
 4. Reemplaza cada `<input type="checkbox" checked={x} onChange={(e) => setX(e.target.checked)} />` por:
+
    ```tsx
    <Checkbox checked={x} onCheckedChange={(v) => setX(Boolean(v))} />
    ```
 
 5. Reemplaza el `<select>` por:
+
    ```tsx
    <Select value={fontFamily} onValueChange={setFontFamily}>
-     <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+     <SelectTrigger className="w-40">
+       <SelectValue />
+     </SelectTrigger>
      <SelectContent>
        <SelectItem value="sans">{t('preferences.fontSans')}</SelectItem>
        <SelectItem value="serif">{t('preferences.fontSerif')}</SelectItem>
@@ -663,6 +733,7 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
    ```
 
 6. Reemplaza cada `<input type="number">` (tabSize, etc.) por:
+
    ```tsx
    <input
      type="number"
@@ -671,6 +742,7 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
      onChange={(e) => setTabSize(Number(e.target.value))}
    />
    ```
+
    (Para number-input pulido, considera usar `Input` de shadcn si lo añades, pero un input estilizado vale.)
 
 7. Si hay un `<input type="range">` (zoom/font size), reemplázalo por:
@@ -688,6 +760,7 @@ refactor(m3): migra ShortcutsDialog a shadcn Dialog
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: abre Preferences y prueba cada control.
 
 **Commit:**
+
 ```
 refactor(m2): migra PreferencesDialog a primitivas shadcn (checkbox/select/slider)
 ```
@@ -715,6 +788,7 @@ refactor(m2): migra PreferencesDialog a primitivas shadcn (checkbox/select/slide
 **Pasos:**
 
 3. En `src/App.tsx` (líneas ~1313-1328), localiza el bloque:
+
    ```tsx
    <div className="flex items-center gap-1">
      {VIEW_MODES.map((mode) => (
@@ -744,6 +818,7 @@ refactor(m2): migra PreferencesDialog a primitivas shadcn (checkbox/select/slide
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: focus en uno de los tres tabs, pulsa flecha derecha/izquierda → debería navegar entre modos.
 
 **Commit:**
+
 ```
 refactor(m13): view-mode bar usa Radix Tabs
 ```
@@ -759,12 +834,15 @@ refactor(m13): view-mode bar usa Radix Tabs
 **Pasos:**
 
 1. Anota el tamaño actual del bundle principal:
+
    ```sh
    pnpm build 2>&1 | grep "index-.*\.js"
    ```
+
    Anota el `gzip:` del bundle más grande.
 
 2. Crea una rama de prueba (o stash) y aplica el cambio en un archivo, p.ej. `src/App.tsx`:
+
    ```tsx
    // Antes:
    import Columns2 from 'lucide-react/dist/esm/icons/columns-2.js';
@@ -772,15 +850,19 @@ refactor(m13): view-mode bar usa Radix Tabs
    // Después:
    import { Columns2 } from 'lucide-react';
    ```
+
 3. Vuelve a buildear y comparar.
 
 4. Si el tamaño es **igual o menor**, aplica el cambio a TODOS los archivos:
+
    ```sh
    grep -rln "lucide-react/dist/esm/icons" src/
    ```
+
    Para cada archivo, agrupa todos los imports lucide en uno solo.
 
    Pista para automatizar (revisa el resultado a mano antes de ejecutar):
+
    ```sh
    # No hagas un find/replace ciego — los nombres pasan de PascalCase
    # archivo a PascalCase nombrado (column-2.js → Columns2). Ya están así
@@ -796,6 +878,7 @@ refactor(m13): view-mode bar usa Radix Tabs
 **Verificación:** `pnpm lint && pnpm test && pnpm build`.
 
 **Commit (si aplica):**
+
 ```
 refactor(b1): imports canonicos de lucide-react
 ```
@@ -813,11 +896,13 @@ refactor(b1): imports canonicos de lucide-react
 **Pasos:**
 
 1. En la parte superior del archivo, importa el registry:
+
    ```tsx
    import { COMMAND_REGISTRY } from '../../lib/shortcuts';
    ```
 
 2. Antes del `return`, dentro del componente, calcula:
+
    ```tsx
    const shortcuts = {
      newDocument: COMMAND_REGISTRY.newDocument.defaultShortcut,
@@ -827,6 +912,7 @@ refactor(b1): imports canonicos de lucide-react
    ```
 
 3. Crea un helper local (arriba del componente, fuera de él):
+
    ```tsx
    function Kbd({ value }: { value: string | null }) {
      if (!value) return null;
@@ -854,6 +940,7 @@ refactor(b1): imports canonicos de lucide-react
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: abre la app sin documento previo y revisa que las tarjetas muestran las teclas.
 
 **Commit:**
+
 ```
 feat(b3): muestra atajos de teclado en las tarjetas de Welcome
 ```
@@ -872,6 +959,7 @@ feat(b3): muestra atajos de teclado en las tarjetas de Welcome
 
 1. Localiza el punto "### 9. Status bar basica".
 2. Reemplaza su contenido por:
+
    ```md
    ### 9. ✅ Status bar — RESUELTO
 
@@ -881,6 +969,7 @@ feat(b3): muestra atajos de teclado en las tarjetas de Welcome
 **Verificación:** `pnpm lint && pnpm test`.
 
 **Commit:**
+
 ```
 docs(b4): marca punto 9 de FRONTEND_IMPROVEMENTS como resuelto
 ```
@@ -898,6 +987,7 @@ docs(b4): marca punto 9 de FRONTEND_IMPROVEMENTS como resuelto
 **Pasos:**
 
 1. Crea `src/components/ErrorBoundary.tsx`:
+
    ```tsx
    import { Component, type ErrorInfo, type ReactNode } from 'react';
 
@@ -947,6 +1037,7 @@ docs(b4): marca punto 9 de FRONTEND_IMPROVEMENTS como resuelto
    ```
 
 2. En `src/main.tsx` envuelve `<App />`:
+
    ```tsx
    import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -965,6 +1056,7 @@ docs(b4): marca punto 9 de FRONTEND_IMPROVEMENTS como resuelto
 **Verificación:** `pnpm lint && pnpm test && pnpm build`.
 
 **Commit:**
+
 ```
 feat(b5): error boundary en root para errores de render
 ```
@@ -1004,6 +1096,7 @@ feat(b5): error boundary en root para errores de render
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: arrastra una pestaña, deberías ver un borde primary en la posición destino.
 
 **Commit:**
+
 ```
 feat(b8): feedback visual de drag-over en TabBar
 ```
@@ -1021,9 +1114,11 @@ feat(b8): feedback visual de drag-over en TabBar
 **Pasos:**
 
 1. Importa el icono:
+
    ```tsx
    import RotateCcw from 'lucide-react/dist/esm/icons/rotate-ccw.js';
    ```
+
    (o usa `import { RotateCcw } from 'lucide-react'` si ya hiciste B1).
 
 2. Modifica el bloque del botón de zoom:
@@ -1036,9 +1131,7 @@ feat(b8): feedback visual de drag-over en TabBar
          onClick={resetFontScaleStore}
          className="h-9 min-w-14 rounded-full px-3 text-xs font-semibold tabular-nums"
        >
-         {fontScale !== 1 && (
-           <RotateCcw className="mr-1 size-3" aria-hidden />
-         )}
+         {fontScale !== 1 && <RotateCcw className="mr-1 size-3" aria-hidden />}
          {Math.round(fontScale * 100)}%
        </Button>
      </TooltipTrigger>
@@ -1049,6 +1142,7 @@ feat(b8): feedback visual de drag-over en TabBar
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual: cambia el zoom y comprueba que aparece el icono de reset.
 
 **Commit:**
+
 ```
 feat(b9): icono de reset visible cuando el zoom no esta a 100%
 ```
@@ -1066,15 +1160,18 @@ feat(b9): icono de reset visible cuando el zoom no esta a 100%
 **Pasos:**
 
 1. Añade keys i18n. En `es.json`:
+
    ```json
    "mobileFallback": {
      "title": "Bruma esta optimizado para escritorio",
      "body": "Para una experiencia completa, abre Bruma en una ventana mas ancha o instala la aplicacion de escritorio."
    }
    ```
+
    En `en.json` el equivalente.
 
 2. En `src/App.tsx`, dentro del componente `App`, antes del `return` principal, añade:
+
    ```tsx
    const isTauri =
      typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -1092,7 +1189,9 @@ feat(b9): icono de reset visible cuando el zoom no esta a 100%
      return (
        <div className="grid min-h-dvh place-items-center bg-background p-6 text-foreground">
          <div className="max-w-sm text-center">
-           <h1 className="text-lg font-semibold">{t('mobileFallback.title')}</h1>
+           <h1 className="text-lg font-semibold">
+             {t('mobileFallback.title')}
+           </h1>
            <p className="mt-2 text-sm text-muted-foreground">
              {t('mobileFallback.body')}
            </p>
@@ -1105,6 +1204,7 @@ feat(b9): icono de reset visible cuando el zoom no esta a 100%
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual con `pnpm preview`: redimensiona la ventana a <768px → debe mostrar el fallback.
 
 **Commit:**
+
 ```
 feat(b10): fallback desktop-only en la app servida por web
 ```
@@ -1142,6 +1242,7 @@ feat(b10): fallback desktop-only en la app servida por web
    - App pasa a ser orquestador delgado.
 
 **Verificación CRÍTICA:** Después de cada commit:
+
 - `pnpm test` (102/102).
 - `pnpm dev` y prueba a mano: nuevo, abrir, guardar, cambiar view-mode, alternar tema, alternar TOC, focus mode.
 - `pnpm tauri dev` si tienes Rust instalado.
@@ -1151,6 +1252,7 @@ feat(b10): fallback desktop-only en la app servida por web
 **Si en algún paso fallan tests sin razón obvia, REVERT y abre issue antes de seguir.**
 
 **Commits sugeridos:**
+
 ```
 refactor(a5.1): extrae ViewModeBar a su propio componente
 refactor(a5.2): extrae los 5 ToolbarGroup a subcomponentes
@@ -1171,6 +1273,7 @@ refactor(a5.4): introduce AppShell para alojar header/tabs/main/status
 **Pasos:**
 
 1. En cada subcomponente (post-A5), agrupa selectores:
+
    ```tsx
    import { useShallow } from 'zustand/react/shallow';
 
@@ -1189,6 +1292,7 @@ refactor(a5.4): introduce AppShell para alojar header/tabs/main/status
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. Manual con React DevTools Profiler.
 
 **Commit:**
+
 ```
 perf(a6): useShallow en selectores Zustand para evitar re-renders
 ```
@@ -1208,6 +1312,7 @@ perf(a6): useShallow en selectores Zustand para evitar re-renders
 1. Verifica que `playwright.config.ts` tiene la baseURL apuntando a `pnpm preview` o al dev server.
 
 2. Crea `tests/visual.spec.ts`:
+
    ```ts
    import { expect, test } from '@playwright/test';
 
@@ -1230,9 +1335,11 @@ perf(a6): useShallow en selectores Zustand para evitar re-renders
    ```
 
 3. Genera la baseline:
+
    ```sh
    pnpm test:e2e --update-snapshots
    ```
+
    Commitea los `.png` generados en `tests/visual.spec.ts-snapshots/`.
 
 4. Añade a `.github/workflows/ci.yml` un step:
@@ -1244,6 +1351,7 @@ perf(a6): useShallow en selectores Zustand para evitar re-renders
 **Verificación:** corre `pnpm test:e2e` localmente; debe pasar contra los snapshots commiteados.
 
 **Commit:**
+
 ```
 test(b6): tests de regresion visual con Playwright snapshots
 ```
@@ -1261,6 +1369,7 @@ test(b6): tests de regresion visual con Playwright snapshots
 **Pasos:**
 
 1. Crea `src/features/editor/theme.ts`:
+
    ```ts
    import { EditorView } from '@codemirror/view';
 
@@ -1289,6 +1398,7 @@ test(b6): tests de regresion visual con Playwright snapshots
 **Verificación:** `pnpm lint && pnpm test && pnpm build`. **Visual en `pnpm dev`** — ajusta selectores hasta que la sintaxis Markdown se vea integrada.
 
 **Commit:**
+
 ```
 style(b7): tema CodeMirror coherente con la marca
 ```
@@ -1334,13 +1444,13 @@ Sin embargo, la capa visual está atrapada entre **dos sistemas de tokens parale
 
 Lista priorizada para empezar — máximo impacto / mínimo esfuerzo.
 
-| # | Cambio | Archivo | Esfuerzo | Impacto |
-|---|--------|---------|----------|---------|
-| 1 | Añadir `theme-color`, favicon y carga real de Inter (o quitarla del stack) | `index.html` | 30 min | A2 — la cascada hoy "miente" |
-| 2 | OG tags + Twitter card + canonical en landing | `landing/src/template.html` | 30 min | M5 — links compartibles dejan de verse pelados |
-| 3 | Welcome con `inert/aria-hidden` o no montar Editor debajo | `src/features/shell/WelcomeState.tsx:36` | 30 min | A3 — accesibilidad y carga inicial |
-| 4 | `prefers-reduced-motion` global | `src/styles/main.css` | 10 min | M9 — cumplimiento WCAG 2.3.3 con una regla |
-| 5 | Animar transición de tema y view-mode con `transition-colors duration-200` | `src/styles/main.css` + body | 1 h | A7 — convierte la app de "rígida" a "pulida" |
+| #   | Cambio                                                                     | Archivo                                  | Esfuerzo | Impacto                                        |
+| --- | -------------------------------------------------------------------------- | ---------------------------------------- | -------- | ---------------------------------------------- |
+| 1   | Añadir `theme-color`, favicon y carga real de Inter (o quitarla del stack) | `index.html`                             | 30 min   | A2 — la cascada hoy "miente"                   |
+| 2   | OG tags + Twitter card + canonical en landing                              | `landing/src/template.html`              | 30 min   | M5 — links compartibles dejan de verse pelados |
+| 3   | Welcome con `inert/aria-hidden` o no montar Editor debajo                  | `src/features/shell/WelcomeState.tsx:36` | 30 min   | A3 — accesibilidad y carga inicial             |
+| 4   | `prefers-reduced-motion` global                                            | `src/styles/main.css`                    | 10 min   | M9 — cumplimiento WCAG 2.3.3 con una regla     |
+| 5   | Animar transición de tema y view-mode con `transition-colors duration-200` | `src/styles/main.css` + body             | 1 h      | A7 — convierte la app de "rígida" a "pulida"   |
 
 ---
 
@@ -1357,6 +1467,7 @@ Cosas que afectan UX claramente o son fáciles de arreglar con alto impacto.
 **Por qué:** Rompe la coherencia (cualquier cambio futuro requiere editarlo en dos sitios) y los colores están "casi iguales" pero no idénticos. Por ejemplo: en dark `--background` HSL `240 10% 3.9%` ≈ `#0a0a0c` mientras `--color-bg` es `24 24 27` = `#18181b`. También hace imposible tematizar la marca sin tocar dos sistemas.
 
 **Acción:**
+
 1. Deprecar todas las variables `--color-*`.
 2. Expresar los matices de superficie como `card`/`muted`/`secondary`/`accent` de shadcn, o añadir tokens semánticos shadcn-style en HSL: `--surface`, `--panel`, `--control-hover`.
 3. Migrar consumidores a `bg-card`, `bg-muted`, etc.
@@ -1369,6 +1480,7 @@ Cosas que afectan UX claramente o son fáciles de arreglar con alto impacto.
 **Esfuerzo:** S
 
 **Qué:** `index.html` (raíz, NO la landing) solo declara `<title>Bruma</title>`. Falta:
+
 - `<meta name="description">`
 - `<meta name="theme-color">` (relevante para WebView2/iOS)
 - preconnect/link para Inter — `tailwind.config.ts:10` la declara como primera fuente, pero **no se carga en ningún `<link>`**.
@@ -1377,6 +1489,7 @@ Cosas que afectan UX claramente o son fáciles de arreglar con alto impacto.
 El comentario `font-family: 'Aptos', 'Segoe UI Variable', Inter, …` en `src/styles/main.css:39` confirma que **Inter nunca llega** porque no está embebida ni linkeada. La app usa Aptos/system en lugar de su brand font declarada.
 
 **Acción:** O bien:
+
 - (a) Cargar Inter localmente: `pnpm add @fontsource-variable/inter` y `import '@fontsource-variable/inter';` en `src/main.tsx`. Tauri es offline-first, evita CDN.
 - (b) Quitar Inter del stack en `tailwind.config.ts` para no mentir.
 
@@ -1391,6 +1504,7 @@ Y siempre: añadir favicon (puedes reutilizar `landing/src/icon.svg`) + `<meta n
 **Qué:** `src/features/shell/WelcomeState.tsx:36` usa `absolute inset-0 z-20 bg-background/90 backdrop-blur-sm` sobre el `MarkdownEditor` que sí está montado debajo. El editor recibe focus, los hotkeys siguen vivos, y al teclear `setWelcomeDismissed(true)` se dispara desde `App.tsx:1459`.
 
 **Por qué:**
+
 - Confunde a screen readers (dos textbox simultáneos, uno tapado).
 - Reflows innecesarios.
 - Carga CodeMirror aunque el usuario aún no escribe.
@@ -1440,11 +1554,16 @@ Y siempre: añadir favicon (puedes reutilizar `landing/src/icon.svg`) + `<meta n
 **Por qué:** `App.tsx` es enorme y suspende `MarkdownEditor`/`Preview` por debajo; cada keystroke pasa por aquí.
 
 **Acción:**
+
 - Usar `useShallow` (Zustand 5 lo provee de fábrica) con selectores agrupados por "feature":
   ```ts
   import { useShallow } from 'zustand/react/shallow';
   const { document, isDirty, displayName } = useFileStore(
-    useShallow((s) => ({ document: s.document, isDirty: s.isDirty, displayName: s.displayName }))
+    useShallow((s) => ({
+      document: s.document,
+      isDirty: s.isDirty,
+      displayName: s.displayName,
+    }))
   );
   ```
 - O, mejor en combinación con A5, pasar los stores directamente a los subcomponentes extraídos para que cada uno solo se suscriba a lo suyo.
@@ -1460,6 +1579,7 @@ Y siempre: añadir favicon (puedes reutilizar `landing/src/icon.svg`) + `<meta n
 **Por qué:** La app se siente "rígida" frente a competidores.
 
 **Acción:**
+
 - Añadir `transition-colors duration-200` en `body` y en clases globales `bg-background`/`text-foreground`.
 - Animar los toggles de TOC y view-mode con `animate-in slide-in-from-left`.
 - Para focus mode: `transition-[opacity,transform]`.
@@ -1492,6 +1612,7 @@ Mejoras de pulido y consistencia.
 **Por qué:** Rompe el patrón shadcn que llama a tener componentes reutilizables en `components/ui/`.
 
 **Acción:** Mover a `src/components/ui/icon-button.tsx` con CVA variants:
+
 ```ts
 const iconButtonVariants = cva('...', {
   variants: {
@@ -1509,12 +1630,14 @@ const iconButtonVariants = cva('...', {
 **Esfuerzo:** M
 
 **Qué:** `src/features/settings/PreferencesDialog.tsx` usa:
+
 - `<Switch />` shadcn en `:76` ✓
 - `<input type="checkbox">` directo en `:91` ✗
 - `<input type="number">` directo en `:136`, `:153`, `:167` ✗
 - `<select>` directo en `:119` ✗
 
 **Por qué:**
+
 - Rompe coherencia visual (los `<input>` heredan estilo OS).
 - Accesibilidad: `<input type="range">` sin label de valor `aria-valuetext`.
 - Dark mode: los checkbox nativos no respetan tema.
@@ -1530,6 +1653,7 @@ const iconButtonVariants = cva('...', {
 **Qué:** `src/features/settings/ShortcutsDialog.tsx:81-196` implementa su propio `<div className="fixed inset-0 z-20 grid place-items-center bg-black/35">` con `role="dialog" aria-modal="true"` manual — sin trap de foco, sin restore focus, sin Esc handler explícito. Y usa los tokens **viejos** `--color-border/--color-bg/--color-control-hover` (problema A1).
 
 **Por qué:**
+
 1. Accesibilidad inferior al resto de modales.
 2. Inconsistencia visual.
 3. Si el usuario presiona Tab dentro del modal, puede saltar fuera al árbol bajo.
@@ -1543,6 +1667,7 @@ const iconButtonVariants = cva('...', {
 **Esfuerzo:** S
 
 **Qué:** Además de M3:
+
 - `src/features/preview/Preview.tsx:104` usa `aria-label="Markdown preview"` literal (no `t(...)`).
 - `src/features/toc/TableOfContents.tsx:17` usa `aria-label="Table of contents"`.
 - Tienen translation keys (`toc.title`) para el texto visible pero no para el `aria-label`.
@@ -1562,6 +1687,7 @@ const iconButtonVariants = cva('...', {
 **Por qué:** El README dice que se despliega en `bruma-sigma.vercel.app` — sin OG image, cualquier link compartido en X/Slack/Discord aparece como texto pelado.
 
 **Acción:** Añadir al `<head>`:
+
 ```html
 <meta property="og:title" content="Bruma — editor Markdown local-first" />
 <meta property="og:description" content="..." />
@@ -1589,6 +1715,7 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
 **Por qué:** El usuario que llega busca "instalar Bruma", pero tiene que navegar a Releases y descifrar nombres de artefactos.
 
 **Acción:**
+
 1. En `landing/src/app.js`, detectar OS via `navigator.userAgent`/`navigator.userAgentData.platform`.
 2. Hacer `fetch('https://api.github.com/repos/Mindbreaker81/bruma/releases/latest')`.
 3. Mostrar un CTA primario "Descargar para macOS / Windows / Linux" que apunte directo al asset adecuado.
@@ -1603,6 +1730,7 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
 **Qué:** `landing/src/template.html:9-14` carga Inter desde `fonts.googleapis.com` con preconnect.
 
 **Por qué:**
+
 - Ralentiza First Paint y depende de un tercero.
 - Mientras tanto, la app desktop **no** usa Inter (ver A2).
 - El CSP de `vercel.json:27` ya requiere whitelistear `googleapis`/`gstatic`.
@@ -1620,6 +1748,7 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
 **Por qué:** En un editor markdown enfocado en escritura, el ruido visual del fondo compite con el texto. Funciona para una landing, no para una herramienta de uso prolongado.
 
 **Acción:** Una de:
+
 - (a) Reducir `opacity: 0.2` → `0.06` y hacerlo opt-in via toggle en preferences ("decorative background").
 - (b) Quitarlo automáticamente cuando `focusMode` está activo.
 
@@ -1634,9 +1763,12 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
 **Por qué:** WCAG 2.3.3, y usuarios con sensibilidad vestibular.
 
 **Acción:** En `src/styles/main.css` añadir:
+
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -1656,6 +1788,7 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
 **Por qué:** Deuda implícita.
 
 **Acción:** Declarar en `src/styles/main.css`:
+
 ```css
 :root {
   --z-base: 0;
@@ -1665,6 +1798,7 @@ Y generar un OG 1200×630 con el logo + tagline. Copiar el asset a `landing/src/
   --z-toast: 60;
 }
 ```
+
 Y referenciarlos via `style={{ zIndex: 'var(--z-overlay)' }}` o como tokens Tailwind en `tailwind.config.ts`.
 
 ---
@@ -1832,23 +1966,23 @@ Ese documento es válido y este lo complementa. Para evitar contradicciones:
 
 Para que el desarrollador encuentre rápido los puntos calientes:
 
-| Archivo | Líneas críticas | Por qué |
-|---------|-----------------|---------|
-| `src/App.tsx` | 161-212, 233-296, 949-1045, 1054-1058, 1077-1084, 1191-1194, 1283-1294, 1366-1382, 1459, 1586-1589 | Componente mega-monolítico, foco principal de refactor |
-| `src/styles/main.css` | 5-81, 105-116, 287 | Sistema dual de tokens, overlay decorativo, print styles |
-| `tailwind.config.ts` | 10, 69 | Stack de fuentes (Inter no cargada), tailwindcss-animate |
-| `index.html` | 1-12 | Metadatos vacíos |
-| `src/features/shell/WelcomeState.tsx` | 36, 76-110, 134 | Overlay absolute, tarjetas onboarding |
-| `src/features/settings/PreferencesDialog.tsx` | 76, 91, 119, 136, 153, 167 | Inputs nativos sin estilo shadcn |
-| `src/features/settings/ShortcutsDialog.tsx` | 81-196 | Modal ad-hoc + i18n incompleta + tokens viejos |
-| `src/features/tabs/TabBar.tsx` | 37-51, 71 | Drag-over sin feedback, transitions |
-| `src/features/toc/TableOfContents.tsx` | 16-17 | aria-label sin i18n |
-| `src/features/preview/Preview.tsx` | 104, 107 | aria-label sin i18n; `dangerouslySetInnerHTML` (correcto, ya sanitizado) |
-| `src/features/search/SearchPanel.tsx` | 54 | z-index colisión potencial con Welcome |
-| `landing/src/template.html` | 1-16, 9-14, 44-58 | Sin OG/canonical, Inter remota, CTA débil |
-| `landing/src/app.js` | — | Lugar para añadir detección de OS (M6) |
-| `src/main.tsx` | 9-13 | Sin Error Boundary |
-| `src/components/ui/` | (faltan archivos) | Faltan: `tabs.tsx`, `checkbox.tsx`, `select.tsx`, `slider.tsx`, `icon-button.tsx` |
+| Archivo                                       | Líneas críticas                                                                                    | Por qué                                                                           |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `src/App.tsx`                                 | 161-212, 233-296, 949-1045, 1054-1058, 1077-1084, 1191-1194, 1283-1294, 1366-1382, 1459, 1586-1589 | Componente mega-monolítico, foco principal de refactor                            |
+| `src/styles/main.css`                         | 5-81, 105-116, 287                                                                                 | Sistema dual de tokens, overlay decorativo, print styles                          |
+| `tailwind.config.ts`                          | 10, 69                                                                                             | Stack de fuentes (Inter no cargada), tailwindcss-animate                          |
+| `index.html`                                  | 1-12                                                                                               | Metadatos vacíos                                                                  |
+| `src/features/shell/WelcomeState.tsx`         | 36, 76-110, 134                                                                                    | Overlay absolute, tarjetas onboarding                                             |
+| `src/features/settings/PreferencesDialog.tsx` | 76, 91, 119, 136, 153, 167                                                                         | Inputs nativos sin estilo shadcn                                                  |
+| `src/features/settings/ShortcutsDialog.tsx`   | 81-196                                                                                             | Modal ad-hoc + i18n incompleta + tokens viejos                                    |
+| `src/features/tabs/TabBar.tsx`                | 37-51, 71                                                                                          | Drag-over sin feedback, transitions                                               |
+| `src/features/toc/TableOfContents.tsx`        | 16-17                                                                                              | aria-label sin i18n                                                               |
+| `src/features/preview/Preview.tsx`            | 104, 107                                                                                           | aria-label sin i18n; `dangerouslySetInnerHTML` (correcto, ya sanitizado)          |
+| `src/features/search/SearchPanel.tsx`         | 54                                                                                                 | z-index colisión potencial con Welcome                                            |
+| `landing/src/template.html`                   | 1-16, 9-14, 44-58                                                                                  | Sin OG/canonical, Inter remota, CTA débil                                         |
+| `landing/src/app.js`                          | —                                                                                                  | Lugar para añadir detección de OS (M6)                                            |
+| `src/main.tsx`                                | 9-13                                                                                               | Sin Error Boundary                                                                |
+| `src/components/ui/`                          | (faltan archivos)                                                                                  | Faltan: `tabs.tsx`, `checkbox.tsx`, `select.tsx`, `slider.tsx`, `icon-button.tsx` |
 
 ---
 

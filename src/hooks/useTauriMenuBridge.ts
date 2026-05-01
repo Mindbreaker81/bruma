@@ -1,9 +1,6 @@
 import { useEffect } from 'react';
 
-import {
-  listenToMenuActions,
-  listenToRecentOpen,
-} from '../lib/tauri';
+import { listenToMenuActions, listenToRecentOpen } from '../lib/tauri';
 
 type MenuHandlers = {
   cycleTheme: () => void;
