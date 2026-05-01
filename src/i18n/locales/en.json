@@ -104,8 +104,12 @@
   },
   "toc": {
     "empty": "No headings yet.",
+    "label": "Table of contents",
     "title": "Outline",
     "toggle": "Toggle outline"
+  },
+  "preview": {
+    "label": "Markdown preview"
   },
   "zoom": {
     "decrease": "Decrease font size",

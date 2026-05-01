@@ -104,8 +104,12 @@
   },
   "toc": {
     "empty": "No hay encabezados.",
+    "label": "Tabla de contenidos",
     "title": "Indice",
     "toggle": "Mostrar u ocultar indice"
+  },
+  "preview": {
+    "label": "Vista previa de Markdown"
   },
   "zoom": {
     "decrease": "Reducir tipografia",
