@@ -87,6 +87,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
   }
 }
 
@@ -97,6 +100,9 @@ body {
     rgb(var(--color-bg));
   font-feature-settings: 'ss01' 1, 'cv05' 1;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
 #root {

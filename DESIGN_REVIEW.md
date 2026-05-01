@@ -16,7 +16,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **QW2** — Landing: OG tags + Twitter card + canonical
 - [x] **QW3** — Welcome con `inert/aria-hidden` o no montar Editor debajo
 - [x] **QW4** — `prefers-reduced-motion` global en `main.css`
-- [ ] **QW5** — `transition-colors duration-200` global (cubre A7)
+- [x] **QW5** — `transition-colors duration-200` global (cubre A7)
 
 ### Prioridad alta
 - [ ] **A1** — Unificar tokens de color (HSL shadcn vs RGB `--color-*`)
