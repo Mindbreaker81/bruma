@@ -1004,6 +1004,7 @@ export default function App() {
             </div>
           </div>
 
+          <div className="-mx-1 flex w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:thin] xl:flex-wrap xl:overflow-x-visible">
             <ToolbarFile
               isTemplateMenuOpen={isTemplateMenuOpen}
               setIsTemplateMenuOpen={setIsTemplateMenuOpen}
@@ -1050,6 +1051,7 @@ export default function App() {
               handleExportHtml={handleExportHtml}
               handleExportPdf={handleExportPdf}
             />
+          </div>
         </header>
 
         {focusMode && (
