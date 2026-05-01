@@ -29,7 +29,7 @@ Marcar al completar. Cada ítem se commitea por separado para facilitar review/r
 - [x] **A8** — Contraste del badge "tagline"
 
 ### Prioridad media
-- [ ] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`
+- [x] **M1** — `IconButton`/`ToolbarGroup` a `components/ui/`
 - [ ] **M2** — `PreferencesDialog`: shadcn Checkbox/Select/Slider
 - [ ] **M3** — `ShortcutsDialog` a shadcn `<Dialog>`
 - [ ] **M4** — i18n en aria-labels de Preview/TOC
