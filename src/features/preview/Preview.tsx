@@ -65,6 +65,8 @@ export function Preview({
 
   // Subscribe to external scroll source.
   useEffect(() => {
+    const enabled = useScrollSyncStore.getState().enabled;
+    if (!enabled) return;
     return useScrollSyncStore.subscribe((state, prev) => {
       if (!state.enabled) return;
       if (state.source !== 'editor') return;
@@ -83,6 +85,7 @@ export function Preview({
       ignoreNextScrollRef.current = false;
       return;
     }
+    if (!useScrollSyncStore.getState().enabled) return;
     const node = containerRef.current;
     if (!node) return;
     const max = node.scrollHeight - node.clientHeight;

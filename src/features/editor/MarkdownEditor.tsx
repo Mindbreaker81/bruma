@@ -181,6 +181,7 @@ export const MarkdownEditor = forwardRef<
                 ignoreNextScrollRef.current = false;
                 return false;
               }
+              if (!useScrollSyncStore.getState().enabled) return false;
               const scroller = view.scrollDOM;
               const max = scroller.scrollHeight - scroller.clientHeight;
               if (max <= 0) return false;
@@ -297,6 +298,8 @@ export const MarkdownEditor = forwardRef<
   }, []);
 
   useEffect(() => {
+    const enabled = useScrollSyncStore.getState().enabled;
+    if (!enabled) return;
     return useScrollSyncStore.subscribe((state, prev) => {
       if (!state.enabled) return;
       if (state.source !== 'preview') return;

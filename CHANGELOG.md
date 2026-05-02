@@ -6,6 +6,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-05-02
+
+### Fixed
+
+- Boton scroll-sync en vista split ahora desactiva realmente la sincronizacion editor↔preview. Se agregaron verificaciones defensivas en los handlers de scroll antes de emitir al store.
+- Exportacion a PDF en Windows (portable) ya no falla en documentos medianos/grandes; se reemplaza el encoding manual `btoa(String.fromCharCode(...))` por `pdfDoc.saveAsBase64()` de pdf-lib, evitando desbordes de pila.
+- Los fallos de exportacion ahora se registran en consola antes de mostrar el toast generico.
+
 ## [1.4.1] - 2026-05-02
 
 ### Added

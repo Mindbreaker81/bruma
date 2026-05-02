@@ -442,7 +442,8 @@ export default function App() {
           suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
         });
         setIsExportMenuOpen(false);
-      } catch {
+      } catch (error) {
+        console.error('HTML export failed:', error);
         showError(t('errors.exportFailed'));
       }
     },
@@ -506,8 +507,7 @@ export default function App() {
         yOffset += A4_H;
       }
 
-      const pdfBytes = await pdfDoc.save();
-      const pdfB64 = btoa(String.fromCharCode(...pdfBytes));
+      const pdfB64 = await pdfDoc.saveAsBase64({ dataUri: false });
 
       await saveBinaryExportDialog({
         content: pdfB64,
@@ -515,7 +515,8 @@ export default function App() {
         label: 'PDF',
         suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
       });
-    } catch {
+    } catch (error) {
+      console.error('PDF export failed:', error);
       showError(t('errors.exportFailed'));
     }
   }, [displayName, document.content, showError, t]);
