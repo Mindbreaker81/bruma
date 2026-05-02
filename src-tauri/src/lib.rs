@@ -34,6 +34,7 @@ pub fn run() {
             commands::fs::open_file_dialog,
             commands::fs::read_file,
             commands::fs::read_image_as_data_url,
+            commands::fs::save_binary_export_dialog,
             commands::fs::save_export_dialog,
             commands::fs::save_file,
             commands::fs::save_file_dialog,

@@ -8,6 +8,7 @@ type MenuHandlers = {
   handleNewDocument: () => void;
   handleOpenSearch: () => void;
   handleOpenWithConfirmation: () => void;
+  handlePrint: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
   openAbout: () => void;
@@ -46,6 +47,9 @@ export function useTauriMenuBridge({
       }
       if (action === 'file_save_as') {
         void h.handleSaveAs();
+      }
+      if (action === 'file_print') {
+        h.handlePrint();
       }
       if (action === 'edit_find') {
         h.handleOpenSearch();

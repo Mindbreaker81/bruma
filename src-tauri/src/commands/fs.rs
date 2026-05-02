@@ -106,6 +106,44 @@ pub fn read_image_as_data_url(base: String, relative: String) -> Result<String, 
 }
 
 #[tauri::command]
+pub fn save_binary_export_dialog(
+    content: String,
+    suggested: Option<String>,
+    extension: String,
+    label: Option<String>,
+) -> Result<Option<SavedFile>, String> {
+    let extension = extension.trim().trim_start_matches('.').to_string();
+    if extension.is_empty() {
+        return Err("invalid_extension".to_string());
+    }
+
+    let bytes = BASE64
+        .decode(content.as_bytes())
+        .map_err(|error| format!("base64_decode_failed: {error}"))?;
+
+    let label = label.unwrap_or_else(|| extension.to_uppercase());
+    let mut dialog = rfd::FileDialog::new().add_filter(label.as_str(), &[extension.as_str()]);
+
+    if let Some(file_name) = suggested.filter(|value| !value.trim().is_empty()) {
+        dialog = dialog.set_file_name(file_name);
+    }
+
+    let Some(path) = dialog.save_file() else {
+        return Ok(None);
+    };
+
+    let path = ensure_extension(path, &extension);
+    let path = resolve_allowed_write_path(&path)?;
+
+    fs::write(&path, &bytes).map_err(|error| format!("write_failed: {error}"))?;
+
+    Ok(Some(SavedFile {
+        path: path_to_string(&path),
+        saved_at: now_millis(),
+    }))
+}
+
+#[tauri::command]
 pub fn save_export_dialog(
     content: String,
     suggested: Option<String>,

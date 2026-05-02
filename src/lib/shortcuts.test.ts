@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { detectConflicts, matchBinding, normalizeBinding } from './shortcuts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  detectConflicts,
+  formatBindingForDisplay,
+  matchBinding,
+  normalizeBinding,
+} from './shortcuts';
 
 describe('normalizeBinding', () => {
   it('converts meta/ctrl/cmd to mod', () => {
@@ -52,5 +57,46 @@ describe('detectConflicts', () => {
     expect(conflicts.get('mod+s')).toEqual(['saveDocument', 'exportHtml']);
     expect(conflicts.get('mod+o')).toEqual(['openDocument']);
     expect(conflicts.has('null')).toBe(false);
+  });
+});
+
+describe('formatBindingForDisplay', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns empty string for null', () => {
+    expect(formatBindingForDisplay(null)).toBe('');
+  });
+
+  it('formats with Ctrl on non-macOS (Windows)', () => {
+    vi.stubGlobal('navigator', {
+      platform: 'Win32',
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0)',
+    });
+    expect(formatBindingForDisplay('Mod+s')).toBe('Ctrl+S');
+    expect(formatBindingForDisplay('Mod+Shift+s')).toBe('Ctrl+Shift+S');
+    expect(formatBindingForDisplay('Mod+Alt+t')).toBe('Ctrl+Alt+T');
+    expect(formatBindingForDisplay('Mod+,')).toBe('Ctrl+,');
+  });
+
+  it('formats with Ctrl on non-macOS (Linux)', () => {
+    vi.stubGlobal('navigator', {
+      platform: 'Linux x86_64',
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
+    });
+    expect(formatBindingForDisplay('Mod+s')).toBe('Ctrl+S');
+    expect(formatBindingForDisplay('Mod+Shift+Tab')).toBe('Ctrl+Shift+Tab');
+  });
+
+  it('formats with symbols on macOS', () => {
+    vi.stubGlobal('navigator', {
+      platform: 'MacIntel',
+      userAgent: 'Mozilla/5.0 (Macintosh)',
+    });
+    expect(formatBindingForDisplay('Mod+s')).toBe('⌘S');
+    expect(formatBindingForDisplay('Mod+Shift+s')).toBe('⌘⇧S');
+    expect(formatBindingForDisplay('Mod+Alt+t')).toBe('⌘⌥T');
+    expect(formatBindingForDisplay('Mod+,')).toBe('⌘,');
   });
 });

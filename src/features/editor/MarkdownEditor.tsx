@@ -94,6 +94,7 @@ export const MarkdownEditor = forwardRef<
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<number | null>(null);
   const ignoreNextScrollRef = useRef(false);
+  const hadSearchSelectionRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
   const tabSizeCompartmentRef = useRef(new Compartment());
@@ -297,8 +298,9 @@ export const MarkdownEditor = forwardRef<
 
   useEffect(() => {
     return useScrollSyncStore.subscribe((state, prev) => {
+      if (!state.enabled) return;
       if (state.source !== 'preview') return;
-      if (state === prev) return;
+      if (state.ratio === prev.ratio && state.source === prev.source) return;
       const editor = editorRef.current;
       if (!editor) return;
       const scroller = editor.scrollDOM;
@@ -313,10 +315,18 @@ export const MarkdownEditor = forwardRef<
     const editor = editorRef.current;
     const activeMatch = searchMatches[normalizedActiveSearchIndex];
 
-    if (!editor || !activeMatch) {
+    if (!editor) return;
+
+    if (!activeMatch) {
+      if (hadSearchSelectionRef.current) {
+        hadSearchSelectionRef.current = false;
+        const anchor = editor.state.selection.main.anchor;
+        editor.dispatch({ selection: { anchor, head: anchor } });
+      }
       return;
     }
 
+    hadSearchSelectionRef.current = true;
     editor.dispatch({
       selection: {
         anchor: activeMatch.from,

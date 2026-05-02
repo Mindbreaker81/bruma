@@ -35,6 +35,7 @@ import {
   openFileDialog,
   readFile,
   readImageAsDataUrl,
+  saveBinaryExportDialog,
   saveExportDialog,
   saveFile,
   saveFileDialog,
@@ -128,6 +129,7 @@ type MenuHandlers = {
   handleNewDocument: () => void;
   handleOpenSearch: () => void;
   handleOpenWithConfirmation: () => void;
+  handlePrint: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
   openAbout: () => void;
@@ -349,6 +351,7 @@ export default function App() {
     handleNewDocument: () => {},
     handleOpenSearch: () => {},
     handleOpenWithConfirmation: () => {},
+    handlePrint: () => {},
     handleSave: () => Promise.resolve(false),
     handleSaveAs: () => Promise.resolve(false),
     openAbout: () => {},
@@ -446,10 +449,78 @@ export default function App() {
     [displayName, document.content, showError, t]
   );
 
-  const handleExportPdf = useCallback(() => {
+  const handleExportPdf = useCallback(async () => {
     setIsExportMenuOpen(false);
-    // Best-effort: rely on the print-to-PDF dialog provided by the OS.
-    // CSS in print media restricts to the preview surface only.
+    try {
+      const [{ buildExportHtml }, { PDFDocument }, html2canvas] =
+        await Promise.all([
+          import('./lib/export'),
+          import('pdf-lib'),
+          import('html2canvas'),
+        ]);
+
+      const html = buildExportHtml(document.content, {
+        title: displayName,
+        includeStyles: true,
+      });
+
+      const container = window.document.createElement('div');
+      container.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:794px;background:#fff;';
+      container.innerHTML = html;
+      window.document.body.appendChild(container);
+
+      let canvas: Awaited<ReturnType<(typeof html2canvas)['default']>>;
+      try {
+        const body = container.querySelector('body') ?? container;
+        canvas = await html2canvas.default(body as HTMLElement, {
+          scale: 1.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          windowWidth: 794,
+        });
+      } finally {
+        window.document.body.removeChild(container);
+      }
+
+      const A4_W = 595.28;
+      const A4_H = 841.89;
+      const imgH = (canvas.height * A4_W) / canvas.width;
+
+      const pdfDoc = await PDFDocument.create();
+      const b64 = canvas
+        .toDataURL('image/png')
+        .replace(/^data:image\/png;base64,/, '');
+      const pngBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const pngImage = await pdfDoc.embedPng(pngBytes);
+
+      let yOffset = 0;
+      while (yOffset < imgH) {
+        const page = pdfDoc.addPage([A4_W, A4_H]);
+        page.drawImage(pngImage, {
+          x: 0,
+          y: A4_H - imgH + yOffset,
+          width: A4_W,
+          height: imgH,
+        });
+        yOffset += A4_H;
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const pdfB64 = btoa(String.fromCharCode(...pdfBytes));
+
+      await saveBinaryExportDialog({
+        content: pdfB64,
+        extension: 'pdf',
+        label: 'PDF',
+        suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
+      });
+    } catch {
+      showError(t('errors.exportFailed'));
+    }
+  }, [displayName, document.content, showError, t]);
+
+  const handlePrint = useCallback(() => {
     window.setTimeout(() => window.print(), 100);
   }, []);
 
@@ -773,6 +844,7 @@ export default function App() {
       handleNewDocument,
       handleOpenSearch,
       handleOpenWithConfirmation,
+      handlePrint,
       handleSave,
       handleSaveAs,
       openAbout: () => setIsAboutOpen(true),
@@ -785,6 +857,7 @@ export default function App() {
     handleNewDocument,
     handleOpenSearch,
     handleOpenWithConfirmation,
+    handlePrint,
     handleSave,
     handleSaveAs,
     setLanguage,
@@ -1008,6 +1081,7 @@ export default function App() {
               recentFiles={recentFiles}
               handleOpenRecent={handleOpenRecent}
               handleSave={handleSave}
+              handlePrint={handlePrint}
             />
             <ToolbarWrite
               autosaveEnabled={autosaveEnabled}
@@ -1138,10 +1212,10 @@ export default function App() {
                     >
                       <MarkdownEditor
                         ref={editorRef}
-                        activeSearchIndex={searchActiveIndex}
+                        activeSearchIndex={isSearchOpen ? searchActiveIndex : 0}
                         ariaLabel={t('editor.label')}
                         placeholder={t('editor.placeholder')}
-                        searchMatches={searchMatches}
+                        searchMatches={isSearchOpen ? searchMatches : []}
                         value={document.content}
                         onChange={(nextValue) => {
                           setWelcomeDismissed(true);

@@ -15,7 +15,7 @@ import {
   loadCustomTemplate,
 } from '../../templates/templates';
 import type { Template } from '../../templates/templates';
-import { Save, Clock, FileInput, FileText } from 'lucide-react';
+import { Save, Clock, FileInput, FileText, Printer } from 'lucide-react';
 
 type ToolbarFileProps = {
   isTemplateMenuOpen: boolean;
@@ -32,6 +32,7 @@ type ToolbarFileProps = {
   recentFiles: string[];
   handleOpenRecent: (path: string) => void;
   handleSave: () => Promise<boolean>;
+  handlePrint: () => void;
 };
 
 function getPathBasename(path: string): string {
@@ -53,6 +54,7 @@ export function ToolbarFile({
   recentFiles,
   handleOpenRecent,
   handleSave,
+  handlePrint,
 }: ToolbarFileProps) {
   const { t } = useTranslation();
 
@@ -164,6 +166,12 @@ export function ToolbarFile({
         icon={Save}
         label={t('actions.save')}
         onClick={() => void handleSave()}
+        className="rounded-full"
+      />
+      <IconButton
+        icon={Printer}
+        label={t('actions.print')}
+        onClick={handlePrint}
         className="rounded-full"
       />
     </ToolbarGroup>
