@@ -65,8 +65,6 @@ export function Preview({
 
   // Subscribe to external scroll source.
   useEffect(() => {
-    const enabled = useScrollSyncStore.getState().enabled;
-    if (!enabled) return;
     return useScrollSyncStore.subscribe((state, prev) => {
       if (!state.enabled) return;
       if (state.source !== 'editor') return;
