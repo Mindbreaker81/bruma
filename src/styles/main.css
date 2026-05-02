@@ -94,7 +94,9 @@ body {
   background:
     radial-gradient(circle at top, rgb(209 250 229 / 0.65), transparent 28%),
     rgb(var(--color-bg));
-  font-feature-settings: 'ss01' 1, 'cv05' 1;
+  font-feature-settings:
+    'ss01' 1,
+    'cv05' 1;
   text-rendering: optimizeLegibility;
 }
 
@@ -122,8 +124,11 @@ textarea {
 
 .bruma-editor .cm-editor {
   height: 100%;
-  background:
-    linear-gradient(180deg, rgb(var(--color-editor) / 0.98), rgb(var(--color-editor)));
+  background: linear-gradient(
+    180deg,
+    rgb(var(--color-editor) / 0.98),
+    rgb(var(--color-editor))
+  );
   color: rgb(var(--color-text));
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',

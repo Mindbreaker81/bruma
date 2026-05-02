@@ -470,11 +470,12 @@ export default function App() {
   const handleExportPdf = useCallback(async () => {
     setIsExportMenuOpen(false);
     try {
-      const [{ buildExportHtml }, { jsPDF }, html2canvas] = await Promise.all([
-        import('./lib/export'),
-        import('jspdf'),
-        import('html2canvas'),
-      ]);
+      const [{ buildExportHtml }, { PDFDocument }, html2canvas] =
+        await Promise.all([
+          import('./lib/export'),
+          import('pdf-lib'),
+          import('html2canvas'),
+        ]);
 
       const html = buildExportHtml(document.content, {
         title: displayName,
@@ -496,24 +497,33 @@ export default function App() {
       });
       window.document.body.removeChild(container);
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgW = pageW;
-      const imgH = (canvas.height * imgW) / canvas.width;
-      let yOffset = 0;
+      const A4_W = 595.28;
+      const A4_H = 841.89;
+      const imgH = (canvas.height * A4_W) / canvas.width;
 
+      const pdfDoc = await PDFDocument.create();
+      const b64 = canvas
+        .toDataURL('image/png')
+        .replace(/^data:image\/png;base64,/, '');
+      const pngBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const pngImage = await pdfDoc.embedPng(pngBytes);
+
+      let yOffset = 0;
       while (yOffset < imgH) {
-        if (yOffset > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, -yOffset, imgW, imgH);
-        yOffset += pageH;
+        const page = pdfDoc.addPage([A4_W, A4_H]);
+        page.drawImage(pngImage, {
+          x: 0,
+          y: A4_H - imgH + yOffset,
+          width: A4_W,
+          height: imgH,
+        });
+        yOffset += A4_H;
       }
 
-      const pdfArray = Array.from(new Uint8Array(pdf.output('arraybuffer') as ArrayBuffer));
+      const pdfBytes = await pdfDoc.save();
 
       await saveBinaryExportDialog({
-        bytes: pdfArray,
+        bytes: Array.from(pdfBytes),
         extension: 'pdf',
         label: 'PDF',
         suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
@@ -1396,7 +1406,9 @@ export default function App() {
                   <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
                     {t('export.htmlStyled')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
+                  <DropdownMenuItem
+                    onClick={() => void handleExportHtml(false)}
+                  >
                     {t('export.htmlPlain')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExportPdf}>
@@ -1546,10 +1558,7 @@ export default function App() {
               {viewMode !== 'editor' ? (
                 <Suspense
                   fallback={
-                    <div
-                      aria-hidden
-                      className="h-full min-h-0 bg-background"
-                    />
+                    <div aria-hidden className="h-full min-h-0 bg-background" />
                   }
                 >
                   <Preview

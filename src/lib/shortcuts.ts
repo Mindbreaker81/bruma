@@ -117,7 +117,10 @@ export const COMMAND_REGISTRY: Record<CommandId, CommandDefinition> = {
 
 function isMacOS(): boolean {
   if (typeof navigator === 'undefined') return false;
-  return /Mac|iPhone|iPad/i.test(navigator.platform) || /Mac/i.test(navigator.userAgent);
+  return (
+    /Mac|iPhone|iPad/i.test(navigator.platform) ||
+    /Mac/i.test(navigator.userAgent)
+  );
 }
 
 export function formatBindingForDisplay(binding: string | null): string {
