@@ -67,7 +67,7 @@ export async function readImageAsDataUrl(
 }
 
 export async function saveBinaryExportDialog(args: {
-  bytes: number[];
+  content: string;
   suggested?: string;
   extension: string;
   label?: string;

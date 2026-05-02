@@ -488,14 +488,18 @@ export default function App() {
       container.innerHTML = html;
       window.document.body.appendChild(container);
 
-      const body = container.querySelector('body') ?? container;
-      const canvas = await html2canvas.default(body as HTMLElement, {
-        scale: 1.5,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        windowWidth: 794,
-      });
-      window.document.body.removeChild(container);
+      let canvas: Awaited<ReturnType<(typeof html2canvas)['default']>>;
+      try {
+        const body = container.querySelector('body') ?? container;
+        canvas = await html2canvas.default(body as HTMLElement, {
+          scale: 1.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          windowWidth: 794,
+        });
+      } finally {
+        window.document.body.removeChild(container);
+      }
 
       const A4_W = 595.28;
       const A4_H = 841.89;
@@ -521,9 +525,10 @@ export default function App() {
       }
 
       const pdfBytes = await pdfDoc.save();
+      const pdfB64 = btoa(String.fromCharCode(...pdfBytes));
 
       await saveBinaryExportDialog({
-        bytes: Array.from(pdfBytes),
+        content: pdfB64,
         extension: 'pdf',
         label: 'PDF',
         suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',

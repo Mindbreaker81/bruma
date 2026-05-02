@@ -107,7 +107,7 @@ pub fn read_image_as_data_url(base: String, relative: String) -> Result<String, 
 
 #[tauri::command]
 pub fn save_binary_export_dialog(
-    bytes: Vec<u8>,
+    content: String,
     suggested: Option<String>,
     extension: String,
     label: Option<String>,
@@ -116,6 +116,10 @@ pub fn save_binary_export_dialog(
     if extension.is_empty() {
         return Err("invalid_extension".to_string());
     }
+
+    let bytes = BASE64
+        .decode(content.as_bytes())
+        .map_err(|error| format!("base64_decode_failed: {error}"))?;
 
     let label = label.unwrap_or_else(|| extension.to_uppercase());
     let mut dialog = rfd::FileDialog::new().add_filter(label.as_str(), &[extension.as_str()]);

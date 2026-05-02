@@ -1,6 +1,6 @@
 {
   "name": "bruma",
-  "version": "1.3.0",
+  "version": "1.4.1",
   "description": "Editor Markdown de escritorio: ligero, local y simple.",
   "type": "module",
   "private": true,
