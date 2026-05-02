@@ -76,7 +76,7 @@ await syncText(
   cargoLockPath,
   replaceRequired(
     cargoLock,
-    /(\[\[package\]\]\nname = "bruma"\nversion = ")[^"]+(")/,
+    /(\[\[package\]\]\r?\nname = "bruma"\r?\nversion = ")[^"]+(")/,
     `$1${version}$2`,
     cargoLockPath
   )

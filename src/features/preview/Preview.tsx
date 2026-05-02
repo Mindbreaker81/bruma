@@ -1,4 +1,5 @@
 import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { stripFrontmatter } from '../../lib/frontmatter';
 import { renderSafeMarkdown } from '../../lib/markdown';
@@ -31,6 +32,7 @@ export function Preview({
   onLocalImageRequest,
   maxWidth = 65,
 }: PreviewProps) {
+  const { t } = useTranslation();
   const sourceForRender = hideFrontmatter ? stripFrontmatter(content) : content;
   const [html, setHtml] = useState(() => renderSafeMarkdown(sourceForRender));
   const containerRef = useRef<HTMLElement | null>(null);
@@ -102,8 +104,8 @@ export function Preview({
   return (
     <article
       ref={containerRef}
-      aria-label="Markdown preview"
-      className="bruma-preview h-full min-h-0 overflow-auto bg-background px-6 py-5"
+      aria-label={t('preview.label')}
+      className="bruma-preview min-h-0 flex-1 overflow-auto bg-background px-6 py-5"
       style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
       dangerouslySetInnerHTML={{ __html: html }}
       onClick={handleClick}

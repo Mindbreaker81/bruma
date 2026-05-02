@@ -6,18 +6,47 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-01
+
 ### Added
 
-- Sitio web de presentacion en `landing/` para Vercel: pagina estatica generada en build leyendo `README.md` y `CHANGELOG.md` del repo; configurar el proyecto con **Root Directory** `landing` (ver `landing/README.md`).
+- Inter font cargada via `@fontsource-variable/inter`, favicon SVG, meta `theme-color` y `description` en `index.html` (QW1).
+- OG tags, Twitter card, canonical URL e imagen `og-image.svg` 1200×630 en la landing (QW2).
+- Atributos `inert` y `aria-hidden` en el editor cuando Welcome esta visible (QW3).
+- Regla global `@media (prefers-reduced-motion: reduce)` para respetar WCAG 2.3.3 (QW4).
+- Transicion suave de colores en cambio de tema (`transition-colors 200ms` en body) (QW5/A7).
+- CTA de descarga con deteccion de OS en la landing que apunta al asset correcto de la ultima release de GitHub (M6).
+- Self-host de Inter en la landing, eliminando dependencia de Google Fonts (M7).
+- Overlay decorativo se desvanece automaticamente en focus-mode via `data-focus` (M8).
+- Tokens semanticos de z-index (`--z-base`, `--z-shell`, `--z-overlay`, `--z-modal`, `--z-toast`) en CSS y Tailwind (M10).
+- Componente `Kbd` con atajos de teclado descubribles en las tarjetas de Welcome (B3).
+- ErrorBoundary en root con pantalla degradada y boton de recarga (B5).
+- Tests de regresion visual con Playwright snapshots (B6).
+- Tema CodeMirror coherente con la marca (`brumaLightTheme` / `brumaDarkTheme`) usando variables shadcn (B7).
+- Feedback visual de drag-over en TabBar con `ring-primary` (B8).
+- Icono `RotateCcw` visible en boton de zoom cuando `fontScale !== 1` (B9).
+- Fallback "desktop only" en `<md` para la app servida por web (B10).
 
-### Docs
+### Changed
 
-- `docs/SECURITY.md`: seccion de revision pre-publica (gitleaks, trufflehog, `pnpm audit`, notas de CI).
+- Variables `--color-*` duplicadas eliminadas; consumidores migrados a tokens shadcn HSL (A1).
+- Toolbar con scroll horizontal en pantallas estrechas y wrap natural a partir de `xl` (A4).
+- Badge tagline: `text-emerald-50` sobre `bg-emerald-400/15` en dark para contraste ≥AA (A8).
+- `IconButton` y `ToolbarGroup` movidos a `src/components/ui/icon-button.tsx` (M1).
+- `PreferencesDialog` migrada a primitivas shadcn (`Checkbox`, `Select`, `Slider`) (M2).
+- `ShortcutsDialog` migrada a `Dialog` de shadcn con focus trap y restore focus (M3).
+- Keys `preview.label` y `toc.label` añadidas a `es/en` y usadas en `aria-label` (M4).
+- `<p>` anidados eliminados dentro de `<DialogDescription>` en About (M11).
+- Menu "Recent" vacio usa `<DropdownMenuItem disabled>` en lugar de `<div>` no focusable (M12).
+- View-mode bar usa Radix `Tabs`/`TabsList`/`TabsTrigger` (M13).
+- Imports de Lucide cambiados a forma canonica `import { X } from 'lucide-react'` (B1).
+- Toolbar y AppShell extraidos de `App.tsx` a subcomponentes: `ToolbarFile`, `ToolbarWrite`, `ToolbarView`, `ToolbarZoom`, `ToolbarExport`, `AppShell`, `ViewModeBar`, `useTauriMenuBridge` (A5).
+- Selectores Zustand agrupados con `useShallow` para evitar re-renders innecesarios (A6).
 
 ### Fixed
 
-- Deploy en Vercel: `vercel.json` en la raiz del monorepo con `installCommand` / `buildCommand` en `landing/` y salida `landing/dist`, para que el build tenga acceso a `README.md` y `CHANGELOG.md` (un proyecto con Root Directory solo `landing/` fallaba).
-- `.vercelignore` en la raiz para que la CLI no suba `node_modules`, `src-tauri/target` ni otros artefactos pesados.
+- Editor y preview en modo no-split no llenaban la altura disponible; contenedor cambiado de block a `flex flex-col` con `flex-1` en los hijos.
+- `FRONTEND_IMPROVEMENTS.md` punto 9 marcado como resuelto — StatusBar ya tiene iconos (B4).
 
 ## [1.3.0] - 2026-05-01
 

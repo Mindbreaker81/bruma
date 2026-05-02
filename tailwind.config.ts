@@ -8,6 +8,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          '"Inter Variable"',
           'Inter',
           'ui-sans-serif',
           'system-ui',
@@ -63,6 +64,13 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      zIndex: {
+        base: 'var(--z-base)',
+        shell: 'var(--z-shell)',
+        overlay: 'var(--z-overlay)',
+        modal: 'var(--z-modal)',
+        toast: 'var(--z-toast)',
       },
     },
   },

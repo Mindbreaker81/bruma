@@ -1,24 +1,5 @@
-import Columns2 from 'lucide-react/dist/esm/icons/columns-2.js';
-import Clock from 'lucide-react/dist/esm/icons/clock.js';
-import Download from 'lucide-react/dist/esm/icons/download.js';
-import Eye from 'lucide-react/dist/esm/icons/eye.js';
-import EyeOff from 'lucide-react/dist/esm/icons/eye-off.js';
-import FileInput from 'lucide-react/dist/esm/icons/file-input.js';
-import FileText from 'lucide-react/dist/esm/icons/file-text.js';
-import Keyboard from 'lucide-react/dist/esm/icons/keyboard.js';
-import Languages from 'lucide-react/dist/esm/icons/languages.js';
-import List from 'lucide-react/dist/esm/icons/list.js';
-import Maximize2 from 'lucide-react/dist/esm/icons/maximize-2.js';
-import Minus from 'lucide-react/dist/esm/icons/minus.js';
-import Moon from 'lucide-react/dist/esm/icons/moon.js';
-import Plus from 'lucide-react/dist/esm/icons/plus.js';
-import Printer from 'lucide-react/dist/esm/icons/printer.js';
-import Save from 'lucide-react/dist/esm/icons/save.js';
-import Search from 'lucide-react/dist/esm/icons/search.js';
-import X from 'lucide-react/dist/esm/icons/x.js';
 import {
   type DragEvent,
-  type ReactNode,
   lazy,
   Suspense,
   useCallback,
@@ -49,22 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './components/ui/dialog';
-import { Switch } from './components/ui/switch';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './components/ui/dropdown-menu';
-import { Button } from './components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
+import { TooltipProvider } from './components/ui/tooltip';
 import {
   openFileDialog,
   readFile,
@@ -77,12 +43,10 @@ import {
 } from './features/files/ipc';
 import { TabBar } from './features/files/TabBar';
 import { useFileStore } from './features/files/state';
-import {
-  getAllTemplates,
-  loadCustomTemplate,
-  BUILTIN_TEMPLATES,
-  applyTemplate,
-} from './features/templates/templates';
+import { useShallow } from 'zustand/react/shallow';
+import { useThemeStore } from './features/settings/state';
+import { useTauriMenuBridge } from './hooks/useTauriMenuBridge';
+import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession, readSession, writeSession } from './lib/session';
 import { useScrollSyncStore } from './features/preview/scrollSync';
@@ -92,9 +56,15 @@ import {
   replaceMatchAt,
 } from './features/search/search';
 import { useSearchStore } from './features/search/state';
-import { useThemeStore } from './features/settings/state';
 import type { ViewMode } from './features/settings/view';
 import { StatusBar } from './features/shell/StatusBar';
+import { ToolbarExport } from './features/shell/toolbar/ToolbarExport';
+import { ToolbarFile } from './features/shell/toolbar/ToolbarFile';
+import { ToolbarView } from './features/shell/toolbar/ToolbarView';
+import { ToolbarWrite } from './features/shell/toolbar/ToolbarWrite';
+import { ToolbarZoom } from './features/shell/toolbar/ToolbarZoom';
+import { AppShell } from './features/shell/AppShell';
+import { ViewModeBar } from './features/shell/ViewModeBar';
 import { WelcomeState } from './features/shell/WelcomeState';
 import { APP_VERSION } from './lib/app';
 import { patchConfig, readConfig } from './lib/config';
@@ -102,14 +72,8 @@ import { getTextStats } from './lib/textStats';
 import type { CommandId } from './lib/shortcuts';
 import { useShortcutRegistry } from './lib/useShortcut';
 import type { Template } from './features/templates/templates';
-import {
-  isTauriRuntime,
-  listenToMenuActions,
-  listenToRecentOpen,
-  setAppWindowTitle,
-} from './lib/tauri';
-
-const VIEW_MODES: ViewMode[] = ['editor', 'split', 'preview'];
+import { X } from 'lucide-react';
+import { isTauriRuntime, setAppWindowTitle } from './lib/tauri';
 
 const ConfirmDirtyDialog = lazy(() =>
   import('./features/files/ConfirmDirtyDialog').then((module) => ({
@@ -159,59 +123,6 @@ const MarkdownEditor = lazy(() =>
   }))
 );
 
-function IconButton({
-  icon: Icon,
-  label,
-  onClick,
-  active,
-  disabled,
-  className,
-}: {
-  icon: React.ElementType;
-  label: string;
-  onClick?: () => void;
-  active?: boolean;
-  disabled?: boolean;
-  className?: string;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClick}
-          disabled={disabled}
-          data-active={active}
-          className={`size-9 data-[active=true]:bg-muted data-[active=true]:text-foreground ${className ?? ''}`}
-        >
-          <Icon className="size-4" aria-hidden />
-          <span className="sr-only">{label}</span>
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  );
-}
-
-function ToolbarGroup({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-2 py-1 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/5">
-      <span className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </span>
-      <Separator orientation="vertical" className="h-5 bg-border/80" />
-      <div className="flex items-center gap-1">{children}</div>
-    </div>
-  );
-}
-
 type MenuHandlers = {
   cycleTheme: () => void;
   cycleViewMode: () => void;
@@ -226,95 +137,166 @@ type MenuHandlers = {
   setViewMode: (nextViewMode: ViewMode) => void;
 };
 
-function getPathBasename(path: string): string {
-  const segments = path.split(/[\\/]/).filter(Boolean);
-  return segments[segments.length - 1] ?? path;
-}
-
 export default function App() {
   const { i18n, t } = useTranslation();
-  const document = useFileStore((state) => state.document);
-  const displayName = useFileStore((state) => state.displayName);
-  const isDirty = useFileStore((state) => state.isDirty);
-  const openTab = useFileStore((state) => state.openTab);
-  const closeTab = useFileStore((state) => state.closeTab);
-  const activateTab = useFileStore((state) => state.activateTab);
-  const moveTab = useFileStore((state) => state.moveTab);
-  const tabs = useFileStore((state) => state.tabs);
-  const activeTabId = useFileStore((state) => state.activeTabId);
-  const markSaved = useFileStore((state) => state.markSaved);
-  const restoreSession = useFileStore((state) => state.restoreSession);
-  const recentFiles = useFileStore((state) => state.recentFiles);
-  const removeRecentFile = useFileStore((state) => state.removeRecentFile);
-  const resetUntitled = useFileStore((state) => state.resetUntitled);
-  const updateContent = useFileStore((state) => state.updateContent);
-  const cycleTheme = useThemeStore((state) => state.cycleTheme);
-  const cycleLanguage = useThemeStore((state) => state.cycleLanguage);
-  const cycleViewMode = useThemeStore((state) => state.cycleViewMode);
-  const languagePreference = useThemeStore((state) => state.languagePreference);
-  const resolvedLanguage = useThemeStore((state) => state.resolvedLanguage);
-  const themePreference = useThemeStore((state) => state.preference);
-  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
-  const setLanguage = useThemeStore((state) => state.setLanguage);
-  const setViewMode = useThemeStore((state) => state.setViewMode);
-  const viewMode = useThemeStore((state) => state.viewMode);
-  const fontScale = useThemeStore((state) => state.fontScale);
-  const increaseFontScaleStore = useThemeStore(
-    (state) => state.increaseFontScale
+  const { document, displayName, isDirty, openTab, closeTab } = useFileStore(
+    useShallow((state) => ({
+      document: state.document,
+      displayName: state.displayName,
+      isDirty: state.isDirty,
+      openTab: state.openTab,
+      closeTab: state.closeTab,
+    }))
   );
-  const decreaseFontScaleStore = useThemeStore(
-    (state) => state.decreaseFontScale
+  const {
+    activateTab,
+    moveTab,
+    tabs,
+    activeTabId,
+    markSaved,
+    restoreSession,
+    recentFiles,
+    removeRecentFile,
+    resetUntitled,
+    updateContent,
+  } = useFileStore(
+    useShallow((state) => ({
+      activateTab: state.activateTab,
+      moveTab: state.moveTab,
+      tabs: state.tabs,
+      activeTabId: state.activeTabId,
+      markSaved: state.markSaved,
+      restoreSession: state.restoreSession,
+      recentFiles: state.recentFiles,
+      removeRecentFile: state.removeRecentFile,
+      resetUntitled: state.resetUntitled,
+      updateContent: state.updateContent,
+    }))
   );
-  const resetFontScaleStore = useThemeStore((state) => state.resetFontScale);
-  const focusMode = useThemeStore((state) => state.focusMode);
-  const toggleFocusMode = useThemeStore((state) => state.toggleFocusMode);
-  const tocOpen = useThemeStore((state) => state.tocOpen);
-  const toggleToc = useThemeStore((state) => state.toggleToc);
-  const scrollSyncEnabled = useScrollSyncStore((state) => state.enabled);
-  const toggleScrollSync = useScrollSyncStore((state) => state.toggle);
-  const showFrontmatter = useThemeStore((state) => state.showFrontmatter);
-  const toggleShowFrontmatter = useThemeStore(
-    (state) => state.toggleShowFrontmatter
+  const {
+    cycleTheme,
+    cycleLanguage,
+    cycleViewMode,
+    languagePreference,
+    resolvedLanguage,
+    themePreference,
+    resolvedTheme,
+    setLanguage,
+    setViewMode,
+    viewMode,
+    fontScale,
+    increaseFontScale,
+    decreaseFontScale,
+    resetFontScale,
+    focusMode,
+    toggleFocusMode,
+    tocOpen,
+    toggleToc,
+    showFrontmatter,
+    toggleShowFrontmatter,
+    autosaveEnabled,
+    setAutosaveEnabled,
+    autosaveDelayMs,
+    setAutosaveDelayMs,
+    editorFontFamily,
+    setEditorFontFamily,
+    editorTabSize,
+    setEditorTabSize,
+    editorShowGutter,
+    setEditorShowGutter,
+    editorWrap,
+    setEditorWrap,
+    previewMaxWidth,
+    setPreviewMaxWidth,
+    previewShowToc,
+    setPreviewShowToc,
+  } = useThemeStore(
+    useShallow((state) => ({
+      cycleTheme: state.cycleTheme,
+      cycleLanguage: state.cycleLanguage,
+      cycleViewMode: state.cycleViewMode,
+      languagePreference: state.languagePreference,
+      resolvedLanguage: state.resolvedLanguage,
+      themePreference: state.preference,
+      resolvedTheme: state.resolvedTheme,
+      setLanguage: state.setLanguage,
+      setViewMode: state.setViewMode,
+      viewMode: state.viewMode,
+      fontScale: state.fontScale,
+      increaseFontScale: state.increaseFontScale,
+      decreaseFontScale: state.decreaseFontScale,
+      resetFontScale: state.resetFontScale,
+      focusMode: state.focusMode,
+      toggleFocusMode: state.toggleFocusMode,
+      tocOpen: state.tocOpen,
+      toggleToc: state.toggleToc,
+      showFrontmatter: state.showFrontmatter,
+      toggleShowFrontmatter: state.toggleShowFrontmatter,
+      autosaveEnabled: state.autosaveEnabled,
+      setAutosaveEnabled: state.setAutosaveEnabled,
+      autosaveDelayMs: state.autosaveDelayMs,
+      setAutosaveDelayMs: state.setAutosaveDelayMs,
+      editorFontFamily: state.editorFontFamily,
+      setEditorFontFamily: state.setEditorFontFamily,
+      editorTabSize: state.editorTabSize,
+      setEditorTabSize: state.setEditorTabSize,
+      editorShowGutter: state.editorShowGutter,
+      setEditorShowGutter: state.setEditorShowGutter,
+      editorWrap: state.editorWrap,
+      setEditorWrap: state.setEditorWrap,
+      previewMaxWidth: state.previewMaxWidth,
+      setPreviewMaxWidth: state.setPreviewMaxWidth,
+      previewShowToc: state.previewShowToc,
+      setPreviewShowToc: state.setPreviewShowToc,
+    }))
   );
-  const autosaveEnabled = useThemeStore((state) => state.autosaveEnabled);
-  const setAutosaveEnabled = useThemeStore((state) => state.setAutosaveEnabled);
-  const autosaveDelayMs = useThemeStore((state) => state.autosaveDelayMs);
-  const setAutosaveDelayMs = useThemeStore((state) => state.setAutosaveDelayMs);
-  const editorFontFamily = useThemeStore((state) => state.editorFontFamily);
-  const setEditorFontFamily = useThemeStore(
-    (state) => state.setEditorFontFamily
+  const { enabled: scrollSyncEnabled, toggle: toggleScrollSync } =
+    useScrollSyncStore(
+      useShallow((state) => ({
+        enabled: state.enabled,
+        toggle: state.toggle,
+      }))
+    );
+  const {
+    searchActiveIndex,
+    searchCaseSensitive,
+    closeSearch,
+    goNext,
+    goPrevious,
+    isOpen: isSearchOpen,
+    normalizeActiveIndex,
+  } = useSearchStore(
+    useShallow((state) => ({
+      searchActiveIndex: state.activeIndex,
+      searchCaseSensitive: state.caseSensitive,
+      closeSearch: state.close,
+      goNext: state.goNext,
+      goPrevious: state.goPrevious,
+      isOpen: state.isOpen,
+      normalizeActiveIndex: state.normalizeActiveIndex,
+    }))
   );
-  const editorTabSize = useThemeStore((state) => state.editorTabSize);
-  const setEditorTabSize = useThemeStore((state) => state.setEditorTabSize);
-  const editorShowGutter = useThemeStore((state) => state.editorShowGutter);
-  const setEditorShowGutter = useThemeStore(
-    (state) => state.setEditorShowGutter
+  const {
+    open: openSearch,
+    query: searchQuery,
+    setCaseSensitive: setSearchCaseSensitive,
+    setQuery: setSearchQuery,
+    replaceQuery,
+    replaceMode,
+    setReplaceQuery,
+    toggleReplaceMode,
+  } = useSearchStore(
+    useShallow((state) => ({
+      open: state.open,
+      query: state.query,
+      setCaseSensitive: state.setCaseSensitive,
+      setQuery: state.setQuery,
+      replaceQuery: state.replaceQuery,
+      replaceMode: state.replaceMode,
+      setReplaceQuery: state.setReplaceQuery,
+      toggleReplaceMode: state.toggleReplaceMode,
+    }))
   );
-  const editorWrap = useThemeStore((state) => state.editorWrap);
-  const setEditorWrap = useThemeStore((state) => state.setEditorWrap);
-  const previewMaxWidth = useThemeStore((state) => state.previewMaxWidth);
-  const setPreviewMaxWidth = useThemeStore((state) => state.setPreviewMaxWidth);
-  const previewShowToc = useThemeStore((state) => state.previewShowToc);
-  const setPreviewShowToc = useThemeStore((state) => state.setPreviewShowToc);
-  const searchActiveIndex = useSearchStore((state) => state.activeIndex);
-  const searchCaseSensitive = useSearchStore((state) => state.caseSensitive);
-  const closeSearch = useSearchStore((state) => state.close);
-  const goNextSearch = useSearchStore((state) => state.goNext);
-  const goPreviousSearch = useSearchStore((state) => state.goPrevious);
-  const isSearchOpen = useSearchStore((state) => state.isOpen);
-  const normalizeSearchActiveIndex = useSearchStore(
-    (state) => state.normalizeActiveIndex
-  );
-  const openSearch = useSearchStore((state) => state.open);
-  const searchQuery = useSearchStore((state) => state.query);
-  const setSearchCaseSensitive = useSearchStore(
-    (state) => state.setCaseSensitive
-  );
-  const setSearchQuery = useSearchStore((state) => state.setQuery);
-  const replaceQuery = useSearchStore((state) => state.replaceQuery);
-  const replaceMode = useSearchStore((state) => state.replaceMode);
-  const setReplaceQuery = useSearchStore((state) => state.setReplaceQuery);
-  const toggleReplaceMode = useSearchStore((state) => state.toggleReplaceMode);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -883,8 +865,8 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    normalizeSearchActiveIndex(searchMatchCount);
-  }, [normalizeSearchActiveIndex, searchMatchCount]);
+    normalizeActiveIndex(searchMatchCount);
+  }, [normalizeActiveIndex, searchMatchCount]);
 
   useEffect(() => {
     if (!isTauriRuntime()) {
@@ -989,13 +971,13 @@ export default function App() {
 
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        increaseFontScaleStore();
+        increaseFontScale();
       } else if (event.key === '-' || event.key === '_') {
         event.preventDefault();
-        decreaseFontScaleStore();
+        decreaseFontScale();
       } else if (event.key === '0') {
         event.preventDefault();
-        resetFontScaleStore();
+        resetFontScale();
       } else if (
         isTauriRuntime() &&
         event.shiftKey &&
@@ -1012,129 +994,54 @@ export default function App() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
-    decreaseFontScaleStore,
-    increaseFontScaleStore,
-    resetFontScaleStore,
+    decreaseFontScale,
+    increaseFontScale,
+    resetFontScale,
     toggleFocusMode,
     toggleToc,
   ]);
 
+  useTauriMenuBridge({
+    handlers: menuHandlersRef,
+    setIsPreferencesOpen,
+    setIsAboutOpen,
+    handleOpenRecent,
+  });
+
+  const isTauri =
+    typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+  const [isNarrow, setIsNarrow] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 768
+  );
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    let isDisposed = false;
+    if (isTauri) return;
+    const onResize = () => setIsNarrow(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [isTauri]);
 
-    void listenToMenuActions((action: string) => {
-      const handlers = menuHandlersRef.current;
-
-      if (action === 'file_new') {
-        handlers.handleNewDocument();
-      }
-
-      if (action === 'file_open') {
-        handlers.handleOpenWithConfirmation();
-      }
-
-      if (action === 'file_save') {
-        void handlers.handleSave();
-      }
-
-      if (action === 'file_save_as') {
-        void handlers.handleSaveAs();
-      }
-
-      if (action === 'file_print') {
-        handlers.handlePrint();
-      }
-
-      if (action === 'edit_find') {
-        handlers.handleOpenSearch();
-      }
-
-      if (action === 'view_toggle_theme') {
-        handlers.cycleTheme();
-      }
-
-      if (action === 'view_editor') {
-        handlers.setViewMode('editor');
-      }
-
-      if (action === 'view_preview') {
-        handlers.setViewMode('preview');
-      }
-
-      if (action === 'view_split') {
-        handlers.setViewMode('split');
-      }
-
-      if (action === 'view_toggle_mode') {
-        handlers.cycleViewMode();
-      }
-
-      if (action === 'language_es') {
-        handlers.setLanguage('es');
-      }
-
-      if (action === 'language_en') {
-        handlers.setLanguage('en');
-      }
-
-      if (action === 'help_preferences') {
-        setIsPreferencesOpen((open) => !open);
-      }
-
-      if (action === 'help_about') {
-        setIsAboutOpen((open) => !open);
-      }
-    }).then((unlisten) => {
-      if (isDisposed) {
-        unlisten();
-        return;
-      }
-
-      cleanup = unlisten;
-    });
-
-    return () => {
-      isDisposed = true;
-      cleanup?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    let isDisposed = false;
-
-    void listenToRecentOpen((path) => {
-      handleOpenRecent(path);
-    }).then((unlisten) => {
-      if (isDisposed) {
-        unlisten();
-        return;
-      }
-
-      cleanup = unlisten;
-    });
-
-    return () => {
-      isDisposed = true;
-      cleanup?.();
-    };
-  }, [handleOpenRecent]);
+  if (!isTauri && isNarrow) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-background p-6 text-foreground">
+        <div className="max-w-sm text-center">
+          <h1 className="text-lg font-semibold">{t('mobileFallback.title')}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t('mobileFallback.body')}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={400}>
-      <main
-        className="bruma-shell relative flex min-h-[100dvh] min-h-0 flex-col overflow-hidden bg-background text-foreground antialiased"
+      <AppShell
+        dataFocus={focusMode}
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
-        <div className="pointer-events-none absolute inset-0 opacity-90">
-          <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.16),transparent_65%)]" />
-          <div className="absolute right-[-6rem] top-24 h-64 w-64 rounded-full bg-emerald-200/30 blur-3xl dark:bg-emerald-500/10" />
-          <div className="absolute left-[-4rem] top-40 h-48 w-48 rounded-full bg-stone-200/40 blur-3xl dark:bg-stone-400/10" />
-        </div>
         <header
-          className={`${focusMode ? 'hidden' : 'flex'} relative z-10 shrink-0 flex-col gap-4 border-b border-white/50 bg-white/70 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-zinc-950/70`}
+          className={`${focusMode ? 'hidden' : 'flex'} relative z-shell shrink-0 flex-col gap-4 border-b border-white/50 bg-white/70 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-zinc-950/70`}
         >
           <div className="flex w-full items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
@@ -1152,276 +1059,60 @@ export default function App() {
               </div>
             </div>
             <div className="hidden items-center gap-2 lg:flex">
-              <span className="rounded-full border border-emerald-950/10 bg-emerald-50/80 px-3 py-1 text-[11px] font-medium text-emerald-800 dark:border-white/10 dark:bg-emerald-500/10 dark:text-emerald-200">
+              <span className="rounded-full border border-emerald-700/20 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-900 dark:border-emerald-300/30 dark:bg-emerald-400/15 dark:text-emerald-50">
                 {t('app.tagline')}
               </span>
             </div>
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-2">
-            <ToolbarGroup label={t('toolbar.file')}>
-              <DropdownMenu
-                open={isTemplateMenuOpen}
-                onOpenChange={setIsTemplateMenuOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9 rounded-full"
-                    aria-label={t('actions.newDocument')}
-                  >
-                    <FileText className="size-4" aria-hidden />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {BUILTIN_TEMPLATES.map((template) => (
-                    <DropdownMenuItem
-                      key={template.id}
-                      onClick={() => {
-                        setIsTemplateMenuOpen(false);
-                        requestDirtyConfirmation(() => {
-                          clearSession();
-                          resetUntitled();
-                          updateContent(applyTemplate(template));
-                          setWelcomeDismissed(true);
-                        });
-                      }}
-                    >
-                      {t(template.name)}
-                    </DropdownMenuItem>
-                  ))}
-                  {customTemplates.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      {customTemplates.map((template) => (
-                        <DropdownMenuItem
-                          key={template.id}
-                          onClick={async () => {
-                            setIsTemplateMenuOpen(false);
-                            requestDirtyConfirmation(async () => {
-                              try {
-                                const content = await loadCustomTemplate(
-                                  template.id
-                                );
-                                clearSession();
-                                resetUntitled();
-                                updateContent(
-                                  applyTemplate({ ...template, content })
-                                );
-                                setWelcomeDismissed(true);
-                              } catch {
-                                showError(t('errors.templateLoadFailed'));
-                              }
-                            });
-                          }}
-                        >
-                          {template.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <IconButton
-                icon={FileInput}
-                label={t('actions.openDocument')}
-                onClick={handleOpenWithConfirmation}
-                className="rounded-full"
-              />
-              <DropdownMenu
-                open={isRecentMenuOpen}
-                onOpenChange={setIsRecentMenuOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9 rounded-full"
-                    aria-label={t('recent.open')}
-                  >
-                    <Clock className="size-4" aria-hidden />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="w-72 max-h-96 overflow-y-auto"
-                >
-                  {recentFiles.length > 0 ? (
-                    recentFiles.map((path) => (
-                      <DropdownMenuItem
-                        key={path}
-                        onClick={() => handleOpenRecent(path)}
-                        title={path}
-                      >
-                        <div className="flex min-w-0 flex-col">
-                          <span className="block truncate font-medium">
-                            {getPathBasename(path)}
-                          </span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {path}
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      {t('recent.empty')}
-                    </div>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <IconButton
-                icon={Save}
-                label={t('actions.save')}
-                onClick={() => void handleSave()}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={Printer}
-                label={t('actions.print')}
-                onClick={handlePrint}
-                className="rounded-full"
-              />
-            </ToolbarGroup>
-
-            <ToolbarGroup label={t('toolbar.write')}>
-              <div className="flex items-center gap-2 rounded-full bg-stone-100/80 px-3 py-1.5 dark:bg-white/5">
-                <label
-                  htmlFor="toolbar-autosave"
-                  className="cursor-pointer text-xs font-medium text-muted-foreground"
-                >
-                  {t('autosave.toggle')}
-                </label>
-                <Switch
-                  id="toolbar-autosave"
-                  checked={autosaveEnabled}
-                  onCheckedChange={setAutosaveEnabled}
-                />
-              </div>
-              <div className="flex items-center gap-2 rounded-full bg-stone-100/80 px-3 py-1.5 dark:bg-white/5">
-                <label
-                  htmlFor="toolbar-scroll-sync"
-                  className="cursor-pointer text-xs font-medium text-muted-foreground"
-                  title={t('scrollSync.description')}
-                >
-                  {t('scrollSync.toggle')}
-                </label>
-                <Switch
-                  id="toolbar-scroll-sync"
-                  checked={scrollSyncEnabled}
-                  onCheckedChange={(checked) => {
-                    if (checked !== scrollSyncEnabled) toggleScrollSync();
-                  }}
-                />
-              </div>
-              <IconButton
-                icon={Search}
-                label={t('search.open')}
-                onClick={handleOpenSearch}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={Keyboard}
-                label={t('shortcuts.title')}
-                onClick={() => setIsShortcutsOpen(true)}
-                className="rounded-full"
-              />
-            </ToolbarGroup>
-
-            <ToolbarGroup label={t('toolbar.view')}>
-              <IconButton
-                icon={Moon}
-                label={t('theme.toggle')}
-                onClick={cycleTheme}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={Languages}
-                label={t('language.toggle')}
-                onClick={cycleLanguage}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={List}
-                label={t('toc.toggle')}
-                onClick={toggleToc}
-                active={tocOpen}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={focusMode ? Maximize2 : EyeOff}
-                label={t('focusMode.toggle')}
-                onClick={toggleFocusMode}
-                active={focusMode}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={viewMode === 'preview' ? Eye : Columns2}
-                label={t('view.toggle')}
-                onClick={cycleViewMode}
-                className="rounded-full"
-              />
-            </ToolbarGroup>
-
-            <ToolbarGroup label={t('toolbar.zoom')}>
-              <IconButton
-                icon={Minus}
-                label={t('zoom.decrease')}
-                onClick={decreaseFontScaleStore}
-                className="rounded-full"
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={resetFontScaleStore}
-                    className="h-9 min-w-14 rounded-full px-3 text-xs font-semibold tabular-nums"
-                  >
-                    {Math.round(fontScale * 100)}%
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('zoom.reset')}</TooltipContent>
-              </Tooltip>
-              <IconButton
-                icon={Plus}
-                label={t('zoom.increase')}
-                onClick={increaseFontScaleStore}
-                className="rounded-full"
-              />
-            </ToolbarGroup>
-
-            <ToolbarGroup label={t('toolbar.export')}>
-              <DropdownMenu
-                open={isExportMenuOpen}
-                onOpenChange={setIsExportMenuOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9 rounded-full"
-                    aria-label={t('export.title')}
-                  >
-                    <Download className="size-4" aria-hidden />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
-                    {t('export.htmlStyled')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => void handleExportHtml(false)}
-                  >
-                    {t('export.htmlPlain')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPdf}>
-                    {t('export.pdf')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </ToolbarGroup>
+          <div className="-mx-1 flex w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:thin] xl:flex-wrap xl:overflow-x-visible">
+            <ToolbarFile
+              isTemplateMenuOpen={isTemplateMenuOpen}
+              setIsTemplateMenuOpen={setIsTemplateMenuOpen}
+              customTemplates={customTemplates}
+              requestDirtyConfirmation={requestDirtyConfirmation}
+              clearSession={clearSession}
+              resetUntitled={resetUntitled}
+              updateContent={updateContent}
+              setWelcomeDismissed={setWelcomeDismissed}
+              handleOpenWithConfirmation={handleOpenWithConfirmation}
+              isRecentMenuOpen={isRecentMenuOpen}
+              setIsRecentMenuOpen={setIsRecentMenuOpen}
+              recentFiles={recentFiles}
+              handleOpenRecent={handleOpenRecent}
+              handleSave={handleSave}
+              handlePrint={handlePrint}
+            />
+            <ToolbarWrite
+              autosaveEnabled={autosaveEnabled}
+              setAutosaveEnabled={setAutosaveEnabled}
+              handleOpenSearch={handleOpenSearch}
+              setIsShortcutsOpen={setIsShortcutsOpen}
+            />
+            <ToolbarView
+              cycleTheme={cycleTheme}
+              cycleLanguage={cycleLanguage}
+              toggleToc={toggleToc}
+              tocOpen={tocOpen}
+              focusMode={focusMode}
+              toggleFocusMode={toggleFocusMode}
+              toggleScrollSync={toggleScrollSync}
+              scrollSyncEnabled={scrollSyncEnabled}
+              viewMode={viewMode}
+              cycleViewMode={cycleViewMode}
+            />
+            <ToolbarZoom
+              fontScale={fontScale}
+              resetFontScaleStore={resetFontScale}
+              decreaseFontScaleStore={decreaseFontScale}
+              increaseFontScaleStore={increaseFontScale}
+            />
+            <ToolbarExport
+              isExportMenuOpen={isExportMenuOpen}
+              setIsExportMenuOpen={setIsExportMenuOpen}
+              handleExportHtml={handleExportHtml}
+              handleExportPdf={handleExportPdf}
+            />
           </div>
         </header>
 
@@ -1429,7 +1120,7 @@ export default function App() {
           <button
             type="button"
             onClick={toggleFocusMode}
-            className="fixed right-4 top-4 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="fixed right-4 top-4 z-overlay rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label={t('focusMode.toggle')}
             title={t('focusMode.toggle')}
           >
@@ -1445,7 +1136,7 @@ export default function App() {
           onMove={moveTab}
         />
 
-        <section className="relative z-10 flex min-h-0 flex-1">
+        <section className="relative z-shell flex min-h-0 flex-1">
           <Suspense fallback={null}>
             {tocOpen ? (
               <TableOfContents
@@ -1455,50 +1146,20 @@ export default function App() {
             ) : null}
           </Suspense>
           <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
-            <div
-              className={`${focusMode ? 'hidden' : 'flex'} h-12 items-center justify-between border-b border-white/50 bg-white/60 px-4 text-xs text-muted-foreground backdrop-blur dark:border-white/10 dark:bg-zinc-950/60`}
-            >
-              <div className="flex items-center gap-1">
-                {VIEW_MODES.map((mode) => (
-                  <button
-                    className="rounded-full px-3 py-1.5 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-                    type="button"
-                    aria-pressed={viewMode === mode}
-                    aria-label={t('view.selectMode', {
-                      mode: t(`view.mode.${mode}`),
-                    })}
-                    key={mode}
-                    onClick={() => setViewMode(mode)}
-                  >
-                    {t(`view.mode.${mode}`)}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  className="rounded-full px-3 py-1.5 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-                  type="button"
-                  aria-label={t('frontmatter.toggle')}
-                  title={t('frontmatter.toggle')}
-                  aria-pressed={!showFrontmatter}
-                  onClick={toggleShowFrontmatter}
-                >
-                  {showFrontmatter
-                    ? t('frontmatter.shown')
-                    : t('frontmatter.hidden')}
-                </button>
-                <span>
-                  {t(`theme.preference.${themePreference}`)} ·{' '}
-                  {t(`view.mode.${viewMode}`)}
-                </span>
-              </div>
-            </div>
+            <ViewModeBar
+              focusMode={focusMode}
+              setViewMode={setViewMode}
+              showFrontmatter={showFrontmatter}
+              themePreference={themePreference}
+              toggleShowFrontmatter={toggleShowFrontmatter}
+              viewMode={viewMode}
+            />
 
             <div
               className={
                 viewMode === 'split'
-                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-[rgb(var(--color-border))]'
-                  : 'relative min-h-0'
+                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-border'
+                  : 'relative flex min-h-0 flex-col'
               }
             >
               <Suspense fallback={null}>
@@ -1512,8 +1173,8 @@ export default function App() {
                     replaceQuery={replaceQuery}
                     onCaseSensitiveChange={setSearchCaseSensitive}
                     onClose={handleCloseSearch}
-                    onNext={() => goNextSearch(searchMatchCount)}
-                    onPrevious={() => goPreviousSearch(searchMatchCount)}
+                    onNext={() => goNext(searchMatchCount)}
+                    onPrevious={() => goPrevious(searchMatchCount)}
                     onQueryChange={setSearchQuery}
                     onReplaceAll={handleReplaceAll}
                     onReplaceOne={handleReplaceOne}
@@ -1523,7 +1184,7 @@ export default function App() {
                 ) : null}
               </Suspense>
               {viewMode !== 'preview' ? (
-                <div className="relative min-h-0 bg-background/60">
+                <div className="relative flex-1 min-h-0 bg-background/60">
                   {showWelcomeState ? (
                     <WelcomeState
                       recentFiles={recentFiles}
@@ -1533,37 +1194,45 @@ export default function App() {
                       onOpenRecent={handleOpenRecent}
                     />
                   ) : null}
-                  <Suspense
-                    fallback={
-                      <div
-                        role="textbox"
-                        aria-label={t('editor.label')}
-                        className="bruma-editor h-full min-h-0 bg-background"
-                      />
-                    }
+                  <div
+                    className="contents"
+                    aria-hidden={showWelcomeState || undefined}
+                    {...(showWelcomeState
+                      ? ({ inert: '' } as Record<string, string>)
+                      : {})}
                   >
-                    <MarkdownEditor
-                      ref={editorRef}
-                      activeSearchIndex={isSearchOpen ? searchActiveIndex : 0}
-                      ariaLabel={t('editor.label')}
-                      placeholder={t('editor.placeholder')}
-                      searchMatches={isSearchOpen ? searchMatches : []}
-                      value={document.content}
-                      onChange={(nextValue) => {
-                        setWelcomeDismissed(true);
-                        updateContent(nextValue);
-                      }}
-                      tabSize={editorTabSize}
-                      lineWrapping={editorWrap}
-                      fontFamily={editorFontFamily}
-                    />
-                  </Suspense>
+                    <Suspense
+                      fallback={
+                        <div
+                          role="textbox"
+                          aria-label={t('editor.label')}
+                          className="bruma-editor h-full min-h-0 bg-background"
+                        />
+                      }
+                    >
+                      <MarkdownEditor
+                        ref={editorRef}
+                        activeSearchIndex={isSearchOpen ? searchActiveIndex : 0}
+                        ariaLabel={t('editor.label')}
+                        placeholder={t('editor.placeholder')}
+                        searchMatches={isSearchOpen ? searchMatches : []}
+                        value={document.content}
+                        onChange={(nextValue) => {
+                          setWelcomeDismissed(true);
+                          updateContent(nextValue);
+                        }}
+                        tabSize={editorTabSize}
+                        lineWrapping={editorWrap}
+                        fontFamily={editorFontFamily}
+                      />
+                    </Suspense>
+                  </div>
                 </div>
               ) : null}
               {viewMode !== 'editor' ? (
                 <Suspense
                   fallback={
-                    <div aria-hidden className="h-full min-h-0 bg-background" />
+                    <div aria-hidden className="flex-1 min-h-0 bg-background" />
                   }
                 >
                   <Preview
@@ -1674,11 +1343,11 @@ export default function App() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t('about.title')}</DialogTitle>
-              <DialogDescription className="space-y-1">
-                <p>{t('about.body')}</p>
-                <p>{t('about.version', { version: APP_VERSION })}</p>
-              </DialogDescription>
+              <DialogDescription>{t('about.body')}</DialogDescription>
             </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t('about.version', { version: APP_VERSION })}
+            </p>
           </DialogContent>
         </Dialog>
 
@@ -1723,7 +1392,7 @@ export default function App() {
             words={textStats.words}
           />
         ) : null}
-      </main>
+      </AppShell>
     </TooltipProvider>
   );
 }

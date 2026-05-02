@@ -2,8 +2,82 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 import MarkdownIt from 'markdown-it';
 import anchor from 'markdown-it-anchor';
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
+
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (typeof node.getAttribute !== 'function') return;
+  for (const attr of ['href', 'src']) {
+    const value = node.getAttribute(attr);
+    if (value && /^\s*(?:javascript|vbscript):/i.test(value)) {
+      node.removeAttribute(attr);
+    }
+  }
+});
+
+const SANITIZE_OPTIONS = {
+  ALLOWED_TAGS: [
+    'a',
+    'blockquote',
+    'br',
+    'code',
+    'del',
+    'em',
+    'figure',
+    'figcaption',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'hr',
+    'img',
+    'input',
+    'kbd',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    's',
+    'span',
+    'strong',
+    'sub',
+    'sup',
+    'table',
+    'tbody',
+    'td',
+    'th',
+    'thead',
+    'tr',
+    'ul',
+  ],
+  ALLOWED_ATTR: [
+    'alt',
+    'aria-hidden',
+    'checked',
+    'class',
+    'disabled',
+    'href',
+    'id',
+    'name',
+    'src',
+    'target',
+    'title',
+    'type',
+  ],
+  ALLOW_DATA_ATTR: false,
+  FORBID_ATTR: ['style', 'onerror', 'onload', 'onclick'],
+};
+
+function sanitize(html) {
+  return DOMPurify.sanitize(html, SANITIZE_OPTIONS);
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -65,10 +139,10 @@ function main() {
   const description = pkg.description ?? 'Editor Markdown de escritorio.';
 
   const md = createMarkdownRenderer();
-  const readmeHtml = md.render(readmeRaw);
-  const changelogHtml = md.render(changelogRaw);
+  const readmeHtml = sanitize(md.render(readmeRaw));
+  const changelogHtml = sanitize(md.render(changelogRaw));
   const latestChangelogMd = extractLatestChangelogMarkdown(changelogRaw);
-  const latestChangelogHtml = md.render(latestChangelogMd);
+  const latestChangelogHtml = sanitize(md.render(latestChangelogMd));
 
   const now = new Date();
   const buildDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -85,8 +159,28 @@ function main() {
   fs.mkdirSync(distDir, { recursive: true });
   fs.writeFileSync(path.join(distDir, 'index.html'), template, 'utf8');
 
-  for (const file of ['styles.css', 'app.js', 'icon.svg', 'favicon.svg']) {
+  for (const file of [
+    'styles.css',
+    'app.js',
+    'icon.svg',
+    'favicon.svg',
+    'og-image.svg',
+  ]) {
     fs.copyFileSync(path.join(landingSrc, file), path.join(distDir, file));
+  }
+
+  // Copia los archivos de la fuente Inter al dist
+  const interSrc = path.join(
+    __dirname,
+    'node_modules',
+    '@fontsource-variable',
+    'inter',
+    'files'
+  );
+  const interDist = path.join(distDir, 'fonts', 'inter');
+  fs.mkdirSync(interDist, { recursive: true });
+  for (const file of fs.readdirSync(interSrc)) {
+    fs.copyFileSync(path.join(interSrc, file), path.join(interDist, file));
   }
 
   console.log('landing build ok → dist/');

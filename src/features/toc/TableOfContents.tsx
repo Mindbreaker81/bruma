@@ -14,7 +14,7 @@ export function TableOfContents({ content, onSelect }: TableOfContentsProps) {
   return (
     <aside
       className="flex h-full min-h-0 w-72 shrink-0 flex-col border-r border-white/50 bg-white/70 backdrop-blur animate-in fade-in slide-in-from-left-2 duration-200 dark:border-white/10 dark:bg-zinc-950/70"
-      aria-label="Table of contents"
+      aria-label={t('toc.label')}
     >
       <header className="flex h-12 shrink-0 items-center px-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         {t('toc.title')}
