@@ -23,6 +23,8 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
 - Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
 - Soporte restaurado de cierre nativo con `Cmd+Q` en macOS
+- Exportacion PDF programatica (A4, paginada) y exportacion HTML con estilos o plano
+- Imprimir documento desde toolbar o menu nativo
 - Carga diferida de editor, preview, busqueda, dialogos y export para reducir el JS inicial
 - Reporte de bundle local con `npm run build:analyze`
 

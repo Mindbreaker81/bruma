@@ -6,6 +6,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-05-02
+
+### Added
+
+- Exportacion PDF programatica usando `html2canvas` + `pdf-lib`: genera un PDF real paginado en A4 a partir de la vista previa del documento (EL220).
+- Nuevo comando Tauri `save_binary_export_dialog` para guardar archivos binarios codificados en base64 mediante dialogo nativo del SO.
+- Boton "Imprimir" en la barra de herramientas y accion `Archivo > Imprimir` en el menu nativo, separado del flujo de exportacion PDF.
+- Modulo `src/lib/shortcuts.ts` con registro de comandos (`COMMAND_REGISTRY`), formateo de atajos para mostrar, normalizacion de bindings, deteccion de conflictos y coincidencia de eventos de teclado.
+
+### Fixed
+
+- Al cerrar el panel de busqueda, la seleccion del editor se colapsa a la posicion actual eliminando el resaltado de coincidencias sobrantes.
+- Sincronizacion de scroll corregida para evitar saltos espurios: ya no se dispara si la fuente no es la vista previa o si no hay scroll activo.
+
+### Changed
+
+- Etiqueta de exportacion PDF cambiada de `PDF (imprimir)` a `PDF` (`es`/`en`).
+- Clave `scrollSync.toggle` pasa a ser la etiqueta corta del control; la descripcion larga se mueve a `scrollSync.description`.
+
 ## [1.4.0] - 2026-05-01
 
 ### Added
