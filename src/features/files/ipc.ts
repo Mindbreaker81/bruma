@@ -66,6 +66,18 @@ export async function readImageAsDataUrl(
   }
 }
 
+export async function saveBinaryExportDialog(args: {
+  bytes: number[];
+  suggested?: string;
+  extension: string;
+  label?: string;
+}): Promise<SavedFile | null> {
+  if (!isTauriRuntime()) {
+    throw new Error('fileDialogUnavailable');
+  }
+  return invoke<SavedFile | null>('save_binary_export_dialog', args);
+}
+
 export async function saveExportDialog(args: {
   content: string;
   suggested?: string;

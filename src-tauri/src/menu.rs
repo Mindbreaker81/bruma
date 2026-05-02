@@ -170,6 +170,8 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
         true,
         Some("CmdOrCtrl+Shift+S"),
     )?;
+    let print_separator = PredefinedMenuItem::separator(app)?;
+    let file_print = MenuItem::with_id(app, "file_print", "Imprimir...", true, Some("CmdOrCtrl+P"))?;
 
     Submenu::with_items(
         app,
@@ -182,6 +184,8 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
             &separator,
             &file_save,
             &file_save_as,
+            &print_separator,
+            &file_print,
         ],
     )
 }

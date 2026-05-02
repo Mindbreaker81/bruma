@@ -12,7 +12,8 @@
   "actions": {
     "save": "Save",
     "newDocument": "New document",
-    "openDocument": "Open document"
+    "openDocument": "Open document",
+    "print": "Print"
   },
   "document": {
     "dirtyMark": "(unsaved)",
@@ -43,7 +44,7 @@
     "open": "Export",
     "htmlStyled": "Styled HTML",
     "htmlPlain": "Plain HTML",
-    "pdf": "PDF (print)"
+    "pdf": "PDF"
   },
   "externalLink": {
     "body": "You're about to open an external link in your browser. Continue?",
@@ -52,7 +53,8 @@
     "title": "Open external link"
   },
   "scrollSync": {
-    "toggle": "Sync editor and preview scrolling"
+    "toggle": "Scroll sync",
+    "description": "Sync editor and preview scrolling"
   },
   "recent": {
     "empty": "No recent files.",

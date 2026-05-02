@@ -4,6 +4,7 @@ import {
   COMMAND_REGISTRY,
   type CommandId,
   detectConflicts,
+  formatBindingForDisplay,
   normalizeBinding,
 } from '../../lib/shortcuts';
 
@@ -182,7 +183,9 @@ export function ShortcutsDialog({
                           type="button"
                           onClick={() => setEditingId(cmd.id)}
                         >
-                          {binding ?? t('shortcuts.unbound')}
+                          {binding
+                            ? formatBindingForDisplay(binding)
+                            : t('shortcuts.unbound')}
                         </button>
                       )}
                     </td>

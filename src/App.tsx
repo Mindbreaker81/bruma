@@ -7,12 +7,12 @@ import FileInput from 'lucide-react/dist/esm/icons/file-input.js';
 import FileText from 'lucide-react/dist/esm/icons/file-text.js';
 import Keyboard from 'lucide-react/dist/esm/icons/keyboard.js';
 import Languages from 'lucide-react/dist/esm/icons/languages.js';
-import LinkIcon from 'lucide-react/dist/esm/icons/link.js';
 import List from 'lucide-react/dist/esm/icons/list.js';
 import Maximize2 from 'lucide-react/dist/esm/icons/maximize-2.js';
 import Minus from 'lucide-react/dist/esm/icons/minus.js';
 import Moon from 'lucide-react/dist/esm/icons/moon.js';
 import Plus from 'lucide-react/dist/esm/icons/plus.js';
+import Printer from 'lucide-react/dist/esm/icons/printer.js';
 import Save from 'lucide-react/dist/esm/icons/save.js';
 import Search from 'lucide-react/dist/esm/icons/search.js';
 import X from 'lucide-react/dist/esm/icons/x.js';
@@ -69,6 +69,7 @@ import {
   openFileDialog,
   readFile,
   readImageAsDataUrl,
+  saveBinaryExportDialog,
   saveExportDialog,
   saveFile,
   saveFileDialog,
@@ -217,6 +218,7 @@ type MenuHandlers = {
   handleNewDocument: () => void;
   handleOpenSearch: () => void;
   handleOpenWithConfirmation: () => void;
+  handlePrint: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
   openAbout: () => void;
@@ -367,6 +369,7 @@ export default function App() {
     handleNewDocument: () => {},
     handleOpenSearch: () => {},
     handleOpenWithConfirmation: () => {},
+    handlePrint: () => {},
     handleSave: () => Promise.resolve(false),
     handleSaveAs: () => Promise.resolve(false),
     openAbout: () => {},
@@ -464,10 +467,63 @@ export default function App() {
     [displayName, document.content, showError, t]
   );
 
-  const handleExportPdf = useCallback(() => {
+  const handleExportPdf = useCallback(async () => {
     setIsExportMenuOpen(false);
-    // Best-effort: rely on the print-to-PDF dialog provided by the OS.
-    // CSS in print media restricts to the preview surface only.
+    try {
+      const [{ buildExportHtml }, { jsPDF }, html2canvas] = await Promise.all([
+        import('./lib/export'),
+        import('jspdf'),
+        import('html2canvas'),
+      ]);
+
+      const html = buildExportHtml(document.content, {
+        title: displayName,
+        includeStyles: true,
+      });
+
+      const container = window.document.createElement('div');
+      container.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:794px;background:#fff;';
+      container.innerHTML = html;
+      window.document.body.appendChild(container);
+
+      const body = container.querySelector('body') ?? container;
+      const canvas = await html2canvas.default(body as HTMLElement, {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: 794,
+      });
+      window.document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      let yOffset = 0;
+
+      while (yOffset < imgH) {
+        if (yOffset > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -yOffset, imgW, imgH);
+        yOffset += pageH;
+      }
+
+      const pdfArray = Array.from(new Uint8Array(pdf.output('arraybuffer') as ArrayBuffer));
+
+      await saveBinaryExportDialog({
+        bytes: pdfArray,
+        extension: 'pdf',
+        label: 'PDF',
+        suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
+      });
+    } catch {
+      showError(t('errors.exportFailed'));
+    }
+  }, [displayName, document.content, showError, t]);
+
+  const handlePrint = useCallback(() => {
     window.setTimeout(() => window.print(), 100);
   }, []);
 
@@ -791,6 +847,7 @@ export default function App() {
       handleNewDocument,
       handleOpenSearch,
       handleOpenWithConfirmation,
+      handlePrint,
       handleSave,
       handleSaveAs,
       openAbout: () => setIsAboutOpen(true),
@@ -803,6 +860,7 @@ export default function App() {
     handleNewDocument,
     handleOpenSearch,
     handleOpenWithConfirmation,
+    handlePrint,
     handleSave,
     handleSaveAs,
     setLanguage,
@@ -967,6 +1025,10 @@ export default function App() {
 
       if (action === 'file_save_as') {
         void handlers.handleSaveAs();
+      }
+
+      if (action === 'file_print') {
+        handlers.handlePrint();
       }
 
       if (action === 'edit_find') {
@@ -1200,6 +1262,12 @@ export default function App() {
                 onClick={() => void handleSave()}
                 className="rounded-full"
               />
+              <IconButton
+                icon={Printer}
+                label={t('actions.print')}
+                onClick={handlePrint}
+                className="rounded-full"
+              />
             </ToolbarGroup>
 
             <ToolbarGroup label={t('toolbar.write')}>
@@ -1214,6 +1282,22 @@ export default function App() {
                   id="toolbar-autosave"
                   checked={autosaveEnabled}
                   onCheckedChange={setAutosaveEnabled}
+                />
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-stone-100/80 px-3 py-1.5 dark:bg-white/5">
+                <label
+                  htmlFor="toolbar-scroll-sync"
+                  className="cursor-pointer text-xs font-medium text-muted-foreground"
+                  title={t('scrollSync.description')}
+                >
+                  {t('scrollSync.toggle')}
+                </label>
+                <Switch
+                  id="toolbar-scroll-sync"
+                  checked={scrollSyncEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked !== scrollSyncEnabled) toggleScrollSync();
+                  }}
                 />
               </div>
               <IconButton
@@ -1255,13 +1339,6 @@ export default function App() {
                 label={t('focusMode.toggle')}
                 onClick={toggleFocusMode}
                 active={focusMode}
-                className="rounded-full"
-              />
-              <IconButton
-                icon={LinkIcon}
-                label={t('scrollSync.toggle')}
-                onClick={toggleScrollSync}
-                active={scrollSyncEnabled}
                 className="rounded-full"
               />
               <IconButton
@@ -1450,10 +1527,10 @@ export default function App() {
                   >
                     <MarkdownEditor
                       ref={editorRef}
-                      activeSearchIndex={searchActiveIndex}
+                      activeSearchIndex={isSearchOpen ? searchActiveIndex : 0}
                       ariaLabel={t('editor.label')}
                       placeholder={t('editor.placeholder')}
-                      searchMatches={searchMatches}
+                      searchMatches={isSearchOpen ? searchMatches : []}
                       value={document.content}
                       onChange={(nextValue) => {
                         setWelcomeDismissed(true);

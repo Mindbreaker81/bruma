@@ -12,7 +12,8 @@
   "actions": {
     "save": "Guardar",
     "newDocument": "Nuevo documento",
-    "openDocument": "Abrir documento"
+    "openDocument": "Abrir documento",
+    "print": "Imprimir"
   },
   "document": {
     "dirtyMark": "(sin guardar)",
@@ -43,7 +44,7 @@
     "open": "Exportar",
     "htmlStyled": "HTML con estilos",
     "htmlPlain": "HTML simple",
-    "pdf": "PDF (imprimir)"
+    "pdf": "PDF"
   },
   "externalLink": {
     "body": "Vas a abrir un enlace externo en el navegador. ¿Continuar?",
@@ -52,7 +53,8 @@
     "title": "Abrir enlace externo"
   },
   "scrollSync": {
-    "toggle": "Sincronizar desplazamiento entre editor y preview"
+    "toggle": "Sincronizar scroll",
+    "description": "Sincronizar desplazamiento entre editor y preview"
   },
   "recent": {
     "empty": "No hay archivos recientes.",

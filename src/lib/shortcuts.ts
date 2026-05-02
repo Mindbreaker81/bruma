@@ -115,6 +115,48 @@ export const COMMAND_REGISTRY: Record<CommandId, CommandDefinition> = {
   },
 };
 
+function isMacOS(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Mac|iPhone|iPad/i.test(navigator.platform) || /Mac/i.test(navigator.userAgent);
+}
+
+export function formatBindingForDisplay(binding: string | null): string {
+  if (!binding) return '';
+  const parts = binding.split('+');
+  if (isMacOS()) {
+    return parts
+      .map((p) => {
+        switch (p.toLowerCase()) {
+          case 'mod':
+            return '⌘';
+          case 'shift':
+            return '⇧';
+          case 'alt':
+            return '⌥';
+          case 'ctrl':
+            return '⌃';
+          default:
+            return p.toUpperCase();
+        }
+      })
+      .join('');
+  }
+  return parts
+    .map((p) => {
+      switch (p.toLowerCase()) {
+        case 'mod':
+          return 'Ctrl';
+        case 'shift':
+          return 'Shift';
+        case 'alt':
+          return 'Alt';
+        default:
+          return p.charAt(0).toUpperCase() + p.slice(1);
+      }
+    })
+    .join('+');
+}
+
 export function normalizeBinding(binding: string): string {
   return binding
     .toLowerCase()
