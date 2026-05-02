@@ -298,8 +298,6 @@ export const MarkdownEditor = forwardRef<
   }, []);
 
   useEffect(() => {
-    const enabled = useScrollSyncStore.getState().enabled;
-    if (!enabled) return;
     return useScrollSyncStore.subscribe((state, prev) => {
       if (!state.enabled) return;
       if (state.source !== 'preview') return;

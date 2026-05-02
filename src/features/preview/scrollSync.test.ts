@@ -33,6 +33,16 @@ describe('scrollSync', () => {
     expect(useScrollSyncStore.getState().source).toBeNull();
   });
 
+  it('clears the last scroll event when sync is disabled', () => {
+    useScrollSyncStore.getState().emit('editor', 0.6);
+    useScrollSyncStore.getState().setEnabled(false);
+    expect(useScrollSyncStore.getState()).toMatchObject({
+      enabled: false,
+      ratio: 0,
+      source: null,
+    });
+  });
+
   it('toggles enabled', () => {
     useScrollSyncStore.getState().toggle();
     expect(useScrollSyncStore.getState().enabled).toBe(false);

@@ -49,6 +49,8 @@ import { useTauriMenuBridge } from './hooks/useTauriMenuBridge';
 import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession, readSession, writeSession } from './lib/session';
+import { stripFrontmatter } from './lib/frontmatter';
+import { renderSafeMarkdown } from './lib/markdown';
 import { useScrollSyncStore } from './features/preview/scrollSync';
 import {
   findSearchMatches,
@@ -73,7 +75,11 @@ import type { CommandId } from './lib/shortcuts';
 import { useShortcutRegistry } from './lib/useShortcut';
 import type { Template } from './features/templates/templates';
 import { X } from 'lucide-react';
-import { isTauriRuntime, setAppWindowTitle } from './lib/tauri';
+import {
+  isTauriRuntime,
+  printCurrentWindow,
+  setAppWindowTitle,
+} from './lib/tauri';
 
 const ConfirmDirtyDialog = lazy(() =>
   import('./features/files/ConfirmDirtyDialog').then((module) => ({
@@ -122,6 +128,113 @@ const MarkdownEditor = lazy(() =>
     default: module.MarkdownEditor,
   }))
 );
+
+const EXPORT_CANVAS_WIDTH = 794;
+const PDF_CANVAS_SCALE = 1.5;
+const PDF_PAGE_WIDTH = 595.28;
+const PDF_PAGE_HEIGHT = 841.89;
+const PRINT_DELAY_MS = 100;
+
+type Html2CanvasModule = typeof import('html2canvas');
+type ExportModule = typeof import('./lib/export');
+
+function isAbsoluteExportUrl(value: string): boolean {
+  try {
+    return Boolean(new URL(value));
+  } catch {
+    return false;
+  }
+}
+
+function waitForImage(image: HTMLImageElement): Promise<void> {
+  if (image.complete) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const done = () => resolve();
+    image.addEventListener('load', done, { once: true });
+    image.addEventListener('error', done, { once: true });
+  });
+}
+
+async function waitForExportAssets(root: HTMLElement): Promise<void> {
+  await Promise.all(Array.from(root.querySelectorAll('img')).map(waitForImage));
+
+  if ('fonts' in window.document) {
+    await window.document.fonts.ready.catch(() => undefined);
+  }
+}
+
+async function resolveLocalExportImages(
+  root: HTMLElement,
+  documentPath: string | null
+): Promise<void> {
+  if (!documentPath) return;
+
+  const images = Array.from(root.querySelectorAll('img'));
+
+  await Promise.all(
+    images.map(async (image) => {
+      const original = image.getAttribute('src') ?? '';
+      if (!original || isAbsoluteExportUrl(original)) return;
+      const dataUrl = await readImageAsDataUrl(documentPath, original);
+      if (dataUrl) image.setAttribute('src', dataUrl);
+    })
+  );
+}
+
+async function renderPdfCanvas(
+  source: string,
+  documentPath: string | null,
+  exportModule: ExportModule,
+  html2canvas: Html2CanvasModule
+): Promise<HTMLCanvasElement> {
+  const className = 'bruma-pdf-export';
+  const style = window.document.createElement('style');
+  const container = window.document.createElement('div');
+
+  style.textContent = exportModule.buildScopedExportStyles(`.${className}`);
+  container.className = className;
+  container.innerHTML = exportModule.buildExportContentHtml(source);
+  container.style.position = 'fixed';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.width = `${EXPORT_CANVAS_WIDTH}px`;
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '-1';
+
+  window.document.head.appendChild(style);
+  window.document.body.appendChild(container);
+
+  try {
+    await resolveLocalExportImages(container, documentPath);
+    await waitForExportAssets(container);
+
+    const height = Math.max(container.scrollHeight, container.offsetHeight, 1);
+    const canvas = await html2canvas.default(container, {
+      backgroundColor: '#ffffff',
+      height,
+      logging: false,
+      scale: PDF_CANVAS_SCALE,
+      scrollX: 0,
+      scrollY: 0,
+      useCORS: true,
+      width: EXPORT_CANVAS_WIDTH,
+      windowHeight: height,
+      windowWidth: EXPORT_CANVAS_WIDTH,
+    });
+
+    if (canvas.width <= 0 || canvas.height <= 0) {
+      throw new Error('empty_pdf_canvas');
+    }
+
+    return canvas;
+  } finally {
+    container.remove();
+    style.remove();
+  }
+}
 
 type MenuHandlers = {
   cycleTheme: () => void;
@@ -302,6 +415,7 @@ export default function App() {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [shortcuts, setShortcutsState] = useState<
     Partial<Record<CommandId, string | null>>
   >(() => readConfig().shortcuts);
@@ -453,40 +567,19 @@ export default function App() {
   const handleExportPdf = useCallback(async () => {
     setIsExportMenuOpen(false);
     try {
-      const [{ buildExportHtml }, { PDFDocument }, html2canvas] =
-        await Promise.all([
-          import('./lib/export'),
-          import('pdf-lib'),
-          import('html2canvas'),
-        ]);
+      const [exportModule, { PDFDocument }, html2canvas] = await Promise.all([
+        import('./lib/export'),
+        import('pdf-lib'),
+        import('html2canvas'),
+      ]);
 
-      const html = buildExportHtml(document.content, {
-        title: displayName,
-        includeStyles: true,
-      });
-
-      const container = window.document.createElement('div');
-      container.style.cssText =
-        'position:fixed;left:-9999px;top:0;width:794px;background:#fff;';
-      container.innerHTML = html;
-      window.document.body.appendChild(container);
-
-      let canvas: Awaited<ReturnType<(typeof html2canvas)['default']>>;
-      try {
-        const body = container.querySelector('body') ?? container;
-        canvas = await html2canvas.default(body as HTMLElement, {
-          scale: 1.5,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          windowWidth: 794,
-        });
-      } finally {
-        window.document.body.removeChild(container);
-      }
-
-      const A4_W = 595.28;
-      const A4_H = 841.89;
-      const imgH = (canvas.height * A4_W) / canvas.width;
+      const canvas = await renderPdfCanvas(
+        document.content,
+        document.path ?? null,
+        exportModule,
+        html2canvas
+      );
+      const imgH = (canvas.height * PDF_PAGE_WIDTH) / canvas.width;
 
       const pdfDoc = await PDFDocument.create();
       const b64 = canvas
@@ -495,16 +588,15 @@ export default function App() {
       const pngBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const pngImage = await pdfDoc.embedPng(pngBytes);
 
-      let yOffset = 0;
-      while (yOffset < imgH) {
-        const page = pdfDoc.addPage([A4_W, A4_H]);
+      const pageCount = Math.max(1, Math.ceil(imgH / PDF_PAGE_HEIGHT));
+      for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+        const page = pdfDoc.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT]);
         page.drawImage(pngImage, {
           x: 0,
-          y: A4_H - imgH + yOffset,
-          width: A4_W,
+          y: PDF_PAGE_HEIGHT - imgH + pageIndex * PDF_PAGE_HEIGHT,
+          width: PDF_PAGE_WIDTH,
           height: imgH,
         });
-        yOffset += A4_H;
       }
 
       const pdfB64 = await pdfDoc.saveAsBase64({ dataUri: false });
@@ -519,11 +611,21 @@ export default function App() {
       console.error('PDF export failed:', error);
       showError(t('errors.exportFailed'));
     }
-  }, [displayName, document.content, showError, t]);
+  }, [displayName, document.content, document.path, showError, t]);
 
   const handlePrint = useCallback(() => {
-    window.setTimeout(() => window.print(), 100);
-  }, []);
+    const source = showFrontmatter
+      ? document.content
+      : stripFrontmatter(document.content);
+    setPrintHtml(renderSafeMarkdown(source));
+
+    window.setTimeout(() => {
+      void printCurrentWindow().catch((error) => {
+        console.error('Print failed:', error);
+        window.print();
+      });
+    }, PRINT_DELAY_MS);
+  }, [document.content, showFrontmatter]);
 
   const handleExternalLinkClick = useCallback((href: string) => {
     setExternalLinkPrompt(href);
@@ -1249,6 +1351,14 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        {printHtml ? (
+          <div
+            aria-hidden
+            className="bruma-print-document"
+            dangerouslySetInnerHTML={{ __html: printHtml }}
+          />
+        ) : null}
 
         <Suspense fallback={null}>
           {pendingDirtyAction ? (

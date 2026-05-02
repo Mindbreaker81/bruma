@@ -13,6 +13,17 @@ export async function setAppWindowTitle(title: string): Promise<void> {
   await getCurrentWindow().setTitle(title);
 }
 
+export async function printCurrentWindow(): Promise<void> {
+  if (!isTauriRuntime()) {
+    window.print();
+    return;
+  }
+
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  await invoke('print_current_window');
+}
+
 export async function listenToMenuActions(
   handler: (action: string) => void
 ): Promise<() => void> {

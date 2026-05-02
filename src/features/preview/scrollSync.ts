@@ -26,6 +26,18 @@ export const useScrollSyncStore = create<ScrollSyncState>((set, get) => ({
     if (!get().enabled) return;
     set({ source, ratio: clampRatio(ratio) });
   },
-  setEnabled: (enabled) => set({ enabled }),
-  toggle: () => set({ enabled: !get().enabled }),
+  setEnabled: (enabled) =>
+    set((state) => ({
+      enabled,
+      ratio: enabled ? state.ratio : 0,
+      source: enabled ? state.source : null,
+    })),
+  toggle: () => {
+    const enabled = !get().enabled;
+    set((state) => ({
+      enabled,
+      ratio: enabled ? state.ratio : 0,
+      source: enabled ? state.source : null,
+    }));
+  },
 }));
