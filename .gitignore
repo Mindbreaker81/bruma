@@ -39,6 +39,7 @@ Thumbs.db
 .settings/
 *.sublime-project
 *.sublime-workspace
+._*
 
 # Local tooling / CLI state (machine-specific)
 .todos/
