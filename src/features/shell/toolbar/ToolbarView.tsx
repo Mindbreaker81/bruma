@@ -4,7 +4,6 @@ import { IconButton, ToolbarGroup } from '../../../components/ui/icon-button';
 import {
   Columns2,
   Eye,
-  LinkIcon,
   EyeOff,
   Maximize2,
   List,
@@ -19,8 +18,6 @@ type ToolbarViewProps = {
   tocOpen: boolean;
   focusMode: boolean;
   toggleFocusMode: () => void;
-  toggleScrollSync: () => void;
-  scrollSyncEnabled: boolean;
   viewMode: string;
   cycleViewMode: () => void;
 };
@@ -32,8 +29,6 @@ export function ToolbarView({
   tocOpen,
   focusMode,
   toggleFocusMode,
-  toggleScrollSync,
-  scrollSyncEnabled,
   viewMode,
   cycleViewMode,
 }: ToolbarViewProps) {
@@ -65,13 +60,6 @@ export function ToolbarView({
         label={t('focusMode.toggle')}
         onClick={toggleFocusMode}
         active={focusMode}
-        className="rounded-full"
-      />
-      <IconButton
-        icon={LinkIcon}
-        label={t('scrollSync.toggle')}
-        onClick={toggleScrollSync}
-        active={scrollSyncEnabled}
         className="rounded-full"
       />
       <IconButton

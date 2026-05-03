@@ -1,6 +1,6 @@
 [package]
 name = "bruma"
-version = "1.4.2"
+version = "1.4.4"
 description = "Editor Markdown de escritorio: ligero, local y simple."
 authors = ["mindbreaker81"]
 edition = "2021"

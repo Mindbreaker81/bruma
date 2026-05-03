@@ -4,10 +4,8 @@ import type { ViewMode } from '../features/settings/view';
 import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
 import type { Template } from '../features/templates/templates';
 
-export const CONFIG_VERSION = 7;
+export const CONFIG_VERSION = 9;
 const CONFIG_STORAGE_KEY = 'bruma.config';
-
-import type { CommandId } from '../lib/shortcuts';
 
 export type AppConfig = {
   version: number;
@@ -27,7 +25,7 @@ export type AppConfig = {
   editorWrap: boolean;
   previewMaxWidth: number;
   previewShowToc: boolean;
-  shortcuts: Partial<Record<CommandId, string | null>>;
+  splitScrollSync: boolean;
   customTemplates: Template[];
 };
 
@@ -49,7 +47,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   editorWrap: true,
   previewMaxWidth: 65,
   previewShowToc: false,
-  shortcuts: {},
+  splitScrollSync: false,
   customTemplates: [],
 };
 
@@ -140,6 +138,10 @@ export function migrateConfig(input: unknown): AppConfig {
     typeof config.previewShowToc === 'boolean'
       ? config.previewShowToc
       : DEFAULT_CONFIG.previewShowToc;
+  const splitScrollSync =
+    typeof config.splitScrollSync === 'boolean'
+      ? config.splitScrollSync
+      : DEFAULT_CONFIG.splitScrollSync;
 
   const customTemplates =
     Array.isArray((config as Record<string, unknown>).customTemplates) &&
@@ -165,13 +167,7 @@ export function migrateConfig(input: unknown): AppConfig {
     editorWrap,
     previewMaxWidth,
     previewShowToc,
-    shortcuts:
-      typeof (config as Record<string, unknown>).shortcuts === 'object' &&
-      (config as Record<string, unknown>).shortcuts !== null
-        ? ((config as Record<string, unknown>).shortcuts as Partial<
-            Record<CommandId, string | null>
-          >)
-        : {},
+    splitScrollSync,
     customTemplates,
   };
 }

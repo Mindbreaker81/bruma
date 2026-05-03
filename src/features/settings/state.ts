@@ -38,6 +38,7 @@ type ThemeState = {
   editorWrap: boolean;
   previewMaxWidth: number;
   previewShowToc: boolean;
+  splitScrollSync: boolean;
   setPreference: (preference: ThemePreference) => void;
   cycleTheme: () => void;
   setLanguage: (language: LanguagePreference) => void;
@@ -63,6 +64,7 @@ type ThemeState = {
   setEditorWrap: (wrap: boolean) => void;
   setPreviewMaxWidth: (width: number) => void;
   setPreviewShowToc: (show: boolean) => void;
+  setSplitScrollSync: (enabled: boolean) => void;
 };
 
 function getSystemPrefersDark(): boolean {
@@ -180,6 +182,11 @@ function applyPreviewShowToc(show: boolean): boolean {
   return show;
 }
 
+function applySplitScrollSync(enabled: boolean): boolean {
+  patchConfig({ splitScrollSync: enabled });
+  return enabled;
+}
+
 const initialConfig = readConfig();
 const initialPreference = readStoredPreference();
 const initialLanguage = readStoredLanguage();
@@ -266,6 +273,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   editorWrap: initialConfig.editorWrap ?? true,
   previewMaxWidth: initialConfig.previewMaxWidth ?? 65,
   previewShowToc: initialConfig.previewShowToc ?? false,
+  splitScrollSync: initialConfig.splitScrollSync ?? false,
   setAutosaveEnabled: (enabled) =>
     set(() => ({ autosaveEnabled: applyAutosaveEnabled(enabled) })),
   setAutosaveDelayMs: (delayMs) =>
@@ -281,4 +289,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set(() => ({ previewMaxWidth: applyPreviewMaxWidth(width) })),
   setPreviewShowToc: (show) =>
     set(() => ({ previewShowToc: applyPreviewShowToc(show) })),
+  setSplitScrollSync: (enabled) =>
+    set(() => ({ splitScrollSync: applySplitScrollSync(enabled) })),
 }));

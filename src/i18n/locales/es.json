@@ -43,18 +43,13 @@
   "export": {
     "open": "Exportar",
     "htmlStyled": "HTML con estilos",
-    "htmlPlain": "HTML simple",
-    "pdf": "PDF"
+    "htmlPlain": "HTML simple"
   },
   "externalLink": {
     "body": "Vas a abrir un enlace externo en el navegador. ¿Continuar?",
     "cancel": "Cancelar",
     "confirm": "Abrir",
     "title": "Abrir enlace externo"
-  },
-  "scrollSync": {
-    "toggle": "Sincronizar scroll",
-    "description": "Sincronizar desplazamiento entre editor y preview"
   },
   "recent": {
     "empty": "No hay archivos recientes.",
@@ -150,32 +145,6 @@
     "unsaved": "Cambios sin guardar",
     "close": "Cerrar {{name}}"
   },
-  "shortcuts": {
-    "title": "Atajos de teclado",
-    "command": "Comando",
-    "binding": "Atajo",
-    "unbound": "Sin atajo",
-    "newDocument": "Nuevo documento",
-    "openDocument": "Abrir documento",
-    "saveDocument": "Guardar documento",
-    "saveAsDocument": "Guardar como...",
-    "closeTab": "Cerrar pestaña",
-    "newTab": "Nueva pestaña",
-    "nextTab": "Pestaña siguiente",
-    "previousTab": "Pestaña anterior",
-    "toggleSearch": "Buscar",
-    "toggleTheme": "Cambiar tema",
-    "toggleViewMode": "Cambiar vista",
-    "toggleFocusMode": "Modo enfoque",
-    "togglePreferences": "Preferencias",
-    "toggleTemplateMenu": "Plantillas",
-    "exportHtml": "Exportar HTML",
-    "pressKeys": "Pulsa la combinacion...",
-    "cancel": "Cancelar",
-    "record": "Grabar",
-    "reset": "Restablecer",
-    "resetTooltip": "Restablecer al valor por defecto"
-  },
   "preferences": {
     "title": "Preferencias",
     "close": "Cerrar",
@@ -197,6 +166,7 @@
   "view": {
     "editor": "Editor",
     "selectMode": "Seleccionar vista: {{mode}}",
+    "syncScroll": "Sincronizar scroll",
     "toggle": "Cambiar modo de vista",
     "mode": {
       "editor": "Editor",
@@ -219,8 +189,6 @@
     "openDocument": "Abrir archivo",
     "recentLabel": "Continuar",
     "noRecent": "Todavía no hay archivos recientes en esta instalación.",
-    "shortcutsTitle": "Atajos visibles",
-    "shortcutsBody": "Abre el panel de atajos desde la toolbar y ajusta el flujo al teclado sin salir del editor.",
     "searchTitle": "Búsqueda integrada",
     "searchBody": "La búsqueda queda anclada al área de trabajo para revisar coincidencias sin tapar el documento.",
     "previewTitle": "Vista dividida",

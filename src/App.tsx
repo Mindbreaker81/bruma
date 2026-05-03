@@ -35,7 +35,6 @@ import {
   openFileDialog,
   readFile,
   readImageAsDataUrl,
-  saveBinaryExportDialog,
   saveExportDialog,
   saveFile,
   saveFileDialog,
@@ -51,7 +50,6 @@ import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession, readSession, writeSession } from './lib/session';
 import { stripFrontmatter } from './lib/frontmatter';
 import { renderSafeMarkdown } from './lib/markdown';
-import { useScrollSyncStore } from './features/preview/scrollSync';
 import {
   findSearchMatches,
   replaceAllMatches,
@@ -68,11 +66,9 @@ import { ToolbarZoom } from './features/shell/toolbar/ToolbarZoom';
 import { AppShell } from './features/shell/AppShell';
 import { ViewModeBar } from './features/shell/ViewModeBar';
 import { WelcomeState } from './features/shell/WelcomeState';
+import { useSplitScrollSync } from './features/shell/useSplitScrollSync';
 import { APP_VERSION } from './lib/app';
-import { patchConfig, readConfig } from './lib/config';
 import { getTextStats } from './lib/textStats';
-import type { CommandId } from './lib/shortcuts';
-import { useShortcutRegistry } from './lib/useShortcut';
 import type { Template } from './features/templates/templates';
 import { X } from 'lucide-react';
 import {
@@ -96,12 +92,6 @@ const RestoreSessionDialog = lazy(() =>
 const PreferencesDialog = lazy(() =>
   import('./features/settings/PreferencesDialog').then((module) => ({
     default: module.PreferencesDialog,
-  }))
-);
-
-const ShortcutsDialog = lazy(() =>
-  import('./features/settings/ShortcutsDialog').then((module) => ({
-    default: module.ShortcutsDialog,
   }))
 );
 
@@ -129,113 +119,7 @@ const MarkdownEditor = lazy(() =>
   }))
 );
 
-const EXPORT_CANVAS_WIDTH = 794;
-const PDF_CANVAS_SCALE = 1.5;
-const PDF_PAGE_WIDTH = 595.28;
-const PDF_PAGE_HEIGHT = 841.89;
 const PRINT_DELAY_MS = 100;
-
-type Html2CanvasModule = typeof import('html2canvas');
-type ExportModule = typeof import('./lib/export');
-
-function isAbsoluteExportUrl(value: string): boolean {
-  try {
-    return Boolean(new URL(value));
-  } catch {
-    return false;
-  }
-}
-
-function waitForImage(image: HTMLImageElement): Promise<void> {
-  if (image.complete) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const done = () => resolve();
-    image.addEventListener('load', done, { once: true });
-    image.addEventListener('error', done, { once: true });
-  });
-}
-
-async function waitForExportAssets(root: HTMLElement): Promise<void> {
-  await Promise.all(Array.from(root.querySelectorAll('img')).map(waitForImage));
-
-  if ('fonts' in window.document) {
-    await window.document.fonts.ready.catch(() => undefined);
-  }
-}
-
-async function resolveLocalExportImages(
-  root: HTMLElement,
-  documentPath: string | null
-): Promise<void> {
-  if (!documentPath) return;
-
-  const images = Array.from(root.querySelectorAll('img'));
-
-  await Promise.all(
-    images.map(async (image) => {
-      const original = image.getAttribute('src') ?? '';
-      if (!original || isAbsoluteExportUrl(original)) return;
-      const dataUrl = await readImageAsDataUrl(documentPath, original);
-      if (dataUrl) image.setAttribute('src', dataUrl);
-    })
-  );
-}
-
-async function renderPdfCanvas(
-  source: string,
-  documentPath: string | null,
-  exportModule: ExportModule,
-  html2canvas: Html2CanvasModule
-): Promise<HTMLCanvasElement> {
-  const className = 'bruma-pdf-export';
-  const style = window.document.createElement('style');
-  const container = window.document.createElement('div');
-
-  style.textContent = exportModule.buildScopedExportStyles(`.${className}`);
-  container.className = className;
-  container.innerHTML = exportModule.buildExportContentHtml(source);
-  container.style.position = 'fixed';
-  container.style.left = '-10000px';
-  container.style.top = '0';
-  container.style.width = `${EXPORT_CANVAS_WIDTH}px`;
-  container.style.pointerEvents = 'none';
-  container.style.background = '#ffffff';
-  container.style.color = '#18181b';
-
-  window.document.head.appendChild(style);
-  window.document.body.appendChild(container);
-
-  try {
-    await resolveLocalExportImages(container, documentPath);
-    await waitForExportAssets(container);
-
-    const height = Math.max(container.scrollHeight, container.offsetHeight, 1);
-    const canvas = await html2canvas.default(container, {
-      backgroundColor: '#ffffff',
-      height,
-      logging: false,
-      scale: PDF_CANVAS_SCALE,
-      scrollX: 0,
-      scrollY: 0,
-      useCORS: true,
-      width: EXPORT_CANVAS_WIDTH,
-      windowHeight: height,
-      windowWidth: EXPORT_CANVAS_WIDTH,
-    });
-
-    if (canvas.width <= 0 || canvas.height <= 0) {
-      throw new Error('empty_pdf_canvas');
-    }
-
-    return canvas;
-  } finally {
-    container.remove();
-    style.remove();
-  }
-}
 
 type MenuHandlers = {
   cycleTheme: () => void;
@@ -324,6 +208,8 @@ export default function App() {
     setPreviewMaxWidth,
     previewShowToc,
     setPreviewShowToc,
+    splitScrollSync,
+    setSplitScrollSync,
   } = useThemeStore(
     useShallow((state) => ({
       cycleTheme: state.cycleTheme,
@@ -362,15 +248,10 @@ export default function App() {
       setPreviewMaxWidth: state.setPreviewMaxWidth,
       previewShowToc: state.previewShowToc,
       setPreviewShowToc: state.setPreviewShowToc,
+      splitScrollSync: state.splitScrollSync,
+      setSplitScrollSync: state.setSplitScrollSync,
     }))
   );
-  const { enabled: scrollSyncEnabled, toggle: toggleScrollSync } =
-    useScrollSyncStore(
-      useShallow((state) => ({
-        enabled: state.enabled,
-        toggle: state.toggle,
-      }))
-    );
   const {
     searchActiveIndex,
     searchCaseSensitive,
@@ -415,11 +296,7 @@ export default function App() {
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
-  const [shortcuts, setShortcutsState] = useState<
-    Partial<Record<CommandId, string | null>>
-  >(() => readConfig().shortcuts);
   const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
 
   // Load custom templates on mount
@@ -460,6 +337,13 @@ export default function App() {
     activeTabId?: string | null;
   } | null>(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
+  const previewRef = useRef<HTMLElement | null>(null);
+
+  useSplitScrollSync({
+    enabled: viewMode === 'split' && splitScrollSync,
+    editorHandleRef: editorRef,
+    previewRef,
+  });
   const menuHandlersRef = useRef<MenuHandlers>({
     cycleTheme: () => {},
     cycleViewMode: () => {},
@@ -565,84 +449,6 @@ export default function App() {
     [displayName, document.content, showError, t]
   );
 
-  const handleExportPdf = useCallback(async () => {
-    setIsExportMenuOpen(false);
-    try {
-      const [exportModule, { PDFDocument }, html2canvas] = await Promise.all([
-        import('./lib/export'),
-        import('pdf-lib'),
-        import('html2canvas'),
-      ]);
-
-      const canvas = await renderPdfCanvas(
-        document.content,
-        document.path ?? null,
-        exportModule,
-        html2canvas
-      );
-
-      const pdfDoc = await PDFDocument.create();
-      const pageCanvas = window.document.createElement('canvas');
-      const pageContext = pageCanvas.getContext('2d');
-      if (!pageContext) throw new Error('pdf_page_canvas_context_unavailable');
-
-      const pageCanvasHeight = Math.floor(
-        (PDF_PAGE_HEIGHT * canvas.width) / PDF_PAGE_WIDTH
-      );
-      pageCanvas.width = canvas.width;
-
-      for (
-        let sourceY = 0;
-        sourceY < canvas.height;
-        sourceY += pageCanvasHeight
-      ) {
-        const sliceHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
-        pageCanvas.height = sliceHeight;
-        pageContext.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageContext.drawImage(
-          canvas,
-          0,
-          sourceY,
-          canvas.width,
-          sliceHeight,
-          0,
-          0,
-          pageCanvas.width,
-          sliceHeight
-        );
-
-        const sliceB64 = pageCanvas
-          .toDataURL('image/png')
-          .replace(/^data:image\/png;base64,/, '');
-        const sliceBytes = Uint8Array.from(atob(sliceB64), (c) =>
-          c.charCodeAt(0)
-        );
-        const sliceImage = await pdfDoc.embedPng(sliceBytes);
-        const page = pdfDoc.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT]);
-        const renderedHeight = (sliceHeight * PDF_PAGE_WIDTH) / canvas.width;
-
-        page.drawImage(sliceImage, {
-          x: 0,
-          y: PDF_PAGE_HEIGHT - renderedHeight,
-          width: PDF_PAGE_WIDTH,
-          height: renderedHeight,
-        });
-      }
-
-      const pdfB64 = await pdfDoc.saveAsBase64({ dataUri: false });
-
-      await saveBinaryExportDialog({
-        content: pdfB64,
-        extension: 'pdf',
-        label: 'PDF',
-        suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
-      });
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      showError(t('errors.exportFailed'));
-    }
-  }, [displayName, document.content, document.path, showError, t]);
-
   const handlePrint = useCallback(() => {
     const source = showFrontmatter
       ? document.content
@@ -711,13 +517,6 @@ export default function App() {
     },
     [isDirty]
   );
-
-  const handleNewTab = useCallback(() => {
-    requestDirtyConfirmation(() => {
-      clearSession();
-      resetUntitled();
-    });
-  }, [requestDirtyConfirmation, resetUntitled]);
 
   const runPendingDirtyAction = useCallback(async () => {
     const action = pendingDirtyAction;
@@ -1045,58 +844,6 @@ export default function App() {
     activeTabId,
   ]);
 
-  const shortcutHandlers = useMemo<Partial<Record<CommandId, () => void>>>(
-    () => ({
-      newDocument: handleNewDocument,
-      openDocument: handleOpenWithConfirmation,
-      saveDocument: () => void handleSave(),
-      saveAsDocument: () => void handleSaveAs(),
-      closeTab: () => activeTabId && handleCloseTab(activeTabId),
-      newTab: handleNewTab,
-      nextTab: () => {
-        if (tabs.length === 0) return;
-        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
-        const nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
-        activateTab(tabs[nextIndex]!.id);
-      },
-      previousTab: () => {
-        if (tabs.length === 0) return;
-        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
-        const prevIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
-        activateTab(tabs[prevIndex]!.id);
-      },
-      toggleSearch: handleOpenSearch,
-      toggleTheme: cycleTheme,
-      toggleViewMode: cycleViewMode,
-      toggleFocusMode: toggleFocusMode,
-      togglePreferences: () => setIsPreferencesOpen((open) => !open),
-      toggleTemplateMenu: () => setIsTemplateMenuOpen((open) => !open),
-      exportHtml: () => void handleExportHtml(true),
-    }),
-    [
-      handleNewDocument,
-      handleOpenWithConfirmation,
-      handleSave,
-      handleSaveAs,
-      activeTabId,
-      handleCloseTab,
-      handleNewTab,
-      tabs,
-      activateTab,
-      handleOpenSearch,
-      cycleTheme,
-      cycleViewMode,
-      toggleFocusMode,
-      handleExportHtml,
-    ]
-  );
-
-  const shortcutsMap = useMemo(
-    () => new Map(Object.entries(shortcuts)) as Map<CommandId, string | null>,
-    [shortcuts]
-  );
-  useShortcutRegistry(shortcutsMap, shortcutHandlers);
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey;
@@ -1220,7 +967,6 @@ export default function App() {
               autosaveEnabled={autosaveEnabled}
               setAutosaveEnabled={setAutosaveEnabled}
               handleOpenSearch={handleOpenSearch}
-              setIsShortcutsOpen={setIsShortcutsOpen}
             />
             <ToolbarView
               cycleTheme={cycleTheme}
@@ -1229,8 +975,6 @@ export default function App() {
               tocOpen={tocOpen}
               focusMode={focusMode}
               toggleFocusMode={toggleFocusMode}
-              toggleScrollSync={toggleScrollSync}
-              scrollSyncEnabled={scrollSyncEnabled}
               viewMode={viewMode}
               cycleViewMode={cycleViewMode}
             />
@@ -1244,7 +988,6 @@ export default function App() {
               isExportMenuOpen={isExportMenuOpen}
               setIsExportMenuOpen={setIsExportMenuOpen}
               handleExportHtml={handleExportHtml}
-              handleExportPdf={handleExportPdf}
             />
           </div>
         </header>
@@ -1281,8 +1024,10 @@ export default function App() {
           <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
             <ViewModeBar
               focusMode={focusMode}
+              setSplitScrollSync={setSplitScrollSync}
               setViewMode={setViewMode}
               showFrontmatter={showFrontmatter}
+              splitScrollSync={splitScrollSync}
               themePreference={themePreference}
               toggleShowFrontmatter={toggleShowFrontmatter}
               viewMode={viewMode}
@@ -1373,6 +1118,7 @@ export default function App() {
                 >
                   <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
                     <Preview
+                      scrollContainerRef={previewRef}
                       content={document.content}
                       documentPath={document.path ?? null}
                       hideFrontmatter={!showFrontmatter}
@@ -1469,18 +1215,6 @@ export default function App() {
               onEditorWrapChange={setEditorWrap}
               onPreviewMaxWidthChange={setPreviewMaxWidth}
               onPreviewShowTocChange={setPreviewShowToc}
-            />
-          ) : null}
-
-          {isShortcutsOpen ? (
-            <ShortcutsDialog
-              open
-              onClose={() => setIsShortcutsOpen(false)}
-              shortcuts={shortcuts}
-              onChange={(next) => {
-                setShortcutsState(next);
-                patchConfig({ shortcuts: next });
-              }}
             />
           ) : null}
         </Suspense>

@@ -249,6 +249,11 @@ Configurar `tauri.conf.json` con permisos mínimos:
 - Cambios → callback `onChange` debounced (50 ms) → actualiza `document.content` → dispara render preview con su debounce (150 ms).
 - Apertura de archivo → reemplazo de `EditorState` con `Transaction` desde el contenido cargado.
 
+### 7.3 Vista dividida y scroll
+
+- **Shell:** el layout raíz fija la altura al viewport (`#root` + `AppShell` con `h-dvh`); el scroll del documento ocurre solo dentro de los paneles editor/preview, no en la ventana entera.
+- **Sync opcional:** con modo `split` y la preferencia `splitScrollSync`, un hook (`useSplitScrollSync`) asocia el `scrollDOM` de CodeMirror con el contenedor con scroll del preview (ratio `scrollTop / max(1, scrollHeight - clientHeight)`), con flag para evitar feedback entre eventos `scroll`.
+
 ---
 
 ## 8. Búsqueda

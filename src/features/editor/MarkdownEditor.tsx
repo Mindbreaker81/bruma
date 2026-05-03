@@ -17,7 +17,6 @@ import {
 } from 'react';
 
 import type { SearchMatch } from '../search/search';
-import { useScrollSyncStore } from '../preview/scrollSync';
 import { useThemeStore } from '../settings/state';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
@@ -38,6 +37,7 @@ const CHANGE_DEBOUNCE_MS = 120;
 export type MarkdownEditorHandle = {
   focus: () => void;
   scrollToLine: (line: number) => void;
+  getScrollDOM: () => HTMLElement | null;
 };
 
 function buildSearchDecorations(
@@ -93,7 +93,6 @@ export const MarkdownEditor = forwardRef<
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<number | null>(null);
-  const ignoreNextScrollRef = useRef(false);
   const hadSearchSelectionRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
   const searchCompartmentRef = useRef(new Compartment());
@@ -111,6 +110,7 @@ export const MarkdownEditor = forwardRef<
 
   useImperativeHandle(ref, () => ({
     focus: () => editorRef.current?.focus(),
+    getScrollDOM: () => editorRef.current?.scrollDOM ?? null,
     scrollToLine: (line: number) => {
       const editor = editorRef.current;
       if (!editor) return;
@@ -174,21 +174,6 @@ export const MarkdownEditor = forwardRef<
             debounceRef.current = window.setTimeout(() => {
               onChangeRef.current(nextValue);
             }, CHANGE_DEBOUNCE_MS);
-          }),
-          EditorView.domEventHandlers({
-            scroll(_event, view) {
-              if (ignoreNextScrollRef.current) {
-                ignoreNextScrollRef.current = false;
-                return false;
-              }
-              if (!useScrollSyncStore.getState().enabled) return false;
-              const scroller = view.scrollDOM;
-              const max = scroller.scrollHeight - scroller.clientHeight;
-              if (max <= 0) return false;
-              const ratio = scroller.scrollTop / max;
-              useScrollSyncStore.getState().emit('editor', ratio);
-              return false;
-            },
           }),
         ],
       }),
@@ -294,21 +279,6 @@ export const MarkdownEditor = forwardRef<
           state.resolvedTheme === 'dark' ? brumaDarkTheme : brumaLightTheme
         ),
       });
-    });
-  }, []);
-
-  useEffect(() => {
-    return useScrollSyncStore.subscribe((state, prev) => {
-      if (!state.enabled) return;
-      if (state.source !== 'preview') return;
-      if (state.ratio === prev.ratio && state.source === prev.source) return;
-      const editor = editorRef.current;
-      if (!editor) return;
-      const scroller = editor.scrollDOM;
-      const max = scroller.scrollHeight - scroller.clientHeight;
-      if (max <= 0) return;
-      ignoreNextScrollRef.current = true;
-      scroller.scrollTop = state.ratio * max;
     });
   }, []);
 

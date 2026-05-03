@@ -1,13 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../components/ui/button';
-import { COMMAND_REGISTRY } from '../../lib/shortcuts';
 import {
   SplitSquareVertical,
   Search,
   FilePlus2,
   FileInput,
-  Command,
   Clock3,
   ArrowRight,
 } from 'lucide-react';
@@ -19,23 +17,6 @@ type WelcomeStateProps = {
   onOpenDocument: () => void;
   onOpenRecent: (path: string) => void;
 };
-
-function Kbd({ value }: { value: string | null }) {
-  if (!value) return null;
-  const parts = value.replace('Mod', '⌘').split('+');
-  return (
-    <span className="ml-1 inline-flex items-center gap-1">
-      {parts.map((p) => (
-        <kbd
-          key={p}
-          className="rounded border border-emerald-950/10 bg-white/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground shadow-sm dark:border-white/10 dark:bg-white/10"
-        >
-          {p}
-        </kbd>
-      ))}
-    </span>
-  );
-}
 
 function getPathBasename(path: string): string {
   const segments = path.split(/[\\/]/).filter(Boolean);
@@ -51,11 +32,6 @@ export function WelcomeState({
 }: WelcomeStateProps) {
   const { t } = useTranslation();
   const visibleRecentFiles = recentFiles.slice(0, 3);
-  const shortcuts = {
-    newDocument: COMMAND_REGISTRY.newDocument.defaultShortcut,
-    toggleSearch: COMMAND_REGISTRY.toggleSearch.defaultShortcut,
-    toggleViewMode: COMMAND_REGISTRY.toggleViewMode.defaultShortcut,
-  };
 
   return (
     <div className="absolute inset-0 z-overlay overflow-auto bg-background/90 p-5 backdrop-blur-sm animate-in fade-in duration-300">
@@ -98,19 +74,7 @@ export function WelcomeState({
               </Button>
             </div>
 
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
-              <div className="rounded-3xl border border-emerald-950/10 bg-emerald-50/70 p-4 dark:border-white/10 dark:bg-white/5">
-                <div className="mb-3 inline-flex rounded-full bg-white p-2 text-emerald-700 shadow-sm dark:bg-white/10 dark:text-emerald-300">
-                  <Command className="size-4" aria-hidden />
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  {t('welcome.shortcutsTitle')}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {t('welcome.shortcutsBody')}
-                  <Kbd value={shortcuts.newDocument} />
-                </p>
-              </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-2">
               <div className="rounded-3xl border border-emerald-950/10 bg-stone-50/80 p-4 dark:border-white/10 dark:bg-white/5">
                 <div className="mb-3 inline-flex rounded-full bg-white p-2 text-foreground shadow-sm dark:bg-white/10">
                   <Search className="size-4" aria-hidden />
@@ -120,7 +84,6 @@ export function WelcomeState({
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {t('welcome.searchBody')}
-                  <Kbd value={shortcuts.toggleSearch} />
                 </p>
               </div>
               <div className="rounded-3xl border border-emerald-950/10 bg-zinc-50/90 p-4 dark:border-white/10 dark:bg-white/5">
@@ -132,7 +95,6 @@ export function WelcomeState({
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {t('welcome.previewBody')}
-                  <Kbd value={shortcuts.toggleViewMode} />
                 </p>
               </div>
             </div>

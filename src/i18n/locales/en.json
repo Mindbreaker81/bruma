@@ -43,18 +43,13 @@
   "export": {
     "open": "Export",
     "htmlStyled": "Styled HTML",
-    "htmlPlain": "Plain HTML",
-    "pdf": "PDF"
+    "htmlPlain": "Plain HTML"
   },
   "externalLink": {
     "body": "You're about to open an external link in your browser. Continue?",
     "cancel": "Cancel",
     "confirm": "Open",
     "title": "Open external link"
-  },
-  "scrollSync": {
-    "toggle": "Scroll sync",
-    "description": "Sync editor and preview scrolling"
   },
   "recent": {
     "empty": "No recent files.",
@@ -150,32 +145,6 @@
     "unsaved": "Unsaved changes",
     "close": "Close {{name}}"
   },
-  "shortcuts": {
-    "title": "Keyboard shortcuts",
-    "command": "Command",
-    "binding": "Binding",
-    "unbound": "Unbound",
-    "newDocument": "New document",
-    "openDocument": "Open document",
-    "saveDocument": "Save document",
-    "saveAsDocument": "Save as...",
-    "closeTab": "Close tab",
-    "newTab": "New tab",
-    "nextTab": "Next tab",
-    "previousTab": "Previous tab",
-    "toggleSearch": "Find",
-    "toggleTheme": "Toggle theme",
-    "toggleViewMode": "Toggle view",
-    "toggleFocusMode": "Focus mode",
-    "togglePreferences": "Preferences",
-    "toggleTemplateMenu": "Templates",
-    "exportHtml": "Export HTML",
-    "pressKeys": "Press keys...",
-    "cancel": "Cancel",
-    "record": "Record",
-    "reset": "Reset",
-    "resetTooltip": "Reset to default"
-  },
   "preferences": {
     "title": "Preferences",
     "close": "Close",
@@ -197,6 +166,7 @@
   "view": {
     "editor": "Editor",
     "selectMode": "Select view: {{mode}}",
+    "syncScroll": "Sync scroll",
     "toggle": "Change view mode",
     "mode": {
       "editor": "Editor",
@@ -219,8 +189,6 @@
     "openDocument": "Open file",
     "recentLabel": "Continue",
     "noRecent": "There are no recent files in this installation yet.",
-    "shortcutsTitle": "Visible shortcuts",
-    "shortcutsBody": "Open the shortcuts panel from the toolbar and shape the workflow around your keyboard without leaving the editor.",
     "searchTitle": "Integrated search",
     "searchBody": "Search now stays anchored to the workspace so you can inspect matches without covering the document.",
     "previewTitle": "Split preview",

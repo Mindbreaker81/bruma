@@ -14,14 +14,12 @@ type ToolbarExportProps = {
   isExportMenuOpen: boolean;
   setIsExportMenuOpen: (open: boolean) => void;
   handleExportHtml: (styled: boolean) => Promise<void>;
-  handleExportPdf: () => void;
 };
 
 export function ToolbarExport({
   isExportMenuOpen,
   setIsExportMenuOpen,
   handleExportHtml,
-  handleExportPdf,
 }: ToolbarExportProps) {
   const { t } = useTranslation();
 
@@ -44,9 +42,6 @@ export function ToolbarExport({
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
             {t('export.htmlPlain')}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void handleExportPdf()}>
-            {t('export.pdf')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

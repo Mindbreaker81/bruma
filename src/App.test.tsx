@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import App from './App';
 import { useFileStore } from './features/files/state';
-import { useScrollSyncStore } from './features/preview/scrollSync';
 import { useThemeStore } from './features/settings/state';
 import './i18n';
 
@@ -12,11 +11,6 @@ describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear();
     useFileStore.getState().resetUntitled();
-    useScrollSyncStore.setState({
-      enabled: true,
-      ratio: 0,
-      source: null,
-    });
     useThemeStore.getState().setLanguage('system');
   });
 
@@ -76,19 +70,5 @@ describe('App', () => {
     expect(screen.getByText('ideas.md')).toBeInTheDocument();
     expect(screen.getByText(path)).toBeInTheDocument();
     expect(recentItem).toHaveAttribute('title', path);
-  });
-
-  it('toggles scroll sync from the toolbar', async () => {
-    render(<App />);
-
-    const button = screen.getByRole('button', {
-      name: /scroll sync|sincronizar scroll/i,
-    });
-
-    expect(button).toHaveAttribute('data-active', 'true');
-
-    await userEvent.click(button);
-
-    expect(button).toHaveAttribute('data-active', 'false');
   });
 });

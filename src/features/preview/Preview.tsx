@@ -1,9 +1,14 @@
-import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import {
+  type MouseEvent,
+  type MutableRefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { stripFrontmatter } from '../../lib/frontmatter';
 import { renderSafeMarkdown } from '../../lib/markdown';
-import { useScrollSyncStore } from './scrollSync';
 
 type PreviewProps = {
   content: string;
@@ -12,6 +17,7 @@ type PreviewProps = {
   onExternalLinkClick?: (href: string) => void;
   onLocalImageRequest?: (relativeSrc: string) => Promise<string | null>;
   maxWidth?: number;
+  scrollContainerRef?: MutableRefObject<HTMLElement | null>;
 };
 
 const RENDER_DEBOUNCE_MS = 150;
@@ -31,12 +37,19 @@ export function Preview({
   onExternalLinkClick,
   onLocalImageRequest,
   maxWidth = 65,
+  scrollContainerRef,
 }: PreviewProps) {
   const { t } = useTranslation();
   const sourceForRender = hideFrontmatter ? stripFrontmatter(content) : content;
   const [html, setHtml] = useState(() => renderSafeMarkdown(sourceForRender));
   const containerRef = useRef<HTMLElement | null>(null);
-  const ignoreNextScrollRef = useRef(false);
+
+  function assignRefs(node: HTMLElement | null) {
+    containerRef.current = node;
+    if (scrollContainerRef) {
+      scrollContainerRef.current = node;
+    }
+  }
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -63,34 +76,6 @@ export function Preview({
     });
   }, [html, onLocalImageRequest, documentPath]);
 
-  // Subscribe to external scroll source.
-  useEffect(() => {
-    return useScrollSyncStore.subscribe((state, prev) => {
-      if (!state.enabled) return;
-      if (state.source !== 'editor') return;
-      if (state.ratio === prev.ratio && state.source === prev.source) return;
-      const node = containerRef.current;
-      if (!node) return;
-      const max = node.scrollHeight - node.clientHeight;
-      if (max <= 0) return;
-      ignoreNextScrollRef.current = true;
-      node.scrollTop = state.ratio * max;
-    });
-  }, []);
-
-  const handleScroll = () => {
-    if (ignoreNextScrollRef.current) {
-      ignoreNextScrollRef.current = false;
-      return;
-    }
-    if (!useScrollSyncStore.getState().enabled) return;
-    const node = containerRef.current;
-    if (!node) return;
-    const max = node.scrollHeight - node.clientHeight;
-    if (max <= 0) return;
-    useScrollSyncStore.getState().emit('preview', node.scrollTop / max);
-  };
-
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     const anchor = (event.target as HTMLElement | null)?.closest('a');
     if (!anchor) return;
@@ -104,13 +89,12 @@ export function Preview({
 
   return (
     <article
-      ref={containerRef}
+      ref={assignRefs}
       aria-label={t('preview.label')}
       className="bruma-preview min-h-0 flex-1 overflow-auto bg-background px-6 py-5"
       style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
       dangerouslySetInnerHTML={{ __html: html }}
       onClick={handleClick}
-      onScroll={handleScroll}
     />
   );
 }

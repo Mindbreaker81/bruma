@@ -15,7 +15,7 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div
-      className="bruma-shell relative flex min-h-[100dvh] min-h-0 flex-col overflow-hidden bg-background text-foreground antialiased"
+      className="bruma-shell relative flex h-dvh min-h-0 flex-col overflow-hidden bg-background text-foreground antialiased"
       data-focus={dataFocus ? 'on' : 'off'}
       onDragOver={onDragOver}
       onDrop={onDrop}

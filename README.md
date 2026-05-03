@@ -14,7 +14,8 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
 - Editor Markdown (CodeMirror 6)
 - Preview en tiempo real (markdown-it + sanitizacion con DOMPurify)
-- Modos de vista: editor, preview, dividido
+- Modos de vista: editor, preview, dividido; en dividido, scroll del editor y del preview **sincronizable** u independiente (preferencia persistida)
+- Interfaz: barra superior, pestañas y barra de modo de vista **fijas**; el documento largo se desplaza solo en el panel de edición o vista previa
 - Busqueda con contador, siguiente/anterior y case-sensitive
 - Proteccion ante cambios sin guardar (confirmacion en acciones de riesgo)
 - Drag and drop de archivos Markdown
@@ -23,7 +24,7 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
 - Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
 - Soporte restaurado de cierre nativo con `Cmd+Q` en macOS
-- Exportacion PDF programatica (A4, paginada) y exportacion HTML con estilos o plano
+- Exportacion HTML con estilos o plano
 - Imprimir documento desde toolbar o menu nativo
 - Carga diferida de editor, preview, busqueda, dialogos y export para reducir el JS inicial
 - Reporte de bundle local con `npm run build:analyze`
@@ -210,7 +211,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 
 ## Roadmap
 
-- `v1.1`: reemplazar, exportar HTML/PDF, scroll sincronizado, imagenes locales
+- `v1.1`: reemplazar, exportar HTML, imagenes locales
 - `v1.2`: pestanas, preferencias avanzadas, modo enfoque, autoguardado
 - `v2.0`: soporte Linux oficial (Ubuntu/Debian/Fedora)
 

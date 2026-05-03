@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { Switch } from '../../components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { ViewMode } from '../settings/view';
 
@@ -12,6 +13,8 @@ type ViewModeBarProps = {
   toggleShowFrontmatter: () => void;
   themePreference: string;
   focusMode: boolean;
+  splitScrollSync: boolean;
+  setSplitScrollSync: (enabled: boolean) => void;
 };
 
 export function ViewModeBar({
@@ -21,6 +24,8 @@ export function ViewModeBar({
   toggleShowFrontmatter,
   themePreference,
   focusMode,
+  splitScrollSync,
+  setSplitScrollSync,
 }: ViewModeBarProps) {
   const { t } = useTranslation();
 
@@ -41,7 +46,7 @@ export function ViewModeBar({
           ))}
         </TabsList>
       </Tabs>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
         <button
           className="rounded-full px-3 py-1.5 transition hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
           type="button"
@@ -52,7 +57,22 @@ export function ViewModeBar({
         >
           {showFrontmatter ? t('frontmatter.shown') : t('frontmatter.hidden')}
         </button>
-        <span>
+        {viewMode === 'split' ? (
+          <div className="flex items-center gap-2 rounded-full bg-stone-100/80 px-3 py-1.5 dark:bg-white/5">
+            <label
+              htmlFor="view-sync-scroll"
+              className="cursor-pointer text-xs font-medium text-muted-foreground"
+            >
+              {t('view.syncScroll')}
+            </label>
+            <Switch
+              id="view-sync-scroll"
+              checked={splitScrollSync}
+              onCheckedChange={setSplitScrollSync}
+            />
+          </div>
+        ) : null}
+        <span className="truncate">
           {t(`theme.preference.${themePreference}`)} ·{' '}
           {t(`view.mode.${viewMode}`)}
         </span>

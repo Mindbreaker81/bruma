@@ -6,6 +6,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-05-03
+
+### Added
+
+- Vista dividida: interruptor **Sincronizar scroll** en la barra de modo (`ViewModeBar`), visible solo en modo dividido, mismo patrón visual que el autoguardado de la toolbar.
+- Preferencia persistida `splitScrollSync` en la configuración local (`CONFIG_VERSION` **9**).
+- Hook `useSplitScrollSync`: sincronización bidireccional por ratio de scroll entre el `scrollDOM` de CodeMirror 6 y el `<article>` del preview (listeners pasivos y protección contra bucles).
+- API del editor: `MarkdownEditorHandle.getScrollDOM()` para enlazar el elemento desplazable del editor.
+
+### Fixed / Changed
+
+- **Shell de la app:** `#root` queda acotado al viewport (`height: 100dvh`, `overflow: hidden`) y `AppShell` usa `h-dvh`, de modo que la cabecera (toolbar), pestañas y barra inferior ya no se desplazan con documentos largos; solo el área editor/preview/dividido hace scroll interno.
+
 ## [1.4.3] - 2026-05-03
 
 ### Added
