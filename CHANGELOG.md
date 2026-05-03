@@ -6,6 +6,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-05-03
+
+### Added
+
+- Comando nativo Tauri `print_current_window` para impresión directa desde la app desktop.
+- Función `printCurrentWindow()` en frontend con fallback a `window.print()` para web.
+
+### Fixed
+
+- Scroll sync: ahora limpia `ratio` y `source` al desactivar la sincronización, evitando eventos residuales.
+- PDF export: implementado canvas slicing por página en lugar de dibujar la imagen completa en cada página, mejorando precisión de paginación.
+- PDF export: contenedor renderizado fuera de viewport con `left: -10000px` en lugar de hack de z-index.
+- PDF export: estilos de fondo y color explícitos en el contenedor para evitar conflictos con CSS global.
+- Editor y preview: añadido `overflow-hidden` para corregir comportamiento de scroll en layouts flex.
+- Tests: añadido mock de localStorage en setup para arreglar tests que fallaban por `storage.getItem is not a function`.
+
+### Changed
+
+- CSP de Tauri: `frame-src` cambiado de `'none'` a `'self' about:'` para permitir el iframe interno de `html2canvas`.
+
 ## [1.4.2] - 2026-05-02
 
 ### Fixed
