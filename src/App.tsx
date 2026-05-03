@@ -198,11 +198,12 @@ async function renderPdfCanvas(
   container.className = className;
   container.innerHTML = exportModule.buildExportContentHtml(source);
   container.style.position = 'fixed';
-  container.style.left = '0';
+  container.style.left = '-10000px';
   container.style.top = '0';
   container.style.width = `${EXPORT_CANVAS_WIDTH}px`;
   container.style.pointerEvents = 'none';
-  container.style.zIndex = '-1';
+  container.style.background = '#ffffff';
+  container.style.color = '#18181b';
 
   window.document.head.appendChild(style);
   window.document.body.appendChild(container);
@@ -579,23 +580,52 @@ export default function App() {
         exportModule,
         html2canvas
       );
-      const imgH = (canvas.height * PDF_PAGE_WIDTH) / canvas.width;
 
       const pdfDoc = await PDFDocument.create();
-      const b64 = canvas
-        .toDataURL('image/png')
-        .replace(/^data:image\/png;base64,/, '');
-      const pngBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-      const pngImage = await pdfDoc.embedPng(pngBytes);
+      const pageCanvas = window.document.createElement('canvas');
+      const pageContext = pageCanvas.getContext('2d');
+      if (!pageContext) throw new Error('pdf_page_canvas_context_unavailable');
 
-      const pageCount = Math.max(1, Math.ceil(imgH / PDF_PAGE_HEIGHT));
-      for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+      const pageCanvasHeight = Math.floor(
+        (PDF_PAGE_HEIGHT * canvas.width) / PDF_PAGE_WIDTH
+      );
+      pageCanvas.width = canvas.width;
+
+      for (
+        let sourceY = 0;
+        sourceY < canvas.height;
+        sourceY += pageCanvasHeight
+      ) {
+        const sliceHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
+        pageCanvas.height = sliceHeight;
+        pageContext.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageContext.drawImage(
+          canvas,
+          0,
+          sourceY,
+          canvas.width,
+          sliceHeight,
+          0,
+          0,
+          pageCanvas.width,
+          sliceHeight
+        );
+
+        const sliceB64 = pageCanvas
+          .toDataURL('image/png')
+          .replace(/^data:image\/png;base64,/, '');
+        const sliceBytes = Uint8Array.from(atob(sliceB64), (c) =>
+          c.charCodeAt(0)
+        );
+        const sliceImage = await pdfDoc.embedPng(sliceBytes);
         const page = pdfDoc.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT]);
-        page.drawImage(pngImage, {
+        const renderedHeight = (sliceHeight * PDF_PAGE_WIDTH) / canvas.width;
+
+        page.drawImage(sliceImage, {
           x: 0,
-          y: PDF_PAGE_HEIGHT - imgH + pageIndex * PDF_PAGE_HEIGHT,
+          y: PDF_PAGE_HEIGHT - renderedHeight,
           width: PDF_PAGE_WIDTH,
-          height: imgH,
+          height: renderedHeight,
         });
       }
 
@@ -1287,7 +1317,7 @@ export default function App() {
                 ) : null}
               </Suspense>
               {viewMode !== 'preview' ? (
-                <div className="relative flex-1 min-h-0 bg-background/60">
+                <div className="relative min-h-0 flex-1 overflow-hidden bg-background/60">
                   {showWelcomeState ? (
                     <WelcomeState
                       recentFiles={recentFiles}
@@ -1335,17 +1365,22 @@ export default function App() {
               {viewMode !== 'editor' ? (
                 <Suspense
                   fallback={
-                    <div aria-hidden className="flex-1 min-h-0 bg-background" />
+                    <div
+                      aria-hidden
+                      className="flex min-h-0 flex-1 overflow-hidden bg-background"
+                    />
                   }
                 >
-                  <Preview
-                    content={document.content}
-                    documentPath={document.path ?? null}
-                    hideFrontmatter={!showFrontmatter}
-                    onExternalLinkClick={handleExternalLinkClick}
-                    onLocalImageRequest={handleLocalImageRequest}
-                    maxWidth={previewMaxWidth}
-                  />
+                  <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
+                    <Preview
+                      content={document.content}
+                      documentPath={document.path ?? null}
+                      hideFrontmatter={!showFrontmatter}
+                      onExternalLinkClick={handleExternalLinkClick}
+                      onLocalImageRequest={handleLocalImageRequest}
+                      maxWidth={previewMaxWidth}
+                    />
+                  </div>
                 </Suspense>
               ) : null}
             </div>
