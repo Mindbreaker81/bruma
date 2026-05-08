@@ -13,9 +13,8 @@ type UseSplitScrollSyncArgs = {
  * or `null` if no annotated element is visible.
  */
 function previewTopLine(previewEl: HTMLElement): number | null {
-  const elements = previewEl.querySelectorAll<HTMLElement>(
-    '[data-source-line]'
-  );
+  const elements =
+    previewEl.querySelectorAll<HTMLElement>('[data-source-line]');
   if (elements.length === 0) return null;
 
   const containerTop = previewEl.getBoundingClientRect().top;
@@ -37,9 +36,8 @@ function previewTopLine(previewEl: HTMLElement): number | null {
 }
 
 function scrollPreviewToLine(previewEl: HTMLElement, line: number): void {
-  const elements = previewEl.querySelectorAll<HTMLElement>(
-    '[data-source-line]'
-  );
+  const elements =
+    previewEl.querySelectorAll<HTMLElement>('[data-source-line]');
   if (elements.length === 0) return;
 
   let target: HTMLElement | null = null;

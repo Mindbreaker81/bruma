@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('format toolbar inserts and toggles markdown syntax', async ({
-  page,
-}) => {
+test('format toolbar inserts and toggles markdown syntax', async ({ page }) => {
   await page.goto('/');
 
   // Dismiss welcome state to reveal the editor.
@@ -35,7 +33,9 @@ test('format toolbar inserts and toggles markdown syntax', async ({
   await expect(editor).toContainText('# Título de prueba');
 
   // Markdown guide opens, an example is clickable, and inserts into editor.
-  await page.getByRole('button', { name: /Guía Markdown|Markdown guide/ }).click();
+  await page
+    .getByRole('button', { name: /Guía Markdown|Markdown guide/ })
+    .click();
   const guide = page.getByRole('dialog', {
     name: /Guía rápida|quick guide/i,
   });

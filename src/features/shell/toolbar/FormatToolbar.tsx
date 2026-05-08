@@ -18,7 +18,8 @@ type FormatToolbarProps = {
 
 function formatShortcut(shortcut: string): string {
   const isMac =
-    typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform);
+    typeof navigator !== 'undefined' &&
+    /Mac|iPhone|iPad/i.test(navigator.platform);
   return shortcut
     .replace(/Mod-/g, isMac ? '⌘' : 'Ctrl+')
     .replace(/Shift-/g, isMac ? '⇧' : 'Shift+')
@@ -41,7 +42,10 @@ export function FormatToolbar({
       {FORMAT_GROUPS.map((group, groupIndex) => (
         <div key={groupIndex} className="flex items-center gap-1">
           {groupIndex > 0 && (
-            <Separator orientation="vertical" className="mx-1 h-5 bg-border/70" />
+            <Separator
+              orientation="vertical"
+              className="mx-1 h-5 bg-border/70"
+            />
           )}
           {group.map((id) => {
             const cmd = FORMAT_COMMANDS_BY_ID[id];
