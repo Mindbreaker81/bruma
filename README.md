@@ -12,9 +12,14 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 ## Que incluye la version actual
 
 - Nuevo, abrir, guardar y guardar como (`.md` / `.markdown`)
-- Editor Markdown (CodeMirror 6)
+- Editor Markdown (CodeMirror 6) con parser GFM (tachado, listas de tareas, tablas, autoenlaces)
+- **Toolbar de formato** sobre el editor con botones para encabezados, énfasis, listas, citas, código, enlaces, imágenes, tablas y reglas; los botones se **resaltan** según el formato bajo el cursor
+- **Atajos de formato**: `Mod-B` negrita, `Mod-I` cursiva, `Mod-E` código, `Mod-1/2/3` H1/H2/H3, `Mod-K` enlace
+- **Guía rápida de Markdown** con ejemplos clicables que se insertan en la posición del cursor
+- **Auto-continuación de listas** al pulsar Enter (con incremento de numeradas y salida en marcador vacío)
+- **Pegar URL como enlace**: al pegar una URL sobre una selección no vacía se envuelve como `[selección](url)`
 - Preview en tiempo real (markdown-it + sanitizacion con DOMPurify)
-- Modos de vista: editor, preview, dividido; en dividido, scroll del editor y del preview **sincronizable** u independiente (preferencia persistida)
+- Modos de vista: editor, preview, dividido; en dividido, scroll **sincronizado por línea** entre editor y preview (preferencia persistida)
 - Interfaz: barra superior, pestañas y barra de modo de vista **fijas**; el documento largo se desplaza solo en el panel de edición o vista previa
 - Busqueda con contador, siguiente/anterior y case-sensitive
 - Proteccion ante cambios sin guardar (confirmacion en acciones de riesgo)
