@@ -25,10 +25,8 @@ type GuideSection = {
 type GuideItem = {
   /** Identifier from FORMAT_COMMANDS, when the entry maps to a command. */
   commandId?: keyof typeof FORMAT_COMMANDS_BY_ID;
-  /** Markdown shown as the example (also used as the snippet to insert). */
-  sample: string;
-  /** Optional override of the snippet inserted on click. */
-  snippet?: string;
+  /** i18n key of the markdown shown as the example. */
+  sampleKey: string;
   /** i18n key of the description. */
   descriptionKey: string;
 };
@@ -39,17 +37,17 @@ const SECTIONS: GuideSection[] = [
     items: [
       {
         commandId: 'h1',
-        sample: '# Título 1',
+        sampleKey: 'editor.format.guide.sample.h1',
         descriptionKey: 'editor.format.h1',
       },
       {
         commandId: 'h2',
-        sample: '## Título 2',
+        sampleKey: 'editor.format.guide.sample.h2',
         descriptionKey: 'editor.format.h2',
       },
       {
         commandId: 'h3',
-        sample: '### Título 3',
+        sampleKey: 'editor.format.guide.sample.h3',
         descriptionKey: 'editor.format.h3',
       },
     ],
@@ -59,22 +57,22 @@ const SECTIONS: GuideSection[] = [
     items: [
       {
         commandId: 'bold',
-        sample: '**negrita**',
+        sampleKey: 'editor.format.guide.sample.bold',
         descriptionKey: 'editor.format.bold',
       },
       {
         commandId: 'italic',
-        sample: '_cursiva_',
+        sampleKey: 'editor.format.guide.sample.italic',
         descriptionKey: 'editor.format.italic',
       },
       {
         commandId: 'strike',
-        sample: '~~tachado~~',
+        sampleKey: 'editor.format.guide.sample.strike',
         descriptionKey: 'editor.format.strike',
       },
       {
         commandId: 'code',
-        sample: '`código`',
+        sampleKey: 'editor.format.guide.sample.code',
         descriptionKey: 'editor.format.code',
       },
     ],
@@ -84,22 +82,22 @@ const SECTIONS: GuideSection[] = [
     items: [
       {
         commandId: 'ul',
-        sample: '- elemento\n- otro',
+        sampleKey: 'editor.format.guide.sample.ul',
         descriptionKey: 'editor.format.ul',
       },
       {
         commandId: 'ol',
-        sample: '1. primero\n2. segundo',
+        sampleKey: 'editor.format.guide.sample.ol',
         descriptionKey: 'editor.format.ol',
       },
       {
         commandId: 'task',
-        sample: '- [ ] pendiente\n- [x] hecho',
+        sampleKey: 'editor.format.guide.sample.task',
         descriptionKey: 'editor.format.task',
       },
       {
         commandId: 'quote',
-        sample: '> cita',
+        sampleKey: 'editor.format.guide.sample.quote',
         descriptionKey: 'editor.format.quote',
       },
     ],
@@ -109,27 +107,27 @@ const SECTIONS: GuideSection[] = [
     items: [
       {
         commandId: 'link',
-        sample: '[texto](https://ejemplo.com)',
+        sampleKey: 'editor.format.guide.sample.link',
         descriptionKey: 'editor.format.link',
       },
       {
         commandId: 'image',
-        sample: '![alt](imagen.png)',
+        sampleKey: 'editor.format.guide.sample.image',
         descriptionKey: 'editor.format.image',
       },
       {
         commandId: 'codeblock',
-        sample: '```\ncódigo\n```',
+        sampleKey: 'editor.format.guide.sample.codeblock',
         descriptionKey: 'editor.format.codeblock',
       },
       {
         commandId: 'table',
-        sample: '| a | b |\n| - | - |\n| 1 | 2 |',
+        sampleKey: 'editor.format.guide.sample.table',
         descriptionKey: 'editor.format.table',
       },
       {
         commandId: 'hr',
-        sample: '---',
+        sampleKey: 'editor.format.guide.sample.hr',
         descriptionKey: 'editor.format.hr',
       },
     ],
@@ -149,7 +147,7 @@ export function MarkdownGuide({
     if (item.commandId) {
       editor.applyFormat(FORMAT_COMMANDS_BY_ID[item.commandId].action);
     } else {
-      editor.insertSnippet(item.snippet ?? item.sample);
+      editor.insertSnippet(t(item.sampleKey));
     }
     onOpenChange(false);
   }
@@ -172,14 +170,14 @@ export function MarkdownGuide({
               </h3>
               <ul className="space-y-1.5">
                 {section.items.map((item) => (
-                  <li key={item.sample}>
+                  <li key={item.sampleKey}>
                     <button
                       type="button"
                       onClick={() => handleInsert(item)}
                       className="group flex w-full items-start justify-between gap-3 rounded-md border border-transparent px-2 py-1.5 text-left transition hover:border-border hover:bg-muted"
                     >
                       <pre className="m-0 whitespace-pre-wrap break-words font-mono text-xs text-foreground">
-                        {item.sample}
+                        {t(item.sampleKey)}
                       </pre>
                       <span className="shrink-0 text-xs text-muted-foreground">
                         {t(item.descriptionKey)}

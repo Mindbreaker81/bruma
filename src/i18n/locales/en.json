@@ -58,6 +58,24 @@
           "emphasis": "Emphasis",
           "lists": "Lists & quotes",
           "blocks": "Blocks"
+        },
+        "sample": {
+          "h1": "# Heading 1",
+          "h2": "## Heading 2",
+          "h3": "### Heading 3",
+          "bold": "**bold**",
+          "italic": "_italic_",
+          "strike": "~~strikethrough~~",
+          "code": "`code`",
+          "ul": "- item\n- another",
+          "ol": "1. first\n2. second",
+          "task": "- [ ] todo\n- [x] done",
+          "quote": "> quote",
+          "link": "[text](https://example.com)",
+          "image": "![alt](image.png)",
+          "codeblock": "```\ncode\n```",
+          "table": "| a | b |\n| - | - |\n| 1 | 2 |",
+          "hr": "---"
         }
       }
     }

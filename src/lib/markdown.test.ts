@@ -36,6 +36,14 @@ describe('markdown rendering', () => {
     expect(renderMarkdown('**Bruma**')).toContain('<strong>Bruma</strong>');
   });
 
+  it('keeps data-source-line but strips other data-* attributes', () => {
+    const html = sanitizeMarkdownHtml(
+      '<p data-source-line="3" data-evil="x">hi</p>'
+    );
+    expect(html).toContain('data-source-line="3"');
+    expect(html).not.toContain('data-evil');
+  });
+
   it('removes script tags, event handlers and javascript URLs', () => {
     const html = sanitizeMarkdownHtml(
       '<p onclick="alert(1)">x</p><script>alert(1)</script><a href="javascript:alert(1)">bad</a>'

@@ -117,6 +117,14 @@ function installPurifyHooksOnce() {
     stripIfDangerous('href');
     stripIfDangerous('src');
   });
+
+  // Whitelist `data-source-line` so it survives sanitization without enabling
+  // arbitrary data-* attributes from untrusted markdown.
+  DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+    if (data.attrName === 'data-source-line') {
+      data.allowedAttributes['data-source-line'] = true;
+    }
+  });
 }
 
 export function renderMarkdown(source: string): string {
@@ -128,11 +136,10 @@ export function sanitizeMarkdownHtml(html: string): string {
   const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_ATTR,
     ALLOWED_TAGS,
-    // Allow data-* so we can keep `data-source-line` for editor/preview sync.
-    // data-* attributes are read-only metadata and do not introduce XSS by
-    // themselves; dangerous attributes like style/href/src/on* are still
-    // blocked via FORBID_ATTR and the afterSanitizeAttributes hook.
-    ALLOW_DATA_ATTR: true,
+    // Keep arbitrary data-* out of the DOM. The `uponSanitizeAttribute` hook
+    // explicitly whitelists only `data-source-line`, which we need for the
+    // editor↔preview scroll sync.
+    ALLOW_DATA_ATTR: false,
     FORBID_ATTR: ['style'],
   });
 

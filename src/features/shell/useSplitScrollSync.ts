@@ -8,52 +8,98 @@ type UseSplitScrollSyncArgs = {
   previewRef: RefObject<HTMLElement | null>;
 };
 
+type LineEntry = {
+  line: number;
+  top: number;
+  el: HTMLElement;
+};
+
 /**
- * Returns the 0-based source line of the topmost visible block in `previewEl`,
- * or `null` if no annotated element is visible.
+ * Snapshot of the line→element map for a preview pane. Built once per render
+ * (invalidated by MutationObserver) so scroll handlers can binary-search
+ * instead of walking the DOM and reading layout on every tick.
  */
-function previewTopLine(previewEl: HTMLElement): number | null {
-  const elements =
-    previewEl.querySelectorAll<HTMLElement>('[data-source-line]');
-  if (elements.length === 0) return null;
+type PreviewIndex = {
+  /** Sorted by line ascending; `top` is offsetTop relative to `previewEl`. */
+  entries: LineEntry[];
+  /** True when the cached snapshot is out of date. */
+  dirty: boolean;
+};
 
-  const containerTop = previewEl.getBoundingClientRect().top;
-  let candidate: number | null = null;
-
-  for (const el of elements) {
-    const top = el.getBoundingClientRect().top - containerTop;
-    if (top <= 0) {
-      candidate = Number.parseInt(el.dataset.sourceLine ?? '0', 10);
-    } else {
-      break;
-    }
+function buildPreviewIndex(previewEl: HTMLElement): LineEntry[] {
+  const nodes = previewEl.querySelectorAll<HTMLElement>('[data-source-line]');
+  const entries: LineEntry[] = [];
+  for (const el of nodes) {
+    const line = Number.parseInt(el.dataset.sourceLine ?? '', 10);
+    if (Number.isNaN(line)) continue;
+    entries.push({ line, top: el.offsetTop, el });
   }
-
-  if (candidate !== null) return candidate;
-  // Fallback: nothing reaches the top yet (we're scrolled above the first
-  // annotated block). Use the very first annotated line.
-  return Number.parseInt(elements[0]!.dataset.sourceLine ?? '0', 10);
+  // Source order in the DOM matches source-line order, but defensively sort.
+  entries.sort((a, b) => a.line - b.line);
+  return entries;
 }
 
-function scrollPreviewToLine(previewEl: HTMLElement, line: number): void {
-  const elements =
-    previewEl.querySelectorAll<HTMLElement>('[data-source-line]');
-  if (elements.length === 0) return;
+function ensureFreshIndex(
+  previewEl: HTMLElement,
+  index: PreviewIndex
+): LineEntry[] {
+  if (index.dirty || index.entries.length === 0) {
+    index.entries = buildPreviewIndex(previewEl);
+    index.dirty = false;
+  }
+  return index.entries;
+}
 
-  let target: HTMLElement | null = null;
-  for (const el of elements) {
-    const elLine = Number.parseInt(el.dataset.sourceLine ?? '0', 10);
-    if (elLine <= line) {
-      target = el;
+/**
+ * Returns the 0-based source line of the topmost visible block in `previewEl`,
+ * or `null` if no annotated element is visible. Uses cached `offsetTop` values
+ * and `previewEl.scrollTop` instead of `getBoundingClientRect`.
+ */
+function previewTopLine(
+  previewEl: HTMLElement,
+  index: PreviewIndex
+): number | null {
+  const entries = ensureFreshIndex(previewEl, index);
+  if (entries.length === 0) return null;
+
+  const scrollTop = previewEl.scrollTop;
+  // Binary search for the last entry whose top is <= scrollTop.
+  let lo = 0;
+  let hi = entries.length - 1;
+  let candidate = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (entries[mid]!.top <= scrollTop) {
+      candidate = mid;
+      lo = mid + 1;
     } else {
-      break;
+      hi = mid - 1;
     }
   }
-  target ??= elements[0]!;
+  return entries[Math.max(candidate, 0)]!.line;
+}
 
-  const containerTop = previewEl.getBoundingClientRect().top;
-  const targetTop = target.getBoundingClientRect().top - containerTop;
-  previewEl.scrollTop += targetTop;
+function scrollPreviewToLine(
+  previewEl: HTMLElement,
+  line: number,
+  index: PreviewIndex
+): void {
+  const entries = ensureFreshIndex(previewEl, index);
+  if (entries.length === 0) return;
+
+  let lo = 0;
+  let hi = entries.length - 1;
+  let candidate = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (entries[mid]!.line <= line) {
+      candidate = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  previewEl.scrollTop = entries[candidate]!.top;
 }
 
 export function useSplitScrollSync({
@@ -69,12 +115,15 @@ export function useSplitScrollSync({
     let rafId = 0;
     let removeEditor: (() => void) | null = null;
     let removePreview: (() => void) | null = null;
+    let observer: MutationObserver | null = null;
 
     const clearListeners = () => {
       removeEditor?.();
       removeEditor = null;
       removePreview?.();
       removePreview = null;
+      observer?.disconnect();
+      observer = null;
     };
 
     const tryAttach = () => {
@@ -91,13 +140,24 @@ export function useSplitScrollSync({
       attached = true;
 
       let syncing = false;
+      const index: PreviewIndex = { entries: [], dirty: true };
+
+      // Rebuild the line→element index whenever the preview DOM changes.
+      observer = new MutationObserver(() => {
+        index.dirty = true;
+      });
+      observer.observe(previewEl, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
 
       const onEditorScroll = () => {
         if (syncing) return;
         const line = editorHandleRef.current?.getTopVisibleLine();
         if (line == null) return;
         syncing = true;
-        scrollPreviewToLine(previewEl, line);
+        scrollPreviewToLine(previewEl, line, index);
         requestAnimationFrame(() => {
           syncing = false;
         });
@@ -105,7 +165,7 @@ export function useSplitScrollSync({
 
       const onPreviewScroll = () => {
         if (syncing) return;
-        const line = previewTopLine(previewEl);
+        const line = previewTopLine(previewEl, index);
         if (line == null) return;
         syncing = true;
         editorHandleRef.current?.scrollToLineTop(line);

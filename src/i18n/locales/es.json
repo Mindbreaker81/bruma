@@ -58,6 +58,24 @@
           "emphasis": "Énfasis",
           "lists": "Listas y citas",
           "blocks": "Bloques"
+        },
+        "sample": {
+          "h1": "# Título 1",
+          "h2": "## Título 2",
+          "h3": "### Título 3",
+          "bold": "**negrita**",
+          "italic": "_cursiva_",
+          "strike": "~~tachado~~",
+          "code": "`código`",
+          "ul": "- elemento\n- otro",
+          "ol": "1. primero\n2. segundo",
+          "task": "- [ ] pendiente\n- [x] hecho",
+          "quote": "> cita",
+          "link": "[texto](https://ejemplo.com)",
+          "image": "![alt](imagen.png)",
+          "codeblock": "```\ncódigo\n```",
+          "table": "| a | b |\n| - | - |\n| 1 | 2 |",
+          "hr": "---"
         }
       }
     }

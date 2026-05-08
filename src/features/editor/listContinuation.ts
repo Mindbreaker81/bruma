@@ -9,15 +9,18 @@ type ContinuationPlan =
   | { kind: 'continue'; at: number; insert: string };
 
 function nextMarker(marker: string): string {
-  const numbered = marker.match(/^(\d+)\.\s(.*)$/);
+  // Always reset a checked task box to unchecked: carrying the checked state
+  // forward when the user is composing a new item is rarely what they want.
+  // Applies to both bullet (`- [x] `) and ordered (`1. [x] `) variants.
+  const reset = marker.replace(/\[[xX]\]/, '[ ]');
+
+  const numbered = reset.match(/^(\d+)\.\s(.*)$/);
   if (numbered) {
     const next = Number.parseInt(numbered[1] ?? '0', 10) + 1;
     return `${next}. ${numbered[2] ?? ''}`;
   }
 
-  // For task lists, an unchecked checkbox is more useful than carrying the
-  // checked state forward.
-  return marker.replace(/\[[xX]\]/, '[ ]');
+  return reset;
 }
 
 export function planListContinuation(

@@ -15,15 +15,15 @@ test('format toolbar inserts and toggles markdown syntax', async ({ page }) => {
 
   // Bold via toolbar wraps the selected text.
   await editor.click();
-  await page.keyboard.press('Meta+a');
+  await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.type('hola mundo');
-  await page.keyboard.press('Meta+a');
+  await page.keyboard.press('ControlOrMeta+a');
 
   await page.getByRole('button', { name: /^Negrita|^Bold/ }).click();
   await expect(editor).toContainText('**hola mundo**');
 
   // Heading 1 via toolbar toggles a prefix on the current line.
-  await page.keyboard.press('Meta+a');
+  await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.type('Título de prueba');
   await page.keyboard.press('Home');
   await page
@@ -40,7 +40,7 @@ test('format toolbar inserts and toggles markdown syntax', async ({ page }) => {
     name: /Guía rápida|quick guide/i,
   });
   await expect(guide).toBeVisible();
-  await guide.getByRole('button', { name: /\*\*negrita\*\*/ }).click();
+  await guide.getByRole('button', { name: /\*\*(negrita|bold)\*\*/ }).click();
   await expect(guide).toBeHidden();
   await expect(editor).toContainText('**');
 });
@@ -58,7 +58,7 @@ test('Enter on a list item continues the list, Enter on empty exits', async ({
     name: /Editor Markdown|Markdown editor/i,
   });
   await editor.click();
-  await page.keyboard.press('Meta+a');
+  await page.keyboard.press('ControlOrMeta+a');
 
   await page.keyboard.type('- alpha');
   await page.keyboard.press('Enter');

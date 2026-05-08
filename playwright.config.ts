@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  // Skip macOS resource fork files (`._foo.spec.ts`) that some external
+  // drives create alongside real specs and that break the test compiler.
+  testIgnore: ['**/._*'],
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:1420',

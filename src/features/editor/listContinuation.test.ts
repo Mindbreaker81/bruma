@@ -35,6 +35,12 @@ describe('planListContinuation', () => {
     expect(plan).toEqual({ kind: 'continue', at: 10, insert: '\n- [ ] ' });
   });
 
+  it('continues an ordered task list with reset checkbox', () => {
+    const doc = '1. [x] done';
+    const plan = planListContinuation(stateAt(doc, doc.length));
+    expect(plan).toEqual({ kind: 'continue', at: 11, insert: '\n2. [ ] ' });
+  });
+
   it('exits the list when the current item is empty', () => {
     const doc = '- ';
     const plan = planListContinuation(stateAt(doc, doc.length));
