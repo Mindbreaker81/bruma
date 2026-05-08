@@ -1,5 +1,9 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import {
+  markdown,
+  markdownLanguage,
+  pasteURLAsLink,
+} from '@codemirror/lang-markdown';
 import { searchKeymap } from '@codemirror/search';
 import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
 import {
@@ -201,6 +205,9 @@ export const MarkdownEditor = forwardRef<
         extensions: [
           history(),
           markdown({ base: markdownLanguage }),
+          // When the user pastes a URL over a non-empty selection, wrap the
+          // selection as `[selection](url)` instead of replacing it.
+          pasteURLAsLink,
           keymap.of([
             { key: 'Enter', run: continueListOnEnter },
             ...formatKeymap,

@@ -22,6 +22,10 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Skip macOS resource fork files (e.g. `._foo.test.ts`) that some external
+    // drives create alongside real files. They are invalid TS and break vitest
+    // even though git ignores them.
+    exclude: ['**/._*', '**/node_modules/**'],
     setupFiles: ['./src/test/setup.ts'],
   },
 });
