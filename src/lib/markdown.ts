@@ -24,11 +24,24 @@ const markdown: MarkdownIt = new MarkdownIt({
 
     return escapeHtml(code);
   },
-}).use(taskLists, {
-  enabled: false,
-  label: true,
-  labelAfter: true,
-});
+})
+  .use(taskLists, {
+    enabled: false,
+    label: true,
+    labelAfter: true,
+  })
+  .use((md) => {
+    // Annotate every top-level opening block token with its source line, so
+    // the preview can be scrolled in lockstep with the editor.
+    const renderToken = md.renderer.renderToken.bind(md.renderer);
+    md.renderer.renderToken = function (tokens, idx, options) {
+      const token = tokens[idx];
+      if (token && token.map && token.level === 0 && token.nesting !== -1) {
+        token.attrSet('data-source-line', String(token.map[0]));
+      }
+      return renderToken(tokens, idx, options);
+    };
+  });
 
 const ALLOWED_TAGS = [
   'a',
@@ -115,7 +128,11 @@ export function sanitizeMarkdownHtml(html: string): string {
   const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_ATTR,
     ALLOWED_TAGS,
-    ALLOW_DATA_ATTR: false,
+    // Allow data-* so we can keep `data-source-line` for editor/preview sync.
+    // data-* attributes are read-only metadata and do not introduce XSS by
+    // themselves; dangerous attributes like style/href/src/on* are still
+    // blocked via FORBID_ATTR and the afterSanitizeAttributes hook.
+    ALLOW_DATA_ATTR: true,
     FORBID_ATTR: ['style'],
   });
 

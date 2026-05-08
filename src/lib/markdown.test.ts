@@ -25,10 +25,11 @@ describe('markdown rendering', () => {
       ].join('\n')
     );
 
-    expect(html).toContain('<h1>Bruma</h1>');
-    expect(html).toContain('<table>');
+    expect(html).toMatch(/<h1[^>]*>Bruma<\/h1>/);
+    expect(html).toContain('<table');
     expect(html).toContain('contains-task-list');
     expect(html).toContain('language-ts');
+    expect(html).toMatch(/data-source-line="\d+"/);
   });
 
   it('keeps raw markdown rendering separate from sanitization', () => {
