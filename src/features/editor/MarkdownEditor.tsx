@@ -24,6 +24,7 @@ import {
   insertSnippet as insertSnippetToView,
 } from './format';
 import { FORMAT_COMMANDS } from './formatCommands';
+import { continueListOnEnter } from './listContinuation';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
 const formatKeymap = FORMAT_COMMANDS.filter((c) => c.shortcut).map((c) => ({
@@ -172,6 +173,7 @@ export const MarkdownEditor = forwardRef<
           history(),
           markdown(),
           keymap.of([
+            { key: 'Enter', run: continueListOnEnter },
             ...formatKeymap,
             ...defaultKeymap,
             ...historyKeymap,
