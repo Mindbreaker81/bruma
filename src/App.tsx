@@ -1040,7 +1040,7 @@ export default function App() {
               viewMode={viewMode}
             />
 
-            {viewMode !== 'preview' && !focusMode ? (
+            {viewMode !== 'preview' && !focusMode && !showWelcomeState ? (
               <FormatToolbar
                 editorRef={editorRef}
                 activeFormats={activeFormats}

@@ -1,5 +1,5 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { markdown } from '@codemirror/lang-markdown';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { searchKeymap } from '@codemirror/search';
 import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
 import {
@@ -200,7 +200,7 @@ export const MarkdownEditor = forwardRef<
         doc: latestValueRef.current,
         extensions: [
           history(),
-          markdown(),
+          markdown({ base: markdownLanguage }),
           keymap.of([
             { key: 'Enter', run: continueListOnEnter },
             ...formatKeymap,
