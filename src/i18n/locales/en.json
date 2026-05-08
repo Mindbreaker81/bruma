@@ -30,7 +30,37 @@
   },
   "editor": {
     "label": "Markdown editor",
-    "placeholder": "Start writing Markdown..."
+    "placeholder": "Start writing Markdown...",
+    "format": {
+      "toolbar": "Markdown formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "h1": "Heading 1",
+      "h2": "Heading 2",
+      "h3": "Heading 3",
+      "ul": "Bulleted list",
+      "ol": "Numbered list",
+      "task": "Task list",
+      "quote": "Blockquote",
+      "codeblock": "Code block",
+      "link": "Link",
+      "image": "Image",
+      "table": "Table",
+      "hr": "Horizontal rule",
+      "guide": {
+        "open": "Markdown guide",
+        "title": "Markdown quick guide",
+        "description": "Click any example to insert it into the editor.",
+        "section": {
+          "headings": "Headings",
+          "emphasis": "Emphasis",
+          "lists": "Lists & quotes",
+          "blocks": "Blocks"
+        }
+      }
+    }
   },
   "errors": {
     "exportFailed": "The document could not be exported.",

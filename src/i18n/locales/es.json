@@ -30,7 +30,37 @@
   },
   "editor": {
     "label": "Editor Markdown",
-    "placeholder": "Empieza a escribir Markdown..."
+    "placeholder": "Empieza a escribir Markdown...",
+    "format": {
+      "toolbar": "Formato Markdown",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "strike": "Tachado",
+      "code": "Código en línea",
+      "h1": "Título 1",
+      "h2": "Título 2",
+      "h3": "Título 3",
+      "ul": "Lista con viñetas",
+      "ol": "Lista numerada",
+      "task": "Lista de tareas",
+      "quote": "Cita",
+      "codeblock": "Bloque de código",
+      "link": "Enlace",
+      "image": "Imagen",
+      "table": "Tabla",
+      "hr": "Línea horizontal",
+      "guide": {
+        "open": "Guía Markdown",
+        "title": "Guía rápida de Markdown",
+        "description": "Haz clic en cualquier ejemplo para insertarlo en el editor.",
+        "section": {
+          "headings": "Encabezados",
+          "emphasis": "Énfasis",
+          "lists": "Listas y citas",
+          "blocks": "Bloques"
+        }
+      }
+    }
   },
   "errors": {
     "exportFailed": "No se pudo exportar el documento.",

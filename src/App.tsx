@@ -58,6 +58,8 @@ import {
 import { useSearchStore } from './features/search/state';
 import type { ViewMode } from './features/settings/view';
 import { StatusBar } from './features/shell/StatusBar';
+import { FormatToolbar } from './features/shell/toolbar/FormatToolbar';
+import { MarkdownGuide } from './features/shell/MarkdownGuide';
 import { ToolbarExport } from './features/shell/toolbar/ToolbarExport';
 import { ToolbarFile } from './features/shell/toolbar/ToolbarFile';
 import { ToolbarView } from './features/shell/toolbar/ToolbarView';
@@ -327,6 +329,7 @@ export default function App() {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  const [isMarkdownGuideOpen, setIsMarkdownGuideOpen] = useState(false);
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingSession, setPendingSession] = useState<{
@@ -1021,7 +1024,7 @@ export default function App() {
               />
             ) : null}
           </Suspense>
-          <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
+          <div className="flex min-h-0 flex-1 flex-col">
             <ViewModeBar
               focusMode={focusMode}
               setSplitScrollSync={setSplitScrollSync}
@@ -1033,11 +1036,18 @@ export default function App() {
               viewMode={viewMode}
             />
 
+            {viewMode !== 'preview' && !focusMode ? (
+              <FormatToolbar
+                editorRef={editorRef}
+                onOpenGuide={() => setIsMarkdownGuideOpen(true)}
+              />
+            ) : null}
+
             <div
               className={
                 viewMode === 'split'
-                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-border'
-                  : 'relative flex min-h-0 flex-col'
+                  ? 'relative grid min-h-0 flex-1 grid-cols-2 divide-x divide-border'
+                  : 'relative flex min-h-0 flex-1 flex-col'
               }
             >
               <Suspense fallback={null}>
@@ -1194,6 +1204,12 @@ export default function App() {
               }}
             />
           ) : null}
+
+          <MarkdownGuide
+            open={isMarkdownGuideOpen}
+            onOpenChange={setIsMarkdownGuideOpen}
+            editorRef={editorRef}
+          />
 
           {isPreferencesOpen ? (
             <PreferencesDialog

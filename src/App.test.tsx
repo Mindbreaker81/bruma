@@ -18,7 +18,9 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Bruma' })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Markdown/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/Editor Markdown|Markdown editor/i)
+    ).toBeInTheDocument();
     expect(screen.getAllByText(/Guardado|Saved/i).length).toBeGreaterThan(0);
   });
 
