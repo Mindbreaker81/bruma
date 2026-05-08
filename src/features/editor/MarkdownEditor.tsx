@@ -18,6 +18,11 @@ import {
 
 import type { SearchMatch } from '../search/search';
 import { useThemeStore } from '../settings/state';
+import {
+  applyFormat as applyFormatToView,
+  type FormatAction,
+  insertSnippet as insertSnippetToView,
+} from './format';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
 type MarkdownEditorProps = {
@@ -38,6 +43,8 @@ export type MarkdownEditorHandle = {
   focus: () => void;
   scrollToLine: (line: number) => void;
   getScrollDOM: () => HTMLElement | null;
+  applyFormat: (action: FormatAction) => void;
+  insertSnippet: (text: string) => void;
 };
 
 function buildSearchDecorations(
@@ -122,6 +129,16 @@ export const MarkdownEditor = forwardRef<
         scrollIntoView: true,
       });
       editor.focus();
+    },
+    applyFormat: (action: FormatAction) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      applyFormatToView(editor, action);
+    },
+    insertSnippet: (text: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      insertSnippetToView(editor, text);
     },
   }));
 
