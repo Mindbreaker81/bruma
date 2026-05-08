@@ -52,6 +52,13 @@ const CHANGE_DEBOUNCE_MS = 120;
 export type MarkdownEditorHandle = {
   focus: () => void;
   scrollToLine: (line: number) => void;
+  /**
+   * Scroll so that the given 0-based line is at the top of the viewport,
+   * without changing the selection. Used by the split-pane scroll sync.
+   */
+  scrollToLineTop: (line: number) => void;
+  /** 0-based source line currently at the top of the editor viewport. */
+  getTopVisibleLine: () => number | null;
   getScrollDOM: () => HTMLElement | null;
   applyFormat: (action: FormatAction) => void;
   insertSnippet: (text: string) => void;
@@ -149,6 +156,20 @@ export const MarkdownEditor = forwardRef<
       const editor = editorRef.current;
       if (!editor) return;
       insertSnippetToView(editor, text);
+    },
+    scrollToLineTop: (line: number) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const totalLines = editor.state.doc.lines;
+      const target = Math.min(Math.max(line + 1, 1), totalLines);
+      const block = editor.lineBlockAt(editor.state.doc.line(target).from);
+      editor.scrollDOM.scrollTop = block.top;
+    },
+    getTopVisibleLine: () => {
+      const editor = editorRef.current;
+      if (!editor) return null;
+      const block = editor.lineBlockAtHeight(editor.scrollDOM.scrollTop);
+      return editor.state.doc.lineAt(block.from).number - 1;
     },
   }));
 

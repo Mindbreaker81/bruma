@@ -2,21 +2,61 @@ import { type RefObject, useEffect } from 'react';
 
 import type { MarkdownEditorHandle } from '../editor/MarkdownEditor';
 
-function scrollRatio(el: HTMLElement): number {
-  const maxScroll = Math.max(1, el.scrollHeight - el.clientHeight);
-  return el.scrollTop / maxScroll;
-}
-
-function applyScrollRatio(target: HTMLElement, ratio: number) {
-  const maxScroll = Math.max(1, target.scrollHeight - target.clientHeight);
-  target.scrollTop = ratio * maxScroll;
-}
-
 type UseSplitScrollSyncArgs = {
   enabled: boolean;
   editorHandleRef: RefObject<MarkdownEditorHandle | null>;
   previewRef: RefObject<HTMLElement | null>;
 };
+
+/**
+ * Returns the 0-based source line of the topmost visible block in `previewEl`,
+ * or `null` if no annotated element is visible.
+ */
+function previewTopLine(previewEl: HTMLElement): number | null {
+  const elements = previewEl.querySelectorAll<HTMLElement>(
+    '[data-source-line]'
+  );
+  if (elements.length === 0) return null;
+
+  const containerTop = previewEl.getBoundingClientRect().top;
+  let candidate: number | null = null;
+
+  for (const el of elements) {
+    const top = el.getBoundingClientRect().top - containerTop;
+    if (top <= 0) {
+      candidate = Number.parseInt(el.dataset.sourceLine ?? '0', 10);
+    } else {
+      break;
+    }
+  }
+
+  if (candidate !== null) return candidate;
+  // Fallback: nothing reaches the top yet (we're scrolled above the first
+  // annotated block). Use the very first annotated line.
+  return Number.parseInt(elements[0]!.dataset.sourceLine ?? '0', 10);
+}
+
+function scrollPreviewToLine(previewEl: HTMLElement, line: number): void {
+  const elements = previewEl.querySelectorAll<HTMLElement>(
+    '[data-source-line]'
+  );
+  if (elements.length === 0) return;
+
+  let target: HTMLElement | null = null;
+  for (const el of elements) {
+    const elLine = Number.parseInt(el.dataset.sourceLine ?? '0', 10);
+    if (elLine <= line) {
+      target = el;
+    } else {
+      break;
+    }
+  }
+  target ??= elements[0]!;
+
+  const containerTop = previewEl.getBoundingClientRect().top;
+  const targetTop = target.getBoundingClientRect().top - containerTop;
+  previewEl.scrollTop += targetTop;
+}
 
 export function useSplitScrollSync({
   enabled,
@@ -56,8 +96,10 @@ export function useSplitScrollSync({
 
       const onEditorScroll = () => {
         if (syncing) return;
+        const line = editorHandleRef.current?.getTopVisibleLine();
+        if (line == null) return;
         syncing = true;
-        applyScrollRatio(previewEl, scrollRatio(editorEl));
+        scrollPreviewToLine(previewEl, line);
         requestAnimationFrame(() => {
           syncing = false;
         });
@@ -65,8 +107,10 @@ export function useSplitScrollSync({
 
       const onPreviewScroll = () => {
         if (syncing) return;
+        const line = previewTopLine(previewEl);
+        if (line == null) return;
         syncing = true;
-        applyScrollRatio(editorEl, scrollRatio(previewEl));
+        editorHandleRef.current?.scrollToLineTop(line);
         requestAnimationFrame(() => {
           syncing = false;
         });
