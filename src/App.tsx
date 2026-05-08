@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import type { MarkdownEditorHandle } from './features/editor/MarkdownEditor';
+import type { FormatCommandId } from './features/editor/formatCommands';
 import { type Tab } from './features/files/document';
 import {
   AlertDialog,
@@ -330,6 +331,9 @@ export default function App() {
   const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   const [isMarkdownGuideOpen, setIsMarkdownGuideOpen] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<
+    ReadonlySet<FormatCommandId>
+  >(() => new Set());
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingSession, setPendingSession] = useState<{
@@ -1039,6 +1043,7 @@ export default function App() {
             {viewMode !== 'preview' && !focusMode ? (
               <FormatToolbar
                 editorRef={editorRef}
+                activeFormats={activeFormats}
                 onOpenGuide={() => setIsMarkdownGuideOpen(true)}
               />
             ) : null}
@@ -1112,6 +1117,7 @@ export default function App() {
                         tabSize={editorTabSize}
                         lineWrapping={editorWrap}
                         fontFamily={editorFontFamily}
+                        onActiveFormatsChange={setActiveFormats}
                       />
                     </Suspense>
                   </div>

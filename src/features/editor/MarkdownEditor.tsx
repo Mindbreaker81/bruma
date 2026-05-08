@@ -18,12 +18,13 @@ import {
 
 import type { SearchMatch } from '../search/search';
 import { useThemeStore } from '../settings/state';
+import { getActiveFormats } from './activeFormats';
 import {
   applyFormat as applyFormatToView,
   type FormatAction,
   insertSnippet as insertSnippetToView,
 } from './format';
-import { FORMAT_COMMANDS } from './formatCommands';
+import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
 import { continueListOnEnter } from './listContinuation';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
@@ -45,6 +46,7 @@ type MarkdownEditorProps = {
   tabSize?: number;
   lineWrapping?: boolean;
   fontFamily?: string;
+  onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -109,6 +111,7 @@ export const MarkdownEditor = forwardRef<
     tabSize = 4,
     lineWrapping = true,
     fontFamily = 'sans',
+    onActiveFormatsChange,
   },
   ref
 ) {
@@ -116,6 +119,7 @@ export const MarkdownEditor = forwardRef<
   const editorRef = useRef<EditorView | null>(null);
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
+  const onActiveFormatsChangeRef = useRef(onActiveFormatsChange);
   const debounceRef = useRef<number | null>(null);
   const hadSearchSelectionRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
@@ -178,6 +182,10 @@ export const MarkdownEditor = forwardRef<
   }, [onChange]);
 
   useEffect(() => {
+    onActiveFormatsChangeRef.current = onActiveFormatsChange;
+  }, [onActiveFormatsChange]);
+
+  useEffect(() => {
     latestValueRef.current = value;
   }, [value]);
 
@@ -214,20 +222,25 @@ export const MarkdownEditor = forwardRef<
           ),
           themeCompartmentRef.current.of(brumaLightTheme),
           EditorView.updateListener.of((update) => {
-            if (!update.docChanged) {
-              return;
+            if (update.docChanged) {
+              const nextValue = update.state.doc.toString();
+              latestValueRef.current = nextValue;
+
+              if (debounceRef.current) {
+                window.clearTimeout(debounceRef.current);
+              }
+
+              debounceRef.current = window.setTimeout(() => {
+                onChangeRef.current(nextValue);
+              }, CHANGE_DEBOUNCE_MS);
             }
 
-            const nextValue = update.state.doc.toString();
-            latestValueRef.current = nextValue;
-
-            if (debounceRef.current) {
-              window.clearTimeout(debounceRef.current);
+            if (
+              (update.docChanged || update.selectionSet) &&
+              onActiveFormatsChangeRef.current
+            ) {
+              onActiveFormatsChangeRef.current(getActiveFormats(update.state));
             }
-
-            debounceRef.current = window.setTimeout(() => {
-              onChangeRef.current(nextValue);
-            }, CHANGE_DEBOUNCE_MS);
           }),
         ],
       }),

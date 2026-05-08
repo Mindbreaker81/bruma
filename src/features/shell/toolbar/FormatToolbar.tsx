@@ -7,10 +7,12 @@ import type { MarkdownEditorHandle } from '../../editor/MarkdownEditor';
 import {
   FORMAT_COMMANDS_BY_ID,
   FORMAT_GROUPS,
+  type FormatCommandId,
 } from '../../editor/formatCommands';
 
 type FormatToolbarProps = {
   editorRef: RefObject<MarkdownEditorHandle | null>;
+  activeFormats?: ReadonlySet<FormatCommandId>;
   onOpenGuide?: () => void;
 };
 
@@ -23,7 +25,11 @@ function formatShortcut(shortcut: string): string {
     .replace(/Alt-/g, isMac ? '⌥' : 'Alt+');
 }
 
-export function FormatToolbar({ editorRef, onOpenGuide }: FormatToolbarProps) {
+export function FormatToolbar({
+  editorRef,
+  activeFormats,
+  onOpenGuide,
+}: FormatToolbarProps) {
   const { t } = useTranslation();
 
   return (
@@ -48,6 +54,7 @@ export function FormatToolbar({ editorRef, onOpenGuide }: FormatToolbarProps) {
                 key={cmd.id}
                 icon={cmd.icon}
                 label={labelWithShortcut}
+                active={activeFormats?.has(cmd.id)}
                 onClick={() => editorRef.current?.applyFormat(cmd.action)}
                 className="size-8 rounded-md"
               />
