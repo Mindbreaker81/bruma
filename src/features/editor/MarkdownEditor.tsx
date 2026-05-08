@@ -23,7 +23,16 @@ import {
   type FormatAction,
   insertSnippet as insertSnippetToView,
 } from './format';
+import { FORMAT_COMMANDS } from './formatCommands';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
+
+const formatKeymap = FORMAT_COMMANDS.filter((c) => c.shortcut).map((c) => ({
+  key: c.shortcut!,
+  run: (view: EditorView) => {
+    applyFormatToView(view, c.action);
+    return true;
+  },
+}));
 
 type MarkdownEditorProps = {
   value: string;
@@ -162,7 +171,12 @@ export const MarkdownEditor = forwardRef<
         extensions: [
           history(),
           markdown(),
-          keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+          keymap.of([
+            ...formatKeymap,
+            ...defaultKeymap,
+            ...historyKeymap,
+            ...searchKeymap,
+          ]),
           tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
           lineWrappingCompartmentRef.current.of(
             lineWrapping ? EditorView.lineWrapping : []
