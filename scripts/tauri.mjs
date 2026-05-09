@@ -3,7 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
-const targetDir = process.env.CARGO_TARGET_DIR ?? path.join(os.tmpdir(), 'bruma-cargo-target');
+const targetDir =
+  process.env.CARGO_TARGET_DIR ?? path.join(os.tmpdir(), 'bruma-cargo-target');
 
 const result = spawnSync('pnpm', ['exec', 'tauri', ...args], {
   stdio: 'inherit',
