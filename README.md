@@ -57,9 +57,8 @@ El nombre del artifact se genera automaticamente desde `package.json`.
 
 Para usuarios finales, usamos **GitHub Releases** con archivos listos para descargar por plataforma.
 
-- **macOS**:
-  - `bruma-vX.Y.Z-macos-x64.dmg` (Intel)
-  - `bruma-vX.Y.Z-macos-aarch64.dmg` (Apple Silicon)
+- **macOS** (firmado con Developer ID y notarizado por Apple):
+  - `bruma-vX.Y.Z-macos-aarch64.dmg` (Apple Silicon nativo; corre en Intel vía Rosetta 2)
 - **Windows (instaladores)**:
   - `bruma-vX.Y.Z-windows-x64.msi`
   - `bruma-vX.Y.Z-windows-x64-setup.exe`
@@ -74,17 +73,26 @@ Para usuarios finales, usamos **GitHub Releases** con archivos listos para desca
 
 ### macOS
 
-1. Descargar el artifact de macOS desde `Actions`.
-2. Extraer el archivo descargado.
-3. Abrir el `.dmg` y mover `Bruma.app` a `Applications`.
-4. Si macOS indica que la app esta danada o bloqueada, quitar la cuarentena:
+#### Desde **GitHub Releases** (firmado y notarizado)
+
+1. Descargar el `bruma-vX.Y.Z-macos-aarch64.dmg`.
+2. Doble click sobre el `.dmg` para montarlo.
+3. Arrastrar `Bruma.app` a `Applications`.
+4. Abrir desde Launchpad. **No hay diálogos de seguridad**: el bundle está firmado con Developer ID y notarizado por Apple.
+
+#### Desde **Actions** (artifacts de CI sin firmar)
+
+Los artifacts de CI son builds internos sin firma para QA — disparan Gatekeeper:
+
+1. Descargar el artifact, extraer y mover `Bruma.app` a `Applications`.
+2. Quitar la cuarentena:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Bruma.app"
 open "/Applications/Bruma.app"
 ```
 
-5. Si Gatekeeper sigue bloqueando la app, abrirla una vez con clic derecho sobre `Bruma.app` y luego `Open`, o autorizarla en `System Settings > Privacy & Security`.
+3. Alternativa: abrir con clic derecho → `Open`, o autorizar en `System Settings > Privacy & Security`.
 
 ### Windows
 
@@ -99,9 +107,10 @@ open "/Applications/Bruma.app"
    - Marcar `Unblock` si aparece esa opcion.
    - Aplicar cambios y volver a ejecutar.
 
-Las builds actuales de CI son internas y sin firma/notarizacion, por eso ambos sistemas pueden mostrar avisos de seguridad incluso cuando el bundle es valido.
+Las builds de **CI** (job `Tauri` en cada PR) son internas, sin firma, y por eso disparan avisos de seguridad. Las builds de **GitHub Releases** son distintas:
 
-Nota: los bundles de **GitHub Releases** tambien pueden disparar advertencias (SmartScreen/Gatekeeper) mientras no haya firma/notarizacion.
+- **macOS**: firmadas con Developer ID y notarizadas por Apple → no aparecen avisos.
+- **Windows**: aún sin firma Authenticode → puede aparecer SmartScreen ("More info → Run anyway").
 
 ## Desarrollo local
 
@@ -216,9 +225,11 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 
 ## Roadmap
 
-- `v1.1`: reemplazar, exportar HTML, imagenes locales
-- `v1.2`: pestanas, preferencias avanzadas, modo enfoque, autoguardado
-- `v2.0`: soporte Linux oficial (Ubuntu/Debian/Fedora)
+- `v1.5` (entregado): toolbar de formato, guía Markdown, atajos, auto-continuación de listas, sync editor↔preview por línea, paste-URL-as-link, parser GFM, releases macOS firmados+notarizados.
+- Siguiente:
+  - Firma Authenticode para Windows (.msi / .exe).
+  - Builds nativas oficiales para Linux (deb/rpm/Flatpak) además del AppImage.
+  - Build macOS universal (`x86_64 + aarch64`) para no depender de Rosetta 2 en Intel.
 
 ## Sitio web
 

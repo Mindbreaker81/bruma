@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-13
           - platform: macos-14
           - platform: ubuntu-latest
           - platform: windows-latest
@@ -224,22 +223,18 @@ jobs:
           )
 
       - name: Collect release assets (macOS)
-        if: matrix.platform == 'macos-13' || matrix.platform == 'macos-14'
+        if: matrix.platform == 'macos-14'
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          arch="x64"
-          if [[ "${{ matrix.platform }}" == "macos-14" ]]; then
-            arch="aarch64"
-          fi
           shopt -s nullglob
           dmg_files=(src-tauri/target/release/bundle/dmg/*.dmg)
           if [[ ${#dmg_files[@]} -lt 1 ]]; then
             echo "No .dmg found in src-tauri/target/release/bundle/dmg/"
             exit 1
           fi
-          cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-${arch}.dmg"
+          cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'

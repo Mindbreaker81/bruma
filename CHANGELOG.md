@@ -29,11 +29,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Changed
 
 - `useSplitScrollSync` reemplaza la sincronización por ratio con una basada en líneas fuente.
-- El layout interno del área editor/preview pasa de `grid-rows-[auto_1fr]` a `flex flex-col` para acomodar la nueva toolbar de formato sin romper el modo dividido.
+- El área editor/preview anida un `flex flex-col` dentro del `grid-rows-[auto_1fr]` exterior para acomodar la nueva toolbar de formato sin alterar el layout del Welcome state ni del modo dividido.
 
 ### Removed
 
 - `DESIGN_REVIEW.md` y `FRONTEND_IMPROVEMENTS.md` de la raíz: notas de trabajo desactualizadas que duplicaban contenido del README/CHANGELOG.
+- Plataforma `macos-13` (Intel) del matrix de `release.yml`: el pool hospedado de runners macOS Intel está siendo retirado y los jobs quedaban en `queued` indefinidamente. La build `macos-aarch64` se ejecuta en Intel vía Rosetta 2.
+
+### Release & signing infrastructure
+
+- **macOS Developer ID** firma + notarización automática en builds locales y de CI:
+  - `tauri.conf.json` no fija `signingIdentity` — Tauri lee el env var `APPLE_SIGNING_IDENTITY` (presente en `.env.local` para local y como secret en CI), de modo que CI de PR sigue construyendo sin firmar.
+  - `release.yml` importa el certificado `.p12` (vía `APPLE_CERTIFICATE` + `APPLE_CERTIFICATE_PASSWORD` secrets) en un keychain temporal del runner, materializa la API Key de App Store Connect (`APPLE_API_KEY_BASE64` → `.p8` en disco) y deja `APPLE_API_KEY_PATH` en `$GITHUB_ENV` para que el siguiente step la consuma.
+  - El step de build pasa de "unsigned" a "signed & notarized": Tauri firma con `APPLE_SIGNING_IDENTITY`, sube a notarytool y staplea el ticket sobre `.app` y `.dmg`.
+- `scripts/tauri.mjs`: wrapper de `pnpm tauri` que redirige `CARGO_TARGET_DIR` a `$TMPDIR/bruma-cargo-target` para builds locales (mantiene el árbol del repo limpio). En CI los workflows llaman a `pnpm exec tauri build` directamente para preservar las rutas por defecto.
+- Documentación operativa actualizada en [docs/RELEASE.md](docs/RELEASE.md): credenciales, secrets requeridos, comprobaciones post-build (`spctl`, `notarytool`).
 
 ## [1.4.4] - 2026-05-03
 
