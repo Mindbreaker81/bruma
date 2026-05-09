@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-13
           - platform: macos-14
           - platform: ubuntu-latest
           - platform: windows-latest
@@ -73,10 +72,54 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
-      - name: Build unsigned bundle (macOS)
+      - name: Import Apple Developer ID certificate (macOS)
         if: startsWith(matrix.platform, 'macos-')
-        run: pnpm tauri build
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Crea un keychain temporal (se descarta al final del job)
+          KEYCHAIN_PATH="$RUNNER_TEMP/bruma-build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
+          # Importa el .p12
+          CERT_PATH="$RUNNER_TEMP/bruma-cert.p12"
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o "$CERT_PATH"
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Hace el keychain temporal el "search default" para que codesign lo encuentre
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          # Verifica que la identity está disponible
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          # Materializa el .p8 en disco
+          P8_PATH="$RUNNER_TEMP/AuthKey.p8"
+          echo -n "${{ secrets.APPLE_API_KEY_BASE64 }}" | base64 --decode -o "$P8_PATH"
+          chmod 600 "$P8_PATH"
+          echo "APPLE_API_KEY_PATH=$P8_PATH" >> "$GITHUB_ENV"
+
+      - name: Build signed & notarized bundle (macOS)
+        if: startsWith(matrix.platform, 'macos-')
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          # APPLE_API_KEY_PATH se inyecta via GITHUB_ENV en el step anterior
+        run: pnpm exec tauri build
       - name: Prefetch NSIS tools (retry)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -129,11 +172,11 @@ jobs:
 
       - name: Build unsigned bundle (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
-        run: pnpm tauri build
+        run: pnpm exec tauri build
 
       - name: Build unsigned app (Windows arm64, no bundle)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
-        run: pnpm tauri build --target aarch64-pc-windows-msvc --no-bundle
+        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --no-bundle
 
       - name: Build unsigned bundle (Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -145,13 +188,13 @@ jobs:
 
           # Tauri's AppImage bundling can fail on environments that can't execute
           # AppImages reliably. Use a fallback path that runs linuxdeploy directly.
-          if pnpm tauri build --bundles appimage; then
+          if pnpm exec tauri build --bundles appimage; then
             exit 0
           fi
 
           echo "Tauri AppImage bundling failed; running linuxdeploy fallback..."
 
-          pnpm tauri build --no-bundle
+          pnpm exec tauri build --no-bundle
 
           app_dir="src-tauri/target/release/bundle/appimage/Bruma.AppDir"
           if [[ ! -d "$app_dir" ]]; then
@@ -180,22 +223,18 @@ jobs:
           )
 
       - name: Collect release assets (macOS)
-        if: matrix.platform == 'macos-13' || matrix.platform == 'macos-14'
+        if: matrix.platform == 'macos-14'
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          arch="x64"
-          if [[ "${{ matrix.platform }}" == "macos-14" ]]; then
-            arch="aarch64"
-          fi
           shopt -s nullglob
           dmg_files=(src-tauri/target/release/bundle/dmg/*.dmg)
           if [[ ${#dmg_files[@]} -lt 1 ]]; then
             echo "No .dmg found in src-tauri/target/release/bundle/dmg/"
             exit 1
           fi
-          cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-${arch}.dmg"
+          cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'

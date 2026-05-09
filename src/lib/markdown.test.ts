@@ -25,14 +25,23 @@ describe('markdown rendering', () => {
       ].join('\n')
     );
 
-    expect(html).toContain('<h1>Bruma</h1>');
-    expect(html).toContain('<table>');
+    expect(html).toMatch(/<h1[^>]*>Bruma<\/h1>/);
+    expect(html).toContain('<table');
     expect(html).toContain('contains-task-list');
     expect(html).toContain('language-ts');
+    expect(html).toMatch(/data-source-line="\d+"/);
   });
 
   it('keeps raw markdown rendering separate from sanitization', () => {
     expect(renderMarkdown('**Bruma**')).toContain('<strong>Bruma</strong>');
+  });
+
+  it('keeps data-source-line but strips other data-* attributes', () => {
+    const html = sanitizeMarkdownHtml(
+      '<p data-source-line="3" data-evil="x">hi</p>'
+    );
+    expect(html).toContain('data-source-line="3"');
+    expect(html).not.toContain('data-evil');
   });
 
   it('removes script tags, event handlers and javascript URLs', () => {

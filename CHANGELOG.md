@@ -6,6 +6,45 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-05-08
+
+### Added
+
+- **Toolbar de formato Markdown** sobre el editor: botones para negrita, cursiva, tachado, código, encabezados H1–H3, listas con viñetas / numeradas / de tareas, citas, enlaces, imágenes, bloques de código, tablas y reglas horizontales. Agrupados por familia con divisores. Visible solo cuando hay un documento abierto y no se está en focus mode ni preview puro.
+- **Atajos de teclado de formato** en CodeMirror: `Mod-B` (negrita), `Mod-I` (cursiva), `Mod-E` (código en línea), `Mod-1/2/3` (encabezados), `Mod-K` (enlace).
+- **Diálogo "Guía Markdown"** con secciones (Encabezados, Énfasis, Listas y citas, Bloques) que muestran ejemplos clicables; al pulsar uno se inserta su sintaxis en la posición del cursor.
+- **Indicador de formato activo en la toolbar**: el botón correspondiente se resalta cuando el cursor está dentro del nodo (negrita, cursiva, encabezado, lista, cita, código, enlace, imagen, tabla, etc.). Implementado caminando el árbol de Lezer de `@codemirror/lang-markdown`.
+- **Auto-continuación de listas** al pulsar Enter: continúa con `-`, `*`, `+`, listas numeradas (incrementando contador) y de tareas (con checkbox vacío). Pulsar Enter sobre un marcador vacío sale de la lista.
+- **Pegar URL como enlace**: si pegas una URL sobre una selección no vacía, esta se envuelve como `[selección](url)` en lugar de reemplazarse (vía `pasteURLAsLink` de `@codemirror/lang-markdown`).
+- **Sync de scroll editor↔preview por línea**: el preview se anota con `data-source-line` en cada bloque y la sincronización mapea línea ↔ elemento DOM, eliminando la deriva por ratio en documentos con bloques de altura desigual (imágenes, tablas, code blocks).
+- API del editor: `MarkdownEditorHandle.applyFormat(action)`, `insertSnippet(text)`, `scrollToLineTop(line)`, `getTopVisibleLine()`.
+- Dependencia directa: `@codemirror/language` (estaba en transitivos).
+
+### Fixed
+
+- El parser de markdown ahora carga GFM (`markdown({ base: markdownLanguage })`), por lo que el syntax highlighting y la detección de formato activo reconocen correctamente tachado y listas de tareas.
+- `pnpm test` ya no es ruidoso por archivos `._*` que macOS crea en discos externos: vitest los excluye explícitamente.
+- Asserts de tests que dependían de `<h1>X</h1>` exacto ahora aceptan atributos adicionales (`<h1 data-source-line="0">X</h1>`).
+
+### Changed
+
+- `useSplitScrollSync` reemplaza la sincronización por ratio con una basada en líneas fuente.
+- El área editor/preview anida un `flex flex-col` dentro del `grid-rows-[auto_1fr]` exterior para acomodar la nueva toolbar de formato sin alterar el layout del Welcome state ni del modo dividido.
+
+### Removed
+
+- `DESIGN_REVIEW.md` y `FRONTEND_IMPROVEMENTS.md` de la raíz: notas de trabajo desactualizadas que duplicaban contenido del README/CHANGELOG.
+- Plataforma `macos-13` (Intel) del matrix de `release.yml`: el pool hospedado de runners macOS Intel está siendo retirado y los jobs quedaban en `queued` indefinidamente. La build `macos-aarch64` se ejecuta en Intel vía Rosetta 2.
+
+### Release & signing infrastructure
+
+- **macOS Developer ID** firma + notarización automática en builds locales y de CI:
+  - `tauri.conf.json` no fija `signingIdentity` — Tauri lee el env var `APPLE_SIGNING_IDENTITY` (presente en `.env.local` para local y como secret en CI), de modo que CI de PR sigue construyendo sin firmar.
+  - `release.yml` importa el certificado `.p12` (vía `APPLE_CERTIFICATE` + `APPLE_CERTIFICATE_PASSWORD` secrets) en un keychain temporal del runner, materializa la API Key de App Store Connect (`APPLE_API_KEY_BASE64` → `.p8` en disco) y deja `APPLE_API_KEY_PATH` en `$GITHUB_ENV` para que el siguiente step la consuma.
+  - El step de build pasa de "unsigned" a "signed & notarized": Tauri firma con `APPLE_SIGNING_IDENTITY`, sube a notarytool y staplea el ticket sobre `.app` y `.dmg`.
+- `scripts/tauri.mjs`: wrapper de `pnpm tauri` que redirige `CARGO_TARGET_DIR` a `$TMPDIR/bruma-cargo-target` para builds locales (mantiene el árbol del repo limpio). En CI los workflows llaman a `pnpm exec tauri build` directamente para preservar las rutas por defecto.
+- Documentación operativa actualizada en [docs/RELEASE.md](docs/RELEASE.md): credenciales, secrets requeridos, comprobaciones post-build (`spctl`, `notarytool`).
+
 ## [1.4.4] - 2026-05-03
 
 ### Added

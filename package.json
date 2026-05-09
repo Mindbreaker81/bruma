@@ -1,6 +1,6 @@
 {
   "name": "bruma",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "description": "Editor Markdown de escritorio: ligero, local y simple.",
   "type": "module",
   "private": true,
@@ -11,7 +11,7 @@
     "prebuild": "node scripts/sync-version.mjs",
     "build:analyze": "ANALYZE=true npm run build",
     "preview": "vite preview",
-    "tauri": "tauri",
+    "tauri": "node scripts/tauri.mjs",
     "pretauri": "node scripts/sync-version.mjs",
     "sync:version": "node scripts/sync-version.mjs",
     "check:version": "node scripts/sync-version.mjs --check",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-markdown": "^6.3.4",
+    "@codemirror/language": "^6.12.3",
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.8",

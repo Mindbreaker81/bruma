@@ -24,11 +24,24 @@ const markdown: MarkdownIt = new MarkdownIt({
 
     return escapeHtml(code);
   },
-}).use(taskLists, {
-  enabled: false,
-  label: true,
-  labelAfter: true,
-});
+})
+  .use(taskLists, {
+    enabled: false,
+    label: true,
+    labelAfter: true,
+  })
+  .use((md) => {
+    // Annotate every top-level opening block token with its source line, so
+    // the preview can be scrolled in lockstep with the editor.
+    const renderToken = md.renderer.renderToken.bind(md.renderer);
+    md.renderer.renderToken = function (tokens, idx, options) {
+      const token = tokens[idx];
+      if (token && token.map && token.level === 0 && token.nesting !== -1) {
+        token.attrSet('data-source-line', String(token.map[0]));
+      }
+      return renderToken(tokens, idx, options);
+    };
+  });
 
 const ALLOWED_TAGS = [
   'a',
@@ -104,6 +117,14 @@ function installPurifyHooksOnce() {
     stripIfDangerous('href');
     stripIfDangerous('src');
   });
+
+  // Whitelist `data-source-line` so it survives sanitization without enabling
+  // arbitrary data-* attributes from untrusted markdown.
+  DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+    if (data.attrName === 'data-source-line') {
+      data.allowedAttributes['data-source-line'] = true;
+    }
+  });
 }
 
 export function renderMarkdown(source: string): string {
@@ -115,6 +136,9 @@ export function sanitizeMarkdownHtml(html: string): string {
   const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_ATTR,
     ALLOWED_TAGS,
+    // Keep arbitrary data-* out of the DOM. The `uponSanitizeAttribute` hook
+    // explicitly whitelists only `data-source-line`, which we need for the
+    // editor↔preview scroll sync.
     ALLOW_DATA_ATTR: false,
     FORBID_ATTR: ['style'],
   });

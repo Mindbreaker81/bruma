@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import type { MarkdownEditorHandle } from './features/editor/MarkdownEditor';
+import type { FormatCommandId } from './features/editor/formatCommands';
 import { type Tab } from './features/files/document';
 import {
   AlertDialog,
@@ -58,6 +59,8 @@ import {
 import { useSearchStore } from './features/search/state';
 import type { ViewMode } from './features/settings/view';
 import { StatusBar } from './features/shell/StatusBar';
+import { FormatToolbar } from './features/shell/toolbar/FormatToolbar';
+import { MarkdownGuide } from './features/shell/MarkdownGuide';
 import { ToolbarExport } from './features/shell/toolbar/ToolbarExport';
 import { ToolbarFile } from './features/shell/toolbar/ToolbarFile';
 import { ToolbarView } from './features/shell/toolbar/ToolbarView';
@@ -327,6 +330,10 @@ export default function App() {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  const [isMarkdownGuideOpen, setIsMarkdownGuideOpen] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<
+    ReadonlySet<FormatCommandId>
+  >(() => new Set());
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingSession, setPendingSession] = useState<{
@@ -1033,102 +1040,115 @@ export default function App() {
               viewMode={viewMode}
             />
 
-            <div
-              className={
-                viewMode === 'split'
-                  ? 'relative grid min-h-0 grid-cols-2 divide-x divide-border'
-                  : 'relative flex min-h-0 flex-col'
-              }
-            >
-              <Suspense fallback={null}>
-                {isSearchOpen ? (
-                  <SearchPanel
-                    activeIndex={searchActiveIndex}
-                    caseSensitive={searchCaseSensitive}
-                    matchCount={searchMatchCount}
-                    query={searchQuery}
-                    replaceMode={replaceMode}
-                    replaceQuery={replaceQuery}
-                    onCaseSensitiveChange={setSearchCaseSensitive}
-                    onClose={handleCloseSearch}
-                    onNext={() => goNext(searchMatchCount)}
-                    onPrevious={() => goPrevious(searchMatchCount)}
-                    onQueryChange={setSearchQuery}
-                    onReplaceAll={handleReplaceAll}
-                    onReplaceOne={handleReplaceOne}
-                    onReplaceQueryChange={setReplaceQuery}
-                    onToggleReplace={toggleReplaceMode}
-                  />
-                ) : null}
-              </Suspense>
-              {viewMode !== 'preview' ? (
-                <div className="relative min-h-0 flex-1 overflow-hidden bg-background/60">
-                  {showWelcomeState ? (
-                    <WelcomeState
-                      recentFiles={recentFiles}
-                      onDismiss={() => setWelcomeDismissed(true)}
-                      onNewDocument={handleNewDocument}
-                      onOpenDocument={handleOpenWithConfirmation}
-                      onOpenRecent={handleOpenRecent}
+            <div className="flex min-h-0 flex-col">
+              {viewMode !== 'preview' && !focusMode && !showWelcomeState ? (
+                <FormatToolbar
+                  editorRef={editorRef}
+                  activeFormats={activeFormats}
+                  onOpenGuide={() => setIsMarkdownGuideOpen(true)}
+                />
+              ) : null}
+
+              <div
+                className={
+                  viewMode === 'split'
+                    ? 'relative grid min-h-0 flex-1 grid-cols-2 divide-x divide-border'
+                    : 'relative flex min-h-0 flex-1 flex-col'
+                }
+              >
+                <Suspense fallback={null}>
+                  {isSearchOpen ? (
+                    <SearchPanel
+                      activeIndex={searchActiveIndex}
+                      caseSensitive={searchCaseSensitive}
+                      matchCount={searchMatchCount}
+                      query={searchQuery}
+                      replaceMode={replaceMode}
+                      replaceQuery={replaceQuery}
+                      onCaseSensitiveChange={setSearchCaseSensitive}
+                      onClose={handleCloseSearch}
+                      onNext={() => goNext(searchMatchCount)}
+                      onPrevious={() => goPrevious(searchMatchCount)}
+                      onQueryChange={setSearchQuery}
+                      onReplaceAll={handleReplaceAll}
+                      onReplaceOne={handleReplaceOne}
+                      onReplaceQueryChange={setReplaceQuery}
+                      onToggleReplace={toggleReplaceMode}
                     />
                   ) : null}
-                  <div
-                    className="contents"
-                    aria-hidden={showWelcomeState || undefined}
-                    {...(showWelcomeState
-                      ? ({ inert: '' } as Record<string, string>)
-                      : {})}
-                  >
-                    <Suspense
-                      fallback={
-                        <div
-                          role="textbox"
-                          aria-label={t('editor.label')}
-                          className="bruma-editor h-full min-h-0 bg-background"
-                        />
-                      }
-                    >
-                      <MarkdownEditor
-                        ref={editorRef}
-                        activeSearchIndex={isSearchOpen ? searchActiveIndex : 0}
-                        ariaLabel={t('editor.label')}
-                        placeholder={t('editor.placeholder')}
-                        searchMatches={isSearchOpen ? searchMatches : []}
-                        value={document.content}
-                        onChange={(nextValue) => {
-                          setWelcomeDismissed(true);
-                          updateContent(nextValue);
-                        }}
-                        tabSize={editorTabSize}
-                        lineWrapping={editorWrap}
-                        fontFamily={editorFontFamily}
-                      />
-                    </Suspense>
-                  </div>
-                </div>
-              ) : null}
-              {viewMode !== 'editor' ? (
-                <Suspense
-                  fallback={
-                    <div
-                      aria-hidden
-                      className="flex min-h-0 flex-1 overflow-hidden bg-background"
-                    />
-                  }
-                >
-                  <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
-                    <Preview
-                      scrollContainerRef={previewRef}
-                      content={document.content}
-                      documentPath={document.path ?? null}
-                      hideFrontmatter={!showFrontmatter}
-                      onExternalLinkClick={handleExternalLinkClick}
-                      onLocalImageRequest={handleLocalImageRequest}
-                      maxWidth={previewMaxWidth}
-                    />
-                  </div>
                 </Suspense>
-              ) : null}
+                {viewMode !== 'preview' ? (
+                  <div className="relative min-h-0 flex-1 overflow-hidden bg-background/60">
+                    {showWelcomeState ? (
+                      <WelcomeState
+                        recentFiles={recentFiles}
+                        onDismiss={() => setWelcomeDismissed(true)}
+                        onNewDocument={handleNewDocument}
+                        onOpenDocument={handleOpenWithConfirmation}
+                        onOpenRecent={handleOpenRecent}
+                      />
+                    ) : null}
+                    <div
+                      className="contents"
+                      aria-hidden={showWelcomeState || undefined}
+                      {...(showWelcomeState
+                        ? ({ inert: '' } as Record<string, string>)
+                        : {})}
+                    >
+                      <Suspense
+                        fallback={
+                          <div
+                            role="textbox"
+                            aria-label={t('editor.label')}
+                            className="bruma-editor h-full min-h-0 bg-background"
+                          />
+                        }
+                      >
+                        <MarkdownEditor
+                          ref={editorRef}
+                          activeSearchIndex={
+                            isSearchOpen ? searchActiveIndex : 0
+                          }
+                          ariaLabel={t('editor.label')}
+                          placeholder={t('editor.placeholder')}
+                          searchMatches={isSearchOpen ? searchMatches : []}
+                          value={document.content}
+                          onChange={(nextValue) => {
+                            setWelcomeDismissed(true);
+                            updateContent(nextValue);
+                          }}
+                          tabSize={editorTabSize}
+                          lineWrapping={editorWrap}
+                          fontFamily={editorFontFamily}
+                          onActiveFormatsChange={setActiveFormats}
+                        />
+                      </Suspense>
+                    </div>
+                  </div>
+                ) : null}
+                {viewMode !== 'editor' ? (
+                  <Suspense
+                    fallback={
+                      <div
+                        aria-hidden
+                        className="flex min-h-0 flex-1 overflow-hidden bg-background"
+                      />
+                    }
+                  >
+                    <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
+                      <Preview
+                        scrollContainerRef={previewRef}
+                        content={document.content}
+                        documentPath={document.path ?? null}
+                        hideFrontmatter={!showFrontmatter}
+                        onExternalLinkClick={handleExternalLinkClick}
+                        onLocalImageRequest={handleLocalImageRequest}
+                        maxWidth={previewMaxWidth}
+                      />
+                    </div>
+                  </Suspense>
+                ) : null}
+              </div>
             </div>
           </div>
         </section>
@@ -1194,6 +1214,12 @@ export default function App() {
               }}
             />
           ) : null}
+
+          <MarkdownGuide
+            open={isMarkdownGuideOpen}
+            onOpenChange={setIsMarkdownGuideOpen}
+            editorRef={editorRef}
+          />
 
           {isPreferencesOpen ? (
             <PreferencesDialog

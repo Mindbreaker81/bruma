@@ -1,5 +1,9 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { markdown } from '@codemirror/lang-markdown';
+import {
+  markdown,
+  markdownLanguage,
+  pasteURLAsLink,
+} from '@codemirror/lang-markdown';
 import { searchKeymap } from '@codemirror/search';
 import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
 import {
@@ -18,7 +22,23 @@ import {
 
 import type { SearchMatch } from '../search/search';
 import { useThemeStore } from '../settings/state';
+import { getActiveFormats } from './activeFormats';
+import {
+  applyFormat as applyFormatToView,
+  type FormatAction,
+  insertSnippet as insertSnippetToView,
+} from './format';
+import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
+import { continueListOnEnter } from './listContinuation';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
+
+const formatKeymap = FORMAT_COMMANDS.filter((c) => c.shortcut).map((c) => ({
+  key: c.shortcut!,
+  run: (view: EditorView) => {
+    applyFormatToView(view, c.action);
+    return true;
+  },
+}));
 
 type MarkdownEditorProps = {
   value: string;
@@ -30,6 +50,7 @@ type MarkdownEditorProps = {
   tabSize?: number;
   lineWrapping?: boolean;
   fontFamily?: string;
+  onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -37,7 +58,16 @@ const CHANGE_DEBOUNCE_MS = 120;
 export type MarkdownEditorHandle = {
   focus: () => void;
   scrollToLine: (line: number) => void;
+  /**
+   * Scroll so that the given 0-based line is at the top of the viewport,
+   * without changing the selection. Used by the split-pane scroll sync.
+   */
+  scrollToLineTop: (line: number) => void;
+  /** 0-based source line currently at the top of the editor viewport. */
+  getTopVisibleLine: () => number | null;
   getScrollDOM: () => HTMLElement | null;
+  applyFormat: (action: FormatAction) => void;
+  insertSnippet: (text: string) => void;
 };
 
 function buildSearchDecorations(
@@ -85,6 +115,7 @@ export const MarkdownEditor = forwardRef<
     tabSize = 4,
     lineWrapping = true,
     fontFamily = 'sans',
+    onActiveFormatsChange,
   },
   ref
 ) {
@@ -92,6 +123,7 @@ export const MarkdownEditor = forwardRef<
   const editorRef = useRef<EditorView | null>(null);
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
+  const onActiveFormatsChangeRef = useRef(onActiveFormatsChange);
   const debounceRef = useRef<number | null>(null);
   const hadSearchSelectionRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
@@ -123,11 +155,39 @@ export const MarkdownEditor = forwardRef<
       });
       editor.focus();
     },
+    applyFormat: (action: FormatAction) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      applyFormatToView(editor, action);
+    },
+    insertSnippet: (text: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      insertSnippetToView(editor, text);
+    },
+    scrollToLineTop: (line: number) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const totalLines = editor.state.doc.lines;
+      const target = Math.min(Math.max(line + 1, 1), totalLines);
+      const block = editor.lineBlockAt(editor.state.doc.line(target).from);
+      editor.scrollDOM.scrollTop = block.top;
+    },
+    getTopVisibleLine: () => {
+      const editor = editorRef.current;
+      if (!editor) return null;
+      const block = editor.lineBlockAtHeight(editor.scrollDOM.scrollTop);
+      return editor.state.doc.lineAt(block.from).number - 1;
+    },
   }));
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  useEffect(() => {
+    onActiveFormatsChangeRef.current = onActiveFormatsChange;
+  }, [onActiveFormatsChange]);
 
   useEffect(() => {
     latestValueRef.current = value;
@@ -144,8 +204,17 @@ export const MarkdownEditor = forwardRef<
         doc: latestValueRef.current,
         extensions: [
           history(),
-          markdown(),
-          keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+          markdown({ base: markdownLanguage }),
+          // When the user pastes a URL over a non-empty selection, wrap the
+          // selection as `[selection](url)` instead of replacing it.
+          pasteURLAsLink,
+          keymap.of([
+            { key: 'Enter', run: continueListOnEnter },
+            ...formatKeymap,
+            ...defaultKeymap,
+            ...historyKeymap,
+            ...searchKeymap,
+          ]),
           tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
           lineWrappingCompartmentRef.current.of(
             lineWrapping ? EditorView.lineWrapping : []
@@ -160,20 +229,25 @@ export const MarkdownEditor = forwardRef<
           ),
           themeCompartmentRef.current.of(brumaLightTheme),
           EditorView.updateListener.of((update) => {
-            if (!update.docChanged) {
-              return;
+            if (update.docChanged) {
+              const nextValue = update.state.doc.toString();
+              latestValueRef.current = nextValue;
+
+              if (debounceRef.current) {
+                window.clearTimeout(debounceRef.current);
+              }
+
+              debounceRef.current = window.setTimeout(() => {
+                onChangeRef.current(nextValue);
+              }, CHANGE_DEBOUNCE_MS);
             }
 
-            const nextValue = update.state.doc.toString();
-            latestValueRef.current = nextValue;
-
-            if (debounceRef.current) {
-              window.clearTimeout(debounceRef.current);
+            if (
+              (update.docChanged || update.selectionSet) &&
+              onActiveFormatsChangeRef.current
+            ) {
+              onActiveFormatsChangeRef.current(getActiveFormats(update.state));
             }
-
-            debounceRef.current = window.setTimeout(() => {
-              onChangeRef.current(nextValue);
-            }, CHANGE_DEBOUNCE_MS);
           }),
         ],
       }),

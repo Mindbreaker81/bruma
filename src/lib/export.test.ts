@@ -8,7 +8,7 @@ describe('export html', () => {
     expect(html).toContain('<!doctype html>');
     expect(html).toContain('<title>Mi nota</title>');
     expect(html).toContain('<style>');
-    expect(html).toContain('<h1>Hola</h1>');
+    expect(html).toMatch(/<h1[^>]*>Hola<\/h1>/);
   });
 
   it('escapes the title to prevent injection', () => {
