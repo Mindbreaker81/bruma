@@ -34,6 +34,12 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "Developer ID Application: Instituto de Medicina Respiratoria Barcelona SLP (VWG7LL4F2S)",
+      "minimumSystemVersion": "10.15",
+      "entitlements": null,
+      "exceptionDomain": ""
+    }
   }
 }

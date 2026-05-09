@@ -11,7 +11,7 @@
     "prebuild": "node scripts/sync-version.mjs",
     "build:analyze": "ANALYZE=true npm run build",
     "preview": "vite preview",
-    "tauri": "tauri",
+    "tauri": "node scripts/tauri.mjs",
     "pretauri": "node scripts/sync-version.mjs",
     "sync:version": "node scripts/sync-version.mjs",
     "check:version": "node scripts/sync-version.mjs --check",

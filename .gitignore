@@ -21,7 +21,8 @@ src-tauri/target
 .env
 .env.*
 !.env.example
-
+.env.local
+    
 # Vercel CLI (enlace local al proyecto)
 .vercel
 
@@ -47,6 +48,7 @@ Thumbs.db
 .cursor/mcp.json
 .cursor/
 .codex/
+.claude/
 
 # Rust
 **/*.rs.bk
