@@ -120,7 +120,7 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           # APPLE_API_KEY_PATH se inyecta via GITHUB_ENV en el step anterior
-        run: pnpm tauri build
+        run: pnpm exec tauri build
       - name: Prefetch NSIS tools (retry)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -173,11 +173,11 @@ jobs:
 
       - name: Build unsigned bundle (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
-        run: pnpm tauri build
+        run: pnpm exec tauri build
 
       - name: Build unsigned app (Windows arm64, no bundle)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
-        run: pnpm tauri build --target aarch64-pc-windows-msvc --no-bundle
+        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --no-bundle
 
       - name: Build unsigned bundle (Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -189,13 +189,13 @@ jobs:
 
           # Tauri's AppImage bundling can fail on environments that can't execute
           # AppImages reliably. Use a fallback path that runs linuxdeploy directly.
-          if pnpm tauri build --bundles appimage; then
+          if pnpm exec tauri build --bundles appimage; then
             exit 0
           fi
 
           echo "Tauri AppImage bundling failed; running linuxdeploy fallback..."
 
-          pnpm tauri build --no-bundle
+          pnpm exec tauri build --no-bundle
 
           app_dir="src-tauri/target/release/bundle/appimage/Bruma.AppDir"
           if [[ ! -d "$app_dir" ]]; then
