@@ -53,7 +53,7 @@ test('shows the Bruma shell', async ({ page }) => {
   await expect(preview).toContainText('Bruma');
 
   // Open search
-  await page.getByRole('button', { name: /^Buscar$|^Search$/ }).click();
+  await page.getByRole('button', { name: /Search|Buscar/i }).first().click();
   await page
     .getByPlaceholder(/Search|Buscar/)
     .first()
@@ -78,9 +78,7 @@ test('shows the Bruma shell', async ({ page }) => {
 
   // New document triggers unsaved changes dialog
   await page
-    .locator(
-      'button[aria-label="New document"], button[aria-label="Nuevo documento"]'
-    )
+    .locator('button[aria-label*="New document"], button[aria-label*="Nuevo documento"]')
     .click();
   await page.getByRole('menuitem', { name: /Empty note|Nota vacía/i }).click();
 
