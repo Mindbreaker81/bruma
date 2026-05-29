@@ -3,11 +3,11 @@ use tauri::{AppHandle, Runtime, State};
 use crate::menu::{self, RecentFilesMenuState, UpdateMenuState};
 
 #[tauri::command]
-pub fn sync_recent_files_menu<R: Runtime>(
+pub fn set_update_available_menu_state<R: Runtime>(
     app: AppHandle<R>,
-    state: State<'_, RecentFilesMenuState>,
+    recent_state: State<'_, RecentFilesMenuState>,
     update_state: State<'_, UpdateMenuState>,
-    paths: Vec<String>,
+    available: bool,
 ) -> Result<(), String> {
-    menu::sync_recent_files(&app, &state, &update_state, paths)
+    menu::set_update_available(&app, &recent_state, &update_state, available)
 }

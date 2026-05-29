@@ -38,6 +38,18 @@ export async function listenToMenuActions(
   });
 }
 
+export async function setUpdateAvailableMenuState(
+  available: boolean
+): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  await invoke('set_update_available_menu_state', { available });
+}
+
 export async function listenToRecentOpen(
   handler: (path: string) => void
 ): Promise<() => void> {

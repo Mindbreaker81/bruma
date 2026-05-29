@@ -9,7 +9,9 @@ fn configure_fixed_webview2_runtime_if_present() {
         return;
     }
 
-    let exe_dir: PathBuf = match std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf()))
+    let exe_dir: PathBuf = match std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
     {
         Some(dir) => dir,
         None => return,
@@ -29,7 +31,9 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(menu::RecentFilesMenuState::default())
+        .manage(menu::UpdateMenuState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             commands::fs::open_file_dialog,
             commands::fs::read_file,
@@ -38,6 +42,7 @@ pub fn run() {
             commands::fs::save_export_dialog,
             commands::fs::save_file,
             commands::fs::save_file_dialog,
+            commands::app_menu::set_update_available_menu_state,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
             commands::e2e::e2e_emit_recent_open,
@@ -45,6 +50,10 @@ pub fn run() {
             commands::recent::sync_recent_files_menu
         ])
         .setup(|app| {
+            #[cfg(desktop)]
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
+
             menu::install(app)?;
             Ok(())
         })

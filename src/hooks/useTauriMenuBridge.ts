@@ -9,6 +9,7 @@ type MenuHandlers = {
   handleOpenSearch: () => void;
   handleOpenWithConfirmation: () => void;
   handlePrint: () => void;
+  handleCheckUpdates: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
   openAbout: () => void;
@@ -85,6 +86,9 @@ export function useTauriMenuBridge({
       }
       if (action === 'help_shortcuts') {
         setIsShortcutsOpen(true);
+      }
+      if (action === 'help_check_updates') {
+        h.handleCheckUpdates();
       }
     }).then((unlisten) => {
       if (isDisposed) {

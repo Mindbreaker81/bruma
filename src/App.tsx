@@ -48,6 +48,12 @@ import { useFileStore } from './features/files/state';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from './features/settings/state';
 import { useTauriMenuBridge } from './hooks/useTauriMenuBridge';
+import {
+  type UpdateInfo,
+  type UpdateProgress,
+  useUpdateChecker,
+} from './hooks/useUpdateChecker';
+import type { UpdateDialogStatus } from './features/settings/UpdateDialog';
 import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession, readSession, writeSession } from './lib/session';
@@ -81,6 +87,7 @@ import {
   listenToFileDrop,
   printCurrentWindow,
   setAppWindowTitle,
+  setUpdateAvailableMenuState,
 } from './lib/tauri';
 
 const ConfirmDirtyDialog = lazy(() =>
@@ -104,6 +111,12 @@ const PreferencesDialog = lazy(() =>
 const ShortcutsDialog = lazy(() =>
   import('./features/settings/ShortcutsDialog').then((module) => ({
     default: module.ShortcutsDialog,
+  }))
+);
+
+const UpdateDialog = lazy(() =>
+  import('./features/settings/UpdateDialog').then((module) => ({
+    default: module.UpdateDialog,
   }))
 );
 
@@ -140,6 +153,7 @@ type MenuHandlers = {
   handleOpenSearch: () => void;
   handleOpenWithConfirmation: () => void;
   handlePrint: () => void;
+  handleCheckUpdates: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
   openAbout: () => void;
@@ -327,6 +341,14 @@ export default function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [updateStatus, setUpdateStatus] =
+    useState<UpdateDialogStatus>('checking');
+  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(
+    null
+  );
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Load custom templates on mount
   useEffect(() => {
@@ -374,6 +396,13 @@ export default function App() {
   } | null>(null);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const previewRef = useRef<HTMLElement | null>(null);
+  const { checkForUpdates, downloadAndInstall, ignoreVersion, relaunch } =
+    useUpdateChecker();
+  const hasUpdateAvailable =
+    Boolean(updateInfo) &&
+    (updateStatus === 'available' ||
+      updateStatus === 'downloading' ||
+      updateStatus === 'installing');
 
   useSplitScrollSync({
     enabled: viewMode === 'split' && splitScrollSync,
@@ -387,6 +416,7 @@ export default function App() {
     handleOpenSearch: () => {},
     handleOpenWithConfirmation: () => {},
     handlePrint: () => {},
+    handleCheckUpdates: () => {},
     handleSave: () => Promise.resolve(false),
     handleSaveAs: () => Promise.resolve(false),
     openAbout: () => {},
@@ -498,6 +528,77 @@ export default function App() {
       });
     }, PRINT_DELAY_MS);
   }, [document.content, showFrontmatter]);
+
+  const handleCheckUpdates = useCallback(
+    async (manual = true) => {
+      setUpdateStatus('checking');
+      setUpdateError(null);
+      setUpdateProgress(null);
+      if (manual) {
+        setIsUpdateOpen(true);
+      }
+
+      try {
+        const result = await checkForUpdates({ includeIgnored: manual });
+
+        if (result.status === 'available') {
+          setUpdateInfo(result.update);
+          setUpdateStatus('available');
+          setIsUpdateOpen(true);
+          return;
+        }
+
+        if (result.status === 'ignored') {
+          if (manual) {
+            setUpdateInfo(result.update);
+            setUpdateStatus('available');
+            setIsUpdateOpen(true);
+          }
+          return;
+        }
+
+        setUpdateInfo(null);
+        setUpdateStatus('up_to_date');
+        if (manual) {
+          setIsUpdateOpen(true);
+        }
+      } catch (error) {
+        console.error('Update check failed:', error);
+        setUpdateStatus('error');
+        setUpdateError(
+          error instanceof Error ? error.message : t('updates.error')
+        );
+        if (manual) {
+          setIsUpdateOpen(true);
+        }
+      }
+    },
+    [checkForUpdates, t]
+  );
+
+  const handleInstallUpdate = useCallback(() => {
+    setUpdateStatus('downloading');
+    setUpdateError(null);
+    void downloadAndInstall((progress) => setUpdateProgress(progress))
+      .then(async () => {
+        setUpdateStatus('installing');
+        await relaunch();
+      })
+      .catch((error) => {
+        console.error('Update install failed:', error);
+        setUpdateStatus('error');
+        setUpdateError(
+          error instanceof Error ? error.message : t('updates.error')
+        );
+      });
+  }, [downloadAndInstall, relaunch, t]);
+
+  const handleIgnoreUpdate = useCallback(() => {
+    if (updateInfo) {
+      void ignoreVersion(updateInfo.version);
+    }
+    setIsUpdateOpen(false);
+  }, [ignoreVersion, updateInfo]);
 
   const handleExternalLinkClick = useCallback((href: string) => {
     setExternalLinkPrompt(href);
@@ -869,6 +970,7 @@ export default function App() {
       handleOpenSearch,
       handleOpenWithConfirmation,
       handlePrint,
+      handleCheckUpdates: () => handleCheckUpdates(true),
       handleSave,
       handleSaveAs,
       openAbout: () => setIsAboutOpen(true),
@@ -882,6 +984,7 @@ export default function App() {
     handleOpenSearch,
     handleOpenWithConfirmation,
     handlePrint,
+    handleCheckUpdates,
     handleSave,
     handleSaveAs,
     setLanguage,
@@ -891,6 +994,22 @@ export default function App() {
   useEffect(() => {
     normalizeActiveIndex(searchMatchCount);
   }, [normalizeActiveIndex, searchMatchCount]);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    void handleCheckUpdates(false);
+  }, [handleCheckUpdates]);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    void setUpdateAvailableMenuState(hasUpdateAvailable);
+  }, [hasUpdateAvailable]);
 
   useEffect(() => {
     if (!isTauriRuntime()) {
@@ -1145,6 +1264,8 @@ export default function App() {
                   activeFormats={activeFormats}
                   onOpenGuide={() => setIsMarkdownGuideOpen(true)}
                   onOpenShortcuts={() => setIsShortcutsOpen(true)}
+                  updateAvailable={hasUpdateAvailable}
+                  onOpenUpdates={() => void handleCheckUpdates(true)}
                 />
               ) : null}
 
@@ -1324,6 +1445,18 @@ export default function App() {
           <ShortcutsDialog
             open={isShortcutsOpen}
             onOpenChange={setIsShortcutsOpen}
+          />
+
+          <UpdateDialog
+            open={isUpdateOpen}
+            status={updateStatus}
+            update={updateInfo}
+            progress={updateProgress}
+            error={updateError}
+            onOpenChange={setIsUpdateOpen}
+            onInstall={handleInstallUpdate}
+            onRemindLater={() => setIsUpdateOpen(false)}
+            onIgnore={handleIgnoreUpdate}
           />
 
           {isPreferencesOpen ? (

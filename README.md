@@ -36,6 +36,20 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Imprimir documento desde toolbar o menu nativo
 - Carga diferida de editor, preview, busqueda, dialogos y export para reducir el JS inicial
 - Reporte de bundle local con `npm run build:analyze`
+- Actualizaciones integradas: comprobación al inicio, acción manual en menú Ayuda, diálogo propio e indicador en toolbar
+
+
+## Actualizaciones integradas
+
+Bruma usa `tauri-plugin-updater` con un manifiesto estático publicado como asset de GitHub Releases:
+
+```text
+https://github.com/Mindbreaker81/bruma/releases/latest/download/update.json
+```
+
+La app comprueba actualizaciones al iniciar y también desde `Ayuda > Buscar actualizaciones`. Cuando hay una versión disponible, muestra un diálogo propio con notas, progreso e instalación; la versión ignorada se persiste localmente con `tauri-plugin-store`.
+
+El workflow `Release` genera artifacts de updater firmados y publica `update.json` con `scripts/generate-update-json.mjs`. La clave privada de updater no debe entrar al repo; en CI se usa `TAURI_SIGNING_PRIVATE_KEY` y opcionalmente `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
 
 ## Seguridad y privacidad
 

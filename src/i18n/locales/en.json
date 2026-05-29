@@ -275,5 +275,21 @@
   "mobileFallback": {
     "title": "Bruma is optimized for desktop",
     "body": "For the best experience, open Bruma in a wider window or install the desktop app."
+  },
+  "updates": {
+    "dialogTitle": "Updates",
+    "available": "An update is available.",
+    "currentVersion": "Current version",
+    "newVersion": "New version",
+    "notes": "Release notes",
+    "size": "Size",
+    "buttonInstall": "Update now",
+    "buttonRemind": "Remind me later",
+    "buttonIgnore": "Ignore this version",
+    "progress": "Downloading update",
+    "error": "The update could not be checked or installed.",
+    "upToDate": "Bruma is up to date.",
+    "checkNow": "Check for updates",
+    "indicatorAvailable": "Update available"
   }
 }

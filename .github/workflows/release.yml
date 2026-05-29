@@ -12,6 +12,9 @@ jobs:
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
@@ -236,6 +239,14 @@ jobs:
           fi
           cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
+          app_tars=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
+          if [[ ${#app_tars[@]} -lt 1 ]]; then
+            echo "No updater .app.tar.gz found in src-tauri/target/release/bundle/macos/"
+            exit 1
+          fi
+          cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
+          cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
+
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -312,6 +323,7 @@ jobs:
             exit 1
           fi
           cp "${appimages[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage"
+          cp "${appimages[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage.sig"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -324,3 +336,57 @@ jobs:
           draft: ${{ github.event_name == 'workflow_dispatch' }}
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
+
+
+  update-manifest:
+    name: Publish update manifest
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve release tag
+        id: release_tag
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "value=draft-v${version}-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ steps.release_tag.outputs.value }}" --dir release-assets
+
+      - name: Generate update.json
+        env:
+          RELEASE_TAG: ${{ steps.release_tag.outputs.value }}
+        run: node scripts/generate-update-json.mjs release-assets release-assets/update.json
+
+      - name: Upload update manifest
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/update.json
+          tag_name: ${{ steps.release_tag.outputs.value }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}

@@ -2,6 +2,7 @@ import { type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Separator } from '../../../components/ui/separator';
+import { UpdateIndicator } from './UpdateIndicator';
 import { IconButton } from '../../../components/ui/icon-button';
 import { withShortcutLabel } from '../../../lib/formatShortcut';
 import type { MarkdownEditorHandle } from '../../editor/MarkdownEditor';
@@ -16,6 +17,8 @@ type FormatToolbarProps = {
   activeFormats?: ReadonlySet<FormatCommandId>;
   onOpenGuide?: () => void;
   onOpenShortcuts?: () => void;
+  updateAvailable?: boolean;
+  onOpenUpdates?: () => void;
 };
 
 export function FormatToolbar({
@@ -23,6 +26,8 @@ export function FormatToolbar({
   activeFormats,
   onOpenGuide,
   onOpenShortcuts,
+  updateAvailable = false,
+  onOpenUpdates,
 }: FormatToolbarProps) {
   const { t } = useTranslation();
 
@@ -57,10 +62,16 @@ export function FormatToolbar({
           })}
         </div>
       ))}
-      {(onOpenGuide || onOpenShortcuts) && (
+      {(onOpenGuide || onOpenShortcuts || onOpenUpdates) && (
         <>
           <Separator orientation="vertical" className="mx-1 h-5 bg-border/70" />
           <div className="ml-auto flex shrink-0 items-center gap-1">
+            {onOpenUpdates && (
+              <UpdateIndicator
+                available={updateAvailable}
+                onOpen={onOpenUpdates}
+              />
+            )}
             {onOpenGuide && (
               <button
                 type="button"

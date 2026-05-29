@@ -23,7 +23,7 @@ git push origin "v$VERSION"
 ```
 
 3. Ejecutar el workflow `Release` (o esperar a que se dispare por tag).
-4. Verificar que la GitHub Release contiene los assets esperados.
+4. Verificar que la GitHub Release contiene los assets esperados, sus `.sig` y `update.json`.
 5. Probar los bundles en maquinas reales antes de anunciar/publicar ampliamente.
 
 `package.json` es la fuente unica editable de version. `pnpm sync:version` actualiza automaticamente `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` y `src-tauri/Cargo.lock`. `pnpm check:version` falla si alguno queda desincronizado.
@@ -40,6 +40,9 @@ git push origin "v$VERSION"
   - `bruma-vX.Y.Z-windows-arm64-portable-full.zip`
 - **Linux**:
   - `bruma-vX.Y.Z-linux-x86_64.AppImage`
+- **Updater**:
+  - `update.json`
+  - firmas `.sig` para los artifacts usados por el updater
 
 > El runner `macos-13` (Intel) está fuera del matrix porque GitHub está retirando ese pool y los jobs quedaban en `queued` indefinidamente. La build `macos-aarch64` corre en Intel vía Rosetta 2.
 
@@ -58,6 +61,8 @@ Toda la firma + notarización ocurre en `release.yml` cuando se dispara por tag 
 | `APPLE_API_KEY` | Key ID de App Store Connect API Key | 10 caracteres |
 | `APPLE_API_ISSUER` | Issuer ID (UUID) en *App Store Connect → Integrations* | |
 | `APPLE_API_KEY_BASE64` | `base64 -i AuthKey_XXXXX.p8` | El `.p8` solo se descarga **una vez** desde App Store Connect |
+| `TAURI_SIGNING_PRIVATE_KEY` | clave privada del updater | Contenido o ruta usada por Tauri para firmar updater artifacts |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | contraseña del updater | Opcional si la clave no tiene contraseña |
 
 ### Lo que hace el workflow
 

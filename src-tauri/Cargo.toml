@@ -1,6 +1,6 @@
 [package]
 name = "bruma"
-version = "1.6.0"
+version = "1.6.1"
 description = "Editor Markdown de escritorio: ligero, local y simple."
 authors = ["mindbreaker81"]
 edition = "2021"
@@ -17,8 +17,13 @@ tauri-build = { version = "2", features = [] }
 base64 = "0.22"
 rfd = "0.15.4"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tauri = { version = "2", features = [] }
 tauri-plugin-store = "2"
+tauri-plugin-process = "2"
 
 [lints]
 rust = { warnings = "warn" }
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2.10.1"

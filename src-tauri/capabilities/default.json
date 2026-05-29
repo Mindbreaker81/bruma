@@ -3,5 +3,10 @@
   "identifier": "default",
   "description": "Default desktop capability for Bruma.",
   "windows": ["main"],
-  "permissions": ["core:default", "store:default"]
+  "permissions": [
+    "core:default",
+    "store:default",
+    "updater:default",
+    "process:default"
+  ]
 }

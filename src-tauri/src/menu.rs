@@ -13,8 +13,11 @@ const RECENT_EMPTY_ID: &str = "file_recent_empty";
 #[derive(Default)]
 pub struct RecentFilesMenuState(pub Mutex<Vec<String>>);
 
+#[derive(Default)]
+pub struct UpdateMenuState(pub Mutex<bool>);
+
 pub fn install(app: &App) -> tauri::Result<()> {
-    app.set_menu(build_menu(app, &[])?)?;
+    app.set_menu(build_menu(app, &[], false)?)?;
 
     Ok(())
 }
@@ -22,6 +25,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
 pub fn sync_recent_files<R: Runtime>(
     app: &AppHandle<R>,
     state: &RecentFilesMenuState,
+    update_state: &UpdateMenuState,
     paths: Vec<String>,
 ) -> Result<(), String> {
     let mut recent_files = state
@@ -29,7 +33,31 @@ pub fn sync_recent_files<R: Runtime>(
         .lock()
         .map_err(|_| "recent_files_lock_failed".to_string())?;
     *recent_files = paths;
-    refresh_menu(app, &recent_files).map_err(|error| error.to_string())
+
+    let update_available = *update_state
+        .0
+        .lock()
+        .map_err(|_| "update_menu_lock_failed".to_string())?;
+    refresh_menu(app, &recent_files, update_available).map_err(|error| error.to_string())
+}
+
+pub fn set_update_available<R: Runtime>(
+    app: &AppHandle<R>,
+    recent_state: &RecentFilesMenuState,
+    update_state: &UpdateMenuState,
+    available: bool,
+) -> Result<(), String> {
+    let recent_files = recent_state
+        .0
+        .lock()
+        .map_err(|_| "recent_files_lock_failed".to_string())?
+        .clone();
+    let mut update_available = update_state
+        .0
+        .lock()
+        .map_err(|_| "update_menu_lock_failed".to_string())?;
+    *update_available = available;
+    refresh_menu(app, &recent_files, available).map_err(|error| error.to_string())
 }
 
 pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &MenuId) {
@@ -52,14 +80,19 @@ pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &MenuId) {
     let _ = app.emit(MENU_ACTION_EVENT, id.as_ref());
 }
 
-fn refresh_menu<R: Runtime>(app: &AppHandle<R>, recent_files: &[String]) -> tauri::Result<()> {
-    app.set_menu(build_menu(app, recent_files)?)?;
+fn refresh_menu<R: Runtime>(
+    app: &AppHandle<R>,
+    recent_files: &[String],
+    update_available: bool,
+) -> tauri::Result<()> {
+    app.set_menu(build_menu(app, recent_files, update_available)?)?;
     Ok(())
 }
 
 fn build_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
+    update_available: bool,
 ) -> tauri::Result<Menu<R>> {
     #[cfg(target_os = "macos")]
     let app_menu = build_app_menu(app)?;
@@ -106,15 +139,40 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     let language_en = MenuItem::with_id(app, "language_en", "English", true, None::<&str>)?;
     let language_menu = Submenu::with_items(app, "Idioma", true, &[&language_es, &language_en])?;
 
-    let help_preferences = MenuItem::with_id(app, "help_preferences", "Preferencias", true, Some("CmdOrCtrl+,"))?;
-    let help_shortcuts = MenuItem::with_id(app, "help_shortcuts", "Atajos de teclado", true, None::<&str>)?;
+    let help_preferences = MenuItem::with_id(
+        app,
+        "help_preferences",
+        "Preferencias",
+        true,
+        Some("CmdOrCtrl+,"),
+    )?;
+    let help_shortcuts = MenuItem::with_id(
+        app,
+        "help_shortcuts",
+        "Atajos de teclado",
+        true,
+        None::<&str>,
+    )?;
+    let help_check_updates = MenuItem::with_id(
+        app,
+        "help_check_updates",
+        update_menu_item_label(update_available),
+        true,
+        None::<&str>,
+    )?;
     let help_separator = PredefinedMenuItem::separator(app)?;
     let help_about = MenuItem::with_id(app, "help_about", "Acerca de Bruma", true, None::<&str>)?;
     let help_menu = Submenu::with_items(
         app,
         "Ayuda",
         true,
-        &[&help_preferences, &help_shortcuts, &help_separator, &help_about],
+        &[
+            &help_preferences,
+            &help_shortcuts,
+            &help_check_updates,
+            &help_separator,
+            &help_about,
+        ],
     )?;
 
     Menu::with_items(
@@ -177,7 +235,8 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
         Some("CmdOrCtrl+Shift+S"),
     )?;
     let print_separator = PredefinedMenuItem::separator(app)?;
-    let file_print = MenuItem::with_id(app, "file_print", "Imprimir...", true, Some("CmdOrCtrl+P"))?;
+    let file_print =
+        MenuItem::with_id(app, "file_print", "Imprimir...", true, Some("CmdOrCtrl+P"))?;
 
     Submenu::with_items(
         app,
@@ -267,9 +326,20 @@ fn parse_recent_menu_index(id: &str) -> Option<usize> {
     id.strip_prefix(RECENT_ITEM_ID_PREFIX)?.parse().ok()
 }
 
+fn update_menu_item_label(update_available: bool) -> &'static str {
+    if update_available {
+        "* Buscar actualizaciones"
+    } else {
+        "Buscar actualizaciones"
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_recent_menu_index, recent_menu_item_id, recent_menu_item_label};
+    use super::{
+        parse_recent_menu_index, recent_menu_item_id, recent_menu_item_label,
+        update_menu_item_label,
+    };
 
     #[test]
     fn builds_recent_menu_ids_from_indexes() {
@@ -298,5 +368,11 @@ mod tests {
         assert_eq!(parse_recent_menu_index("file_recent_open_"), None);
         assert_eq!(parse_recent_menu_index("file_recent_open_a"), None);
         assert_eq!(parse_recent_menu_index("file_recent"), None);
+    }
+
+    #[test]
+    fn marks_update_menu_item_when_update_is_available() {
+        assert_eq!(update_menu_item_label(false), "Buscar actualizaciones");
+        assert_eq!(update_menu_item_label(true), "* Buscar actualizaciones");
     }
 }

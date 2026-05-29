@@ -275,5 +275,21 @@
   "mobileFallback": {
     "title": "Bruma esta optimizado para escritorio",
     "body": "Para una experiencia completa, abre Bruma en una ventana mas ancha o instala la aplicacion de escritorio."
+  },
+  "updates": {
+    "dialogTitle": "Actualizaciones",
+    "available": "Hay una actualización disponible.",
+    "currentVersion": "Versión actual",
+    "newVersion": "Nueva versión",
+    "notes": "Notas de la versión",
+    "size": "Tamaño",
+    "buttonInstall": "Actualizar ahora",
+    "buttonRemind": "Recordar después",
+    "buttonIgnore": "Ignorar esta versión",
+    "progress": "Descargando actualización",
+    "error": "No se pudo comprobar o instalar la actualización.",
+    "upToDate": "Bruma está actualizado.",
+    "checkNow": "Buscar actualizaciones",
+    "indicatorAvailable": "Actualización disponible"
   }
 }

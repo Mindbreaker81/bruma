@@ -6,6 +6,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-05-29
+
+### Added
+
+- Sistema híbrido de actualizaciones con comprobación automática al inicio y acción manual desde `Ayuda > Buscar actualizaciones`.
+- Diálogo propio de actualización con versión actual/nueva, notas, progreso de descarga y acciones para instalar, recordar después o ignorar versión.
+- Indicador visual en la toolbar de formato y prefijo en el menú nativo cuando hay una actualización disponible.
+- Generación de `update.json` para GitHub Releases a partir de assets firmados por plataforma.
+
+### Changed
+
+- La configuración Tauri ahora genera artifacts de updater firmados y usa `tauri-plugin-updater` con endpoint estático en GitHub Releases.
+
 ## [1.6.0] - 2026-05-29
 
 ### Added
