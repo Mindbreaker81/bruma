@@ -22,6 +22,7 @@ test('shows the Bruma shell', async ({ page }) => {
   // Switch language via toolbar
   await page
     .getByRole('button', { name: /Change language|Cambiar idioma/i })
+    .first()
     .click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'es');
 
