@@ -337,7 +337,6 @@ jobs:
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
 
-
   update-manifest:
     name: Publish update manifest
     runs-on: ubuntu-latest

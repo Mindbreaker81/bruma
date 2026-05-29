@@ -38,7 +38,6 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Reporte de bundle local con `npm run build:analyze`
 - Actualizaciones integradas: comprobación al inicio, acción manual en menú Ayuda, diálogo propio e indicador en toolbar
 
-
 ## Actualizaciones integradas
 
 Bruma usa `tauri-plugin-updater` con un manifiesto estático publicado como asset de GitHub Releases:
