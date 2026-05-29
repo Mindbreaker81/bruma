@@ -44,7 +44,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI4QTg2OTNBRkQxRjUzNjgKUldSb1V4LzlPbW1vS0I4L00zREZBaVBibFZUc2VtNGQ0OHU5ZERkOXgxY2NDTkpuZHZTNkFNSWsK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENURGNzY1NjIwM0YzNzQKUldSMDh3TmlaZGRUWFN2NTdOWFQ0TTNIekdpQ0kxbDFJSEdrRzVTQ2dBSXkzUFp5cVlxZ0JrVg==",
       "endpoints": [
         "https://github.com/Mindbreaker81/bruma/releases/latest/download/update.json"
       ],
