@@ -242,12 +242,12 @@ jobs:
           cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
           app_tars=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
-          if [[ ${#app_tars[@]} -lt 1 ]]; then
-            echo "No updater .app.tar.gz found in src-tauri/target/release/bundle/macos/"
-            exit 1
+          if [[ ${#app_tars[@]} -ge 1 ]]; then
+            cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
+            cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
+          else
+            echo "No updater .app.tar.gz found (updater artifacts disabled)"
           fi
-          cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
-          cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
 
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
@@ -325,7 +325,11 @@ jobs:
             exit 1
           fi
           cp "${appimages[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage"
-          cp "${appimages[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage.sig"
+          if [[ -f "${appimages[0]}.sig" ]]; then
+            cp "${appimages[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage.sig"
+          else
+            echo "No .sig file found (updater artifacts disabled)"
+          fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
