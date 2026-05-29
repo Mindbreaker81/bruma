@@ -15,6 +15,8 @@ import {
   loadCustomTemplate,
 } from '../../templates/templates';
 import type { Template } from '../../templates/templates';
+import { withShortcutLabel } from '../../../lib/formatShortcut';
+import { getShortcutById } from '../../../lib/shortcutsCatalog';
 import { Save, Clock, FileInput, FileText, Printer } from 'lucide-react';
 
 type ToolbarFileProps = {
@@ -57,6 +59,22 @@ export function ToolbarFile({
   handlePrint,
 }: ToolbarFileProps) {
   const { t } = useTranslation();
+  const newLabel = withShortcutLabel(
+    t('actions.newDocument'),
+    getShortcutById('file.new')?.shortcut
+  );
+  const openLabel = withShortcutLabel(
+    t('actions.openDocument'),
+    getShortcutById('file.open')?.shortcut
+  );
+  const saveLabel = withShortcutLabel(
+    t('actions.save'),
+    getShortcutById('file.save')?.shortcut
+  );
+  const printLabel = withShortcutLabel(
+    t('actions.print'),
+    getShortcutById('file.print')?.shortcut
+  );
 
   return (
     <ToolbarGroup label={t('toolbar.file')}>
@@ -69,7 +87,8 @@ export function ToolbarFile({
             variant="ghost"
             size="icon"
             className="size-9 rounded-full"
-            aria-label={t('actions.newDocument')}
+            aria-label={newLabel}
+            title={newLabel}
           >
             <FileText className="size-4" aria-hidden />
           </Button>
@@ -121,7 +140,7 @@ export function ToolbarFile({
       </DropdownMenu>
       <IconButton
         icon={FileInput}
-        label={t('actions.openDocument')}
+        label={openLabel}
         onClick={handleOpenWithConfirmation}
         className="rounded-full"
       />
@@ -132,6 +151,7 @@ export function ToolbarFile({
             size="icon"
             className="size-9 rounded-full"
             aria-label={t('recent.open')}
+            title={t('recent.open')}
           >
             <Clock className="size-4" aria-hidden />
           </Button>
@@ -164,13 +184,13 @@ export function ToolbarFile({
       </DropdownMenu>
       <IconButton
         icon={Save}
-        label={t('actions.save')}
+        label={saveLabel}
         onClick={() => void handleSave()}
         className="rounded-full"
       />
       <IconButton
         icon={Printer}
-        label={t('actions.print')}
+        label={printLabel}
         onClick={handlePrint}
         className="rounded-full"
       />

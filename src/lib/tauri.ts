@@ -51,3 +51,37 @@ export async function listenToRecentOpen(
     handler(event.payload);
   });
 }
+
+type FileDropPayload =
+  | {
+      type: 'drop';
+      paths: string[];
+    }
+  | {
+      type: 'over';
+      position: {
+        x: number;
+        y: number;
+      };
+    }
+  | {
+      type: 'cancel';
+    };
+
+export async function listenToFileDrop(
+  handler: (paths: string[]) => void
+): Promise<() => void> {
+  if (!isTauriRuntime()) {
+    return () => undefined;
+  }
+
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+
+  return getCurrentWindow().onDragDropEvent((event) => {
+    const payload = event.payload as FileDropPayload;
+
+    if (payload.type === 'drop') {
+      handler(payload.paths);
+    }
+  });
+}

@@ -20,6 +20,7 @@ type UseTauriMenuBridgeProps = {
   handlers: React.MutableRefObject<MenuHandlers>;
   setIsPreferencesOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsAboutOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsShortcutsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleOpenRecent: (path: string) => void;
 };
 
@@ -27,6 +28,7 @@ export function useTauriMenuBridge({
   handlers,
   setIsPreferencesOpen,
   setIsAboutOpen,
+  setIsShortcutsOpen,
   handleOpenRecent,
 }: UseTauriMenuBridgeProps) {
   useEffect(() => {
@@ -81,6 +83,9 @@ export function useTauriMenuBridge({
       if (action === 'help_about') {
         setIsAboutOpen((open) => !open);
       }
+      if (action === 'help_shortcuts') {
+        setIsShortcutsOpen(true);
+      }
     }).then((unlisten) => {
       if (isDisposed) {
         unlisten();
@@ -93,7 +98,7 @@ export function useTauriMenuBridge({
       isDisposed = true;
       cleanup?.();
     };
-  }, [handlers, setIsAboutOpen, setIsPreferencesOpen]);
+  }, [handlers, setIsAboutOpen, setIsPreferencesOpen, setIsShortcutsOpen]);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;

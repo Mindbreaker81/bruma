@@ -29,6 +29,7 @@ import {
   insertSnippet as insertSnippetToView,
 } from './format';
 import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
+import { getCursorPosition, type CursorPosition } from './cursorPosition';
 import { continueListOnEnter } from './listContinuation';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
@@ -51,6 +52,7 @@ type MarkdownEditorProps = {
   lineWrapping?: boolean;
   fontFamily?: string;
   onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
+  onSelectionChange?: (position: CursorPosition) => void;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -116,6 +118,7 @@ export const MarkdownEditor = forwardRef<
     lineWrapping = true,
     fontFamily = 'sans',
     onActiveFormatsChange,
+    onSelectionChange,
   },
   ref
 ) {
@@ -124,6 +127,7 @@ export const MarkdownEditor = forwardRef<
   const latestValueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const onActiveFormatsChangeRef = useRef(onActiveFormatsChange);
+  const onSelectionChangeRef = useRef(onSelectionChange);
   const debounceRef = useRef<number | null>(null);
   const hadSearchSelectionRef = useRef(false);
   const contentAttributesCompartmentRef = useRef(new Compartment());
@@ -190,6 +194,10 @@ export const MarkdownEditor = forwardRef<
   }, [onActiveFormatsChange]);
 
   useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
+
+  useEffect(() => {
     latestValueRef.current = value;
   }, [value]);
 
@@ -248,12 +256,20 @@ export const MarkdownEditor = forwardRef<
             ) {
               onActiveFormatsChangeRef.current(getActiveFormats(update.state));
             }
+
+            if (
+              (update.docChanged || update.selectionSet) &&
+              onSelectionChangeRef.current
+            ) {
+              onSelectionChangeRef.current(getCursorPosition(update.state));
+            }
           }),
         ],
       }),
     });
 
     editorRef.current = editor;
+    onSelectionChangeRef.current?.(getCursorPosition(editor.state));
 
     return () => {
       if (debounceRef.current) {

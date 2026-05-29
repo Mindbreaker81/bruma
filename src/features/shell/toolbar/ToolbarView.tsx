@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
 import { IconButton, ToolbarGroup } from '../../../components/ui/icon-button';
+import { withShortcutLabel } from '../../../lib/formatShortcut';
+import { getShortcutById } from '../../../lib/shortcutsCatalog';
 import {
   Columns2,
   Eye,
@@ -33,38 +35,57 @@ export function ToolbarView({
   cycleViewMode,
 }: ToolbarViewProps) {
   const { t } = useTranslation();
+  const themeLabel = withShortcutLabel(
+    t('theme.toggle'),
+    getShortcutById('view.toggleTheme')?.shortcut
+  );
+  const tocLabel = withShortcutLabel(
+    t('toc.toggle'),
+    getShortcutById('view.toggleToc')?.shortcut
+  );
+  const focusLabel = withShortcutLabel(
+    t('focusMode.toggle'),
+    getShortcutById('view.toggleFocusMode')?.shortcut
+  );
+  const viewModeLabel = withShortcutLabel(
+    t('view.toggle'),
+    getShortcutById('view.toggleMode')?.shortcut
+  );
+  const languageLabel = t('language.toggle', {
+    language: t('language.preference.system'),
+  });
 
   return (
     <ToolbarGroup label={t('toolbar.view')}>
       <IconButton
         icon={Moon}
-        label={t('theme.toggle')}
+        label={themeLabel}
         onClick={cycleTheme}
         className="rounded-full"
       />
       <IconButton
         icon={Languages}
-        label={t('language.toggle')}
+        label={languageLabel}
         onClick={cycleLanguage}
         className="rounded-full"
       />
       <IconButton
         icon={List}
-        label={t('toc.toggle')}
+        label={tocLabel}
         onClick={toggleToc}
         active={tocOpen}
         className="rounded-full"
       />
       <IconButton
         icon={focusMode ? Maximize2 : EyeOff}
-        label={t('focusMode.toggle')}
+        label={focusLabel}
         onClick={toggleFocusMode}
         active={focusMode}
         className="rounded-full"
       />
       <IconButton
         icon={viewMode === 'preview' ? Eye : Columns2}
-        label={t('view.toggle')}
+        label={viewModeLabel}
         onClick={cycleViewMode}
         className="rounded-full"
       />

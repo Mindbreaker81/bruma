@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { RotateCcw, Plus, Minus } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { IconButton, ToolbarGroup } from '../../../components/ui/icon-button';
+import { withShortcutLabel } from '../../../lib/formatShortcut';
+import { getShortcutById } from '../../../lib/shortcutsCatalog';
 import {
   Tooltip,
   TooltipContent,
@@ -23,12 +25,24 @@ export function ToolbarZoom({
   increaseFontScaleStore,
 }: ToolbarZoomProps) {
   const { t } = useTranslation();
+  const decreaseLabel = withShortcutLabel(
+    t('zoom.decrease'),
+    getShortcutById('zoom.decrease')?.shortcut
+  );
+  const increaseLabel = withShortcutLabel(
+    t('zoom.increase'),
+    getShortcutById('zoom.increase')?.shortcut
+  );
+  const resetLabel = withShortcutLabel(
+    t('zoom.reset'),
+    getShortcutById('zoom.reset')?.shortcut
+  );
 
   return (
     <ToolbarGroup label={t('toolbar.zoom')}>
       <IconButton
         icon={Minus}
-        label={t('zoom.decrease')}
+        label={decreaseLabel}
         onClick={decreaseFontScaleStore}
         className="rounded-full"
       />
@@ -39,6 +53,8 @@ export function ToolbarZoom({
             size="sm"
             onClick={resetFontScaleStore}
             className="h-9 min-w-14 rounded-full px-3 text-xs font-semibold tabular-nums"
+            aria-label={resetLabel}
+            title={resetLabel}
           >
             {fontScale !== 1 && (
               <RotateCcw className="mr-1 size-3" aria-hidden />
@@ -46,11 +62,11 @@ export function ToolbarZoom({
             {Math.round(fontScale * 100)}%
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{t('zoom.reset')}</TooltipContent>
+        <TooltipContent>{resetLabel}</TooltipContent>
       </Tooltip>
       <IconButton
         icon={Plus}
-        label={t('zoom.increase')}
+        label={increaseLabel}
         onClick={increaseFontScaleStore}
         className="rounded-full"
       />

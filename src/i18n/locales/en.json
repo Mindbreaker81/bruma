@@ -6,6 +6,7 @@
   "about": {
     "body": "A lightweight, local-first desktop Markdown editor.",
     "close": "Close",
+    "repo": "Repository",
     "title": "About Bruma",
     "version": "Version {{version}}"
   },
@@ -143,6 +144,7 @@
   "stats": {
     "characters": "Characters",
     "charactersValue": "{{count}} chars",
+    "cursor": "Ln {{line}}, Col {{column}}",
     "words": "Words",
     "wordsValue_one": "{{count}} word",
     "wordsValue_other": "{{count}} words"
@@ -228,6 +230,34 @@
     "view": "View",
     "zoom": "Zoom",
     "export": "Export"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "open": "Shortcuts",
+    "group": {
+      "file": "File",
+      "edit": "Edit",
+      "view": "View",
+      "format": "Format",
+      "zoom": "Zoom"
+    },
+    "action": {
+      "fileNew": "New document",
+      "fileOpen": "Open document",
+      "fileSave": "Save",
+      "fileSaveAs": "Save as",
+      "filePrint": "Print",
+      "editFind": "Find",
+      "helpPreferences": "Open preferences",
+      "helpShortcuts": "Open shortcuts help",
+      "viewToggleMode": "Toggle view mode",
+      "viewToggleTheme": "Toggle theme",
+      "viewToggleFocusMode": "Toggle focus mode",
+      "viewToggleToc": "Toggle outline",
+      "zoomIn": "Increase font size",
+      "zoomOut": "Decrease font size",
+      "zoomReset": "Reset font size"
+    }
   },
   "welcome": {
     "eyebrow": "Workspace",

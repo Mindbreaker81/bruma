@@ -6,6 +6,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-29
+
+### Added
+
+- **Diálogo "Atajos de teclado"** (solo lectura) con catálogo agrupado por Archivo, Edición, Vista, Formato y Zoom.
+- Nuevo acceso al diálogo de atajos desde tres superficies: botón `Atajos` en la toolbar de formato, menú nativo `Ayuda > Atajos de teclado` y tecla `?` (cuando el foco no está en un campo editable).
+- Tooltips de acciones en toolbar enriquecidos con atajos formateados para plataforma (macOS/Windows/Linux), incluyendo Archivo, Buscar, Vista y Zoom.
+- Barra de estado con **posición de cursor** (`Ln`, `Col`) en modos editor/dividido.
+- Botón **Repositorio** en el diálogo "Acerca de Bruma".
+- Utilidades nuevas para mantener consistencia de atajos y cursor (`formatShortcut`, `shortcutsCatalog`, `cursorPosition`) con tests unitarios dedicados.
+
+### Changed
+
+- Las pills de **idioma** y **tema** en la barra de estado pasan a ser interactivas (ciclo directo desde la barra).
+- Ajuste de layout en barra de estado para ventanas estrechas: el bloque de métricas usa overflow horizontal y evita recortes del nombre de archivo.
+- Drag & drop en runtime Tauri ahora usa evento nativo `onDragDropEvent` y abre archivos por **ruta real** del sistema.
+
+### Fixed
+
+- **Windows:** los builds release de Bruma ya no abren una consola adicional al iniciar la app (`windows_subsystem = "windows"` en el binario).
+
 ## [1.5.0] - 2026-05-08
 
 ### Added

@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Switch } from '../../../components/ui/switch';
 import { IconButton, ToolbarGroup } from '../../../components/ui/icon-button';
+import { withShortcutLabel } from '../../../lib/formatShortcut';
+import { getShortcutById } from '../../../lib/shortcutsCatalog';
 import { Search } from 'lucide-react';
 
 type ToolbarWriteProps = {
@@ -16,6 +18,10 @@ export function ToolbarWrite({
   handleOpenSearch,
 }: ToolbarWriteProps) {
   const { t } = useTranslation();
+  const searchLabel = withShortcutLabel(
+    t('search.open'),
+    getShortcutById('edit.find')?.shortcut
+  );
 
   return (
     <ToolbarGroup label={t('toolbar.write')}>
@@ -34,7 +40,7 @@ export function ToolbarWrite({
       </div>
       <IconButton
         icon={Search}
-        label={t('search.open')}
+        label={searchLabel}
         onClick={handleOpenSearch}
         className="rounded-full"
       />

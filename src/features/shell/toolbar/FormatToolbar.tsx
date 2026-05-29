@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Separator } from '../../../components/ui/separator';
 import { IconButton } from '../../../components/ui/icon-button';
+import { withShortcutLabel } from '../../../lib/formatShortcut';
 import type { MarkdownEditorHandle } from '../../editor/MarkdownEditor';
 import {
   FORMAT_COMMANDS_BY_ID,
@@ -14,22 +15,14 @@ type FormatToolbarProps = {
   editorRef: RefObject<MarkdownEditorHandle | null>;
   activeFormats?: ReadonlySet<FormatCommandId>;
   onOpenGuide?: () => void;
+  onOpenShortcuts?: () => void;
 };
-
-function formatShortcut(shortcut: string): string {
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPhone|iPad/i.test(navigator.platform);
-  return shortcut
-    .replace(/Mod-/g, isMac ? '⌘' : 'Ctrl+')
-    .replace(/Shift-/g, isMac ? '⇧' : 'Shift+')
-    .replace(/Alt-/g, isMac ? '⌥' : 'Alt+');
-}
 
 export function FormatToolbar({
   editorRef,
   activeFormats,
   onOpenGuide,
+  onOpenShortcuts,
 }: FormatToolbarProps) {
   const { t } = useTranslation();
 
@@ -50,9 +43,7 @@ export function FormatToolbar({
           {group.map((id) => {
             const cmd = FORMAT_COMMANDS_BY_ID[id];
             const label = t(cmd.labelKey);
-            const labelWithShortcut = cmd.shortcut
-              ? `${label} (${formatShortcut(cmd.shortcut)})`
-              : label;
+            const labelWithShortcut = withShortcutLabel(label, cmd.shortcut);
             return (
               <IconButton
                 key={cmd.id}
@@ -66,16 +57,29 @@ export function FormatToolbar({
           })}
         </div>
       ))}
-      {onOpenGuide && (
+      {(onOpenGuide || onOpenShortcuts) && (
         <>
           <Separator orientation="vertical" className="mx-1 h-5 bg-border/70" />
-          <button
-            type="button"
-            onClick={onOpenGuide}
-            className="ml-auto shrink-0 rounded-md border border-border/60 px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            {t('editor.format.guide.open')}
-          </button>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                className="rounded-md border border-border/60 px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                {t('editor.format.guide.open')}
+              </button>
+            )}
+            {onOpenShortcuts && (
+              <button
+                type="button"
+                onClick={onOpenShortcuts}
+                className="rounded-md border border-border/60 px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                {t('shortcuts.open')}
+              </button>
+            )}
+          </div>
         </>
       )}
     </div>

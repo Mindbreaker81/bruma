@@ -6,6 +6,7 @@
   "about": {
     "body": "Editor Markdown de escritorio, local y ligero.",
     "close": "Cerrar",
+    "repo": "Repositorio",
     "title": "Acerca de Bruma",
     "version": "Version {{version}}"
   },
@@ -143,6 +144,7 @@
   "stats": {
     "characters": "Caracteres",
     "charactersValue": "{{count}} car.",
+    "cursor": "Ln {{line}}, Col {{column}}",
     "words": "Palabras",
     "wordsValue_one": "{{count}} palabra",
     "wordsValue_other": "{{count}} palabras"
@@ -228,6 +230,34 @@
     "view": "Vista",
     "zoom": "Zoom",
     "export": "Exportar"
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "open": "Atajos",
+    "group": {
+      "file": "Archivo",
+      "edit": "Edición",
+      "view": "Vista",
+      "format": "Formato",
+      "zoom": "Zoom"
+    },
+    "action": {
+      "fileNew": "Nuevo documento",
+      "fileOpen": "Abrir documento",
+      "fileSave": "Guardar",
+      "fileSaveAs": "Guardar como",
+      "filePrint": "Imprimir",
+      "editFind": "Buscar",
+      "helpPreferences": "Abrir preferencias",
+      "helpShortcuts": "Abrir ayuda de atajos",
+      "viewToggleMode": "Cambiar modo de vista",
+      "viewToggleTheme": "Cambiar tema",
+      "viewToggleFocusMode": "Alternar modo enfoque",
+      "viewToggleToc": "Mostrar u ocultar indice",
+      "zoomIn": "Aumentar tipografia",
+      "zoomOut": "Reducir tipografia",
+      "zoomReset": "Restablecer tipografia"
+    }
   },
   "welcome": {
     "eyebrow": "Espacio de trabajo",

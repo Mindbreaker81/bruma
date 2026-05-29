@@ -31,7 +31,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from './components/ui/dialog';
+import { Button } from './components/ui/button';
 import { TooltipProvider } from './components/ui/tooltip';
+import type { CursorPosition } from './features/editor/cursorPosition';
 import {
   openFileDialog,
   readFile,
@@ -70,12 +72,13 @@ import { AppShell } from './features/shell/AppShell';
 import { ViewModeBar } from './features/shell/ViewModeBar';
 import { WelcomeState } from './features/shell/WelcomeState';
 import { useSplitScrollSync } from './features/shell/useSplitScrollSync';
-import { APP_VERSION } from './lib/app';
+import { APP_VERSION, REPO_URL } from './lib/app';
 import { getTextStats } from './lib/textStats';
 import type { Template } from './features/templates/templates';
 import { X } from 'lucide-react';
 import {
   isTauriRuntime,
+  listenToFileDrop,
   printCurrentWindow,
   setAppWindowTitle,
 } from './lib/tauri';
@@ -95,6 +98,12 @@ const RestoreSessionDialog = lazy(() =>
 const PreferencesDialog = lazy(() =>
   import('./features/settings/PreferencesDialog').then((module) => ({
     default: module.PreferencesDialog,
+  }))
+);
+
+const ShortcutsDialog = lazy(() =>
+  import('./features/settings/ShortcutsDialog').then((module) => ({
+    default: module.ShortcutsDialog,
   }))
 );
 
@@ -137,6 +146,22 @@ type MenuHandlers = {
   setLanguage: (language: 'es' | 'en') => void;
   setViewMode: (nextViewMode: ViewMode) => void;
 };
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  if (target.closest('[contenteditable="true"]')) {
+    return true;
+  }
+
+  return Boolean(target.closest('input, textarea, select, [role="textbox"]'));
+}
 
 export default function App() {
   const { i18n, t } = useTranslation();
@@ -299,6 +324,7 @@ export default function App() {
   const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
 
@@ -334,6 +360,9 @@ export default function App() {
   const [activeFormats, setActiveFormats] = useState<
     ReadonlySet<FormatCommandId>
   >(() => new Set());
+  const [cursorPosition, setCursorPosition] = useState<CursorPosition | null>(
+    null
+  );
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingSession, setPendingSession] = useState<{
@@ -642,8 +671,28 @@ export default function App() {
     [openTab, removeRecentFile, requestDirtyConfirmation, showError, t]
   );
 
+  const handleOpenPath = useCallback(
+    (path: string) => {
+      requestDirtyConfirmation(async () => {
+        try {
+          const openedFile = await readFile(path);
+          clearSession();
+          openTab(openedFile);
+          setWelcomeDismissed(true);
+        } catch {
+          showError(t('errors.openFailed'));
+        }
+      });
+    },
+    [openTab, requestDirtyConfirmation, showError, t]
+  );
+
   const handleDrop = useCallback(
     async (event: DragEvent<HTMLElement>) => {
+      if (isTauriRuntime()) {
+        return;
+      }
+
       event.preventDefault();
 
       const [file] = Array.from(event.dataTransfer.files);
@@ -666,10 +715,46 @@ export default function App() {
           content,
           eol: content.includes('\r\n') ? 'crlf' : 'lf',
         });
+        setWelcomeDismissed(true);
       });
     },
     [openTab, requestDirtyConfirmation, showError, t]
   );
+
+  useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    let cleanup: (() => void) | undefined;
+    let isDisposed = false;
+
+    void listenToFileDrop((paths: string[]) => {
+      const [path] = paths;
+      if (!path) {
+        return;
+      }
+
+      if (!/\.(md|markdown)$/i.test(path)) {
+        showError(t('errors.unsupportedFile'));
+        return;
+      }
+
+      handleOpenPath(path);
+    }).then((unlisten: () => void) => {
+      if (isDisposed) {
+        unlisten();
+        return;
+      }
+
+      cleanup = unlisten;
+    });
+
+    return () => {
+      isDisposed = true;
+      cleanup?.();
+    };
+  }, [handleOpenPath, showError, t]);
 
   useEffect(() => {
     const title = `${isDirty ? '*' : ''}${displayName} - Bruma`;
@@ -853,6 +938,18 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === '?' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !isEditableTarget(event.target)
+      ) {
+        event.preventDefault();
+        setIsShortcutsOpen(true);
+        return;
+      }
+
       const modifier = event.metaKey || event.ctrlKey;
       if (!modifier) return;
 
@@ -892,6 +989,7 @@ export default function App() {
     handlers: menuHandlersRef,
     setIsPreferencesOpen,
     setIsAboutOpen,
+    setIsShortcutsOpen,
     handleOpenRecent,
   });
 
@@ -1046,6 +1144,7 @@ export default function App() {
                   editorRef={editorRef}
                   activeFormats={activeFormats}
                   onOpenGuide={() => setIsMarkdownGuideOpen(true)}
+                  onOpenShortcuts={() => setIsShortcutsOpen(true)}
                 />
               ) : null}
 
@@ -1121,6 +1220,7 @@ export default function App() {
                           lineWrapping={editorWrap}
                           fontFamily={editorFontFamily}
                           onActiveFormatsChange={setActiveFormats}
+                          onSelectionChange={setCursorPosition}
                         />
                       </Suspense>
                     </div>
@@ -1221,6 +1321,11 @@ export default function App() {
             editorRef={editorRef}
           />
 
+          <ShortcutsDialog
+            open={isShortcutsOpen}
+            onOpenChange={setIsShortcutsOpen}
+          />
+
           {isPreferencesOpen ? (
             <PreferencesDialog
               open
@@ -1254,6 +1359,14 @@ export default function App() {
             <p className="text-sm text-muted-foreground">
               {t('about.version', { version: APP_VERSION })}
             </p>
+            <div className="mt-4 flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setExternalLinkPrompt(REPO_URL)}
+              >
+                {t('about.repo')}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -1289,12 +1402,16 @@ export default function App() {
           <StatusBar
             autosaveStatus={autosaveStatus}
             characters={textStats.characters}
+            cursorPosition={cursorPosition}
             displayName={displayName}
             encoding={document.encoding}
             eol={document.eol}
             isDirty={isDirty}
+            cycleLanguage={cycleLanguage}
+            cycleTheme={cycleTheme}
             languagePreference={languagePreference}
             resolvedTheme={resolvedTheme}
+            viewMode={viewMode}
             words={textStats.words}
           />
         ) : null}

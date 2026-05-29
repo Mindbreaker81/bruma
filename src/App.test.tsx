@@ -39,15 +39,17 @@ describe('App', () => {
   it('cycles the visible language from the toolbar', async () => {
     render(<App />);
 
+    const [languageToggle] = screen.getAllByRole('button', {
+      name: /language|idioma/i,
+    });
+
     await act(async () => {
-      screen.getByRole('button', { name: /language|idioma/i }).click();
+      languageToggle?.click();
     });
 
     await waitFor(() => {
       expect(document.documentElement.lang).toBe('es');
-      expect(
-        screen.getByRole('button', { name: /Cambiar idioma/i })
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Escritura|Write/i)).toBeInTheDocument();
     });
   });
 
