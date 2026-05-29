@@ -40,7 +40,7 @@
       "entitlements": null,
       "exceptionDomain": ""
     },
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "updater": {
