@@ -251,14 +251,6 @@ jobs:
             echo "No updater .app.tar.gz found (updater artifacts disabled)"
           fi
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: release-assets-${{ matrix.platform }}${{ matrix.win_arch && format('-{0}', matrix.win_arch) || '' }}
-          path: release-assets/*
-          retention-days: 1
-
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -321,14 +313,6 @@ jobs:
           Copy-Item "webview2pkg\\contentFiles\\any\\any\\WebView2\\*" "$portableDir\\WebView2" -Recurse -Force
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
-
-      - name: Upload build artifacts (Windows arm64)
-        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-assets-windows-latest-arm64
-          path: release-assets/*
-          retention-days: 1
 
       - name: Collect release assets (Linux AppImage)
         if: matrix.platform == 'ubuntu-latest'
