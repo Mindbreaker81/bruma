@@ -12,6 +12,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.app_version.outputs.value }}
     env:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -249,6 +251,14 @@ jobs:
             echo "No updater .app.tar.gz found (updater artifacts disabled)"
           fi
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-assets-${{ matrix.platform }}${{ matrix.win_arch && format('-{0}', matrix.win_arch) || '' }}
+          path: release-assets/*
+          retention-days: 1
+
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -331,14 +341,30 @@ jobs:
             echo "No .sig file found (updater artifacts disabled)"
           fi
 
+  upload-release:
+    name: Upload to GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ needs.build.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release-assets/*
+          files: release-assets/*/*
           body_path: CHANGELOG.md
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('draft-v{0}-{1}', steps.app_version.outputs.value, github.run_id) || github.ref_name }}
-          name: ${{ github.event_name == 'workflow_dispatch' && format('draft bruma v{0} ({1})', steps.app_version.outputs.value, github.run_id) || github.ref_name }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('draft-v{0}-{1}', needs.build.outputs.version, github.run_id) || github.ref_name }}
+          name: ${{ github.event_name == 'workflow_dispatch' && format('draft bruma v{0} ({1})', needs.build.outputs.version, github.run_id) || github.ref_name }}
           draft: ${{ github.event_name == 'workflow_dispatch' }}
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
@@ -346,7 +372,7 @@ jobs:
   update-manifest:
     name: Publish update manifest
     runs-on: ubuntu-latest
-    needs: build
+    needs: upload-release
     permissions:
       contents: write
     steps:
@@ -371,7 +397,7 @@ jobs:
         id: release_tag
         shell: bash
         run: |
-          version=$(node -p "require('./package.json').version")
+          version="${{ needs.upload-release.outputs.version }}"
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "value=draft-v${version}-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
           else
