@@ -59,9 +59,17 @@ function fileSize(assetName) {
 }
 
 const platformCandidates = {
-  'darwin-aarch64': [`bruma-v${version}-macos-aarch64.app.tar.gz`],
-  'linux-x86_64': [`bruma-v${version}-linux-x86_64.AppImage`],
-  'windows-x86_64': [`bruma-v${version}-windows-x64-setup.exe`],
+  'darwin-aarch64': [
+    `bruma-v${version}-macos-aarch64.app.tar.gz`,
+    `bruma-v${version}-macos-aarch64.dmg`,
+  ],
+  'linux-x86_64': [
+    `bruma-v${version}-linux-x86_64.AppImage`,
+  ],
+  'windows-x86_64': [
+    `bruma-v${version}-windows-x64-setup.exe`,
+    `bruma-v${version}-windows-x64-setup.msi`,
+  ],
 };
 
 const platforms = {};
@@ -69,19 +77,17 @@ for (const [platform, candidates] of Object.entries(platformCandidates)) {
   const assetName = firstExisting(candidates);
   if (!assetName) continue;
   const signature = readSignature(assetName);
-  if (!signature) {
-    throw new Error(
-      `Missing signature for ${assetName}. Expected ${assetName}.sig in ${assetsDir}`
-    );
-  }
-  platforms[platform] = {
-    signature,
+  const platformData = {
     url: assetUrl(assetName),
   };
+  if (signature) {
+    platformData.signature = signature;
+  }
   const size = fileSize(assetName);
   if (size !== undefined) {
-    platforms[platform].size = size;
+    platformData.size = size;
   }
+  platforms[platform] = platformData;
 }
 
 if (Object.keys(platforms).length === 0) {
