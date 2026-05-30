@@ -63,9 +63,7 @@ const platformCandidates = {
     `bruma-v${version}-macos-aarch64.app.tar.gz`,
     `bruma-v${version}-macos-aarch64.dmg`,
   ],
-  'linux-x86_64': [
-    `bruma-v${version}-linux-x86_64.AppImage`,
-  ],
+  'linux-x86_64': [`bruma-v${version}-linux-x86_64.AppImage`],
   'windows-x86_64': [
     `bruma-v${version}-windows-x64-setup.exe`,
     `bruma-v${version}-windows-x64-setup.msi`,
