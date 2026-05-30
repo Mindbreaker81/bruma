@@ -274,6 +274,14 @@ jobs:
           if (-not $nsisExe) { throw "No NSIS .exe found under src-tauri\\target\\release\\bundle\\nsis\\" }
           Copy-Item $nsisExe.FullName "release-assets\\bruma-v$version-windows-x64-setup.exe" -Force
 
+      - name: Upload build artifacts (Windows x64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-windows-latest-x64
+          path: release-assets/*
+          retention-days: 1
+
       - name: Build portable-full (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         shell: pwsh
@@ -297,6 +305,14 @@ jobs:
           Copy-Item "webview2pkg\\contentFiles\\any\\any\\WebView2\\*" "$portableDir\\WebView2" -Recurse -Force
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-x64-portable-full.zip" -Force
+
+      - name: Upload build artifacts (Windows x64 portable)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-windows-latest-x64
+          path: release-assets/*
+          retention-days: 1
 
       - name: Build portable-full (Windows arm64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
@@ -322,6 +338,14 @@ jobs:
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
 
+      - name: Upload build artifacts (Windows arm64)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-windows-latest-arm64
+          path: release-assets/*
+          retention-days: 1
+
       - name: Collect release assets (Linux AppImage)
         if: matrix.platform == 'ubuntu-latest'
         shell: bash
@@ -340,6 +364,14 @@ jobs:
           else
             echo "No .sig file found (updater artifacts disabled)"
           fi
+
+      - name: Upload build artifacts (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-ubuntu-latest
+          path: release-assets/*
+          retention-days: 1
 
   upload-release:
     name: Upload to GitHub Release
