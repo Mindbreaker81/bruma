@@ -4,13 +4,17 @@ import {
   markdownLanguage,
   pasteURLAsLink,
 } from '@codemirror/lang-markdown';
+import { syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
   EditorView,
+  highlightActiveLine,
+  highlightActiveLineGutter,
   keymap,
+  lineNumbers,
 } from '@codemirror/view';
 import {
   forwardRef,
@@ -30,6 +34,7 @@ import {
 } from './format';
 import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
 import { getCursorPosition, type CursorPosition } from './cursorPosition';
+import { brumaHighlightStyle } from './highlightStyle';
 import { continueListOnEnter } from './listContinuation';
 import { brumaDarkTheme, brumaLightTheme } from './theme';
 
@@ -51,6 +56,7 @@ type MarkdownEditorProps = {
   tabSize?: number;
   lineWrapping?: boolean;
   fontFamily?: string;
+  showGutter?: boolean;
   onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
   onSelectionChange?: (position: CursorPosition) => void;
 };
@@ -117,6 +123,7 @@ export const MarkdownEditor = forwardRef<
     tabSize = 4,
     lineWrapping = true,
     fontFamily = 'sans',
+    showGutter = false,
     onActiveFormatsChange,
     onSelectionChange,
   },
@@ -135,6 +142,7 @@ export const MarkdownEditor = forwardRef<
   const tabSizeCompartmentRef = useRef(new Compartment());
   const lineWrappingCompartmentRef = useRef(new Compartment());
   const themeCompartmentRef = useRef(new Compartment());
+  const gutterCompartmentRef = useRef(new Compartment());
   const normalizedActiveSearchIndex =
     searchMatches.length > 0
       ? Math.min(activeSearchIndex, searchMatches.length - 1)
@@ -213,6 +221,8 @@ export const MarkdownEditor = forwardRef<
         extensions: [
           history(),
           markdown({ base: markdownLanguage }),
+          syntaxHighlighting(brumaHighlightStyle),
+          highlightActiveLine(),
           // When the user pastes a URL over a non-empty selection, wrap the
           // selection as `[selection](url)` instead of replacing it.
           pasteURLAsLink,
@@ -226,6 +236,9 @@ export const MarkdownEditor = forwardRef<
           tabSizeCompartmentRef.current.of(EditorState.tabSize.of(tabSize)),
           lineWrappingCompartmentRef.current.of(
             lineWrapping ? EditorView.lineWrapping : []
+          ),
+          gutterCompartmentRef.current.of(
+            showGutter ? [lineNumbers(), highlightActiveLineGutter()] : []
           ),
           searchCompartmentRef.current.of(searchDecorationExtension([], 0)),
           contentAttributesCompartmentRef.current.of(
@@ -347,6 +360,16 @@ export const MarkdownEditor = forwardRef<
       ),
     });
   }, [lineWrapping]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.dispatch({
+      effects: gutterCompartmentRef.current.reconfigure(
+        showGutter ? [lineNumbers(), highlightActiveLineGutter()] : []
+      ),
+    });
+  }, [showGutter]);
 
   useEffect(() => {
     const editor = editorRef.current;

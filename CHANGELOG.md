@@ -6,8 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-06-25
+
 ### Added
 
+- **Resaltado de sintaxis en el editor**: títulos escalados con peso, énfasis (negrita/cursiva/tachado), código monoespaciado, enlaces con color de acento y marcadores atenuados (`#`, `*`, `` ` ``, `-`).
+- **Números de línea (gutter)**: el ajuste "Mostrar números de línea" en Preferencias ahora funciona — muestra/oculta el gutter con `highlightActiveLineGutter` al cambiar.
+- **Resaltado de línea activa** en el editor para mejor orientación visual.
 - **Bundles Linux oficiales**: `deb`, `rpm` y `appimage` añadidos a `tauri.conf.json` `bundle.targets` junto a los existentes de macOS/Windows.
 - **Sección Linux en README**: instrucciones de instalación para AppImage (incluida dependencia `libfuse2` en Ubuntu 24.04), `.deb` y `.rpm`, además de nota técnica sobre el bug DMABUF de WebKitGTK.
 - Dependencias de desarrollo Linux (`libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev`, `libwebkit2gtk-4.1-dev`) documentadas en la sección de desarrollo local del README.

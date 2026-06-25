@@ -1340,6 +1340,7 @@ export default function App() {
                           tabSize={editorTabSize}
                           lineWrapping={editorWrap}
                           fontFamily={editorFontFamily}
+                          showGutter={editorShowGutter}
                           onActiveFormatsChange={setActiveFormats}
                           onSelectionChange={setCursorPosition}
                         />
