@@ -6,6 +6,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+
+- **Bundles Linux oficiales**: `deb`, `rpm` y `appimage` añadidos a `tauri.conf.json` `bundle.targets` junto a los existentes de macOS/Windows.
+- **Sección Linux en README**: instrucciones de instalación para AppImage (incluida dependencia `libfuse2` en Ubuntu 24.04), `.deb` y `.rpm`, además de nota técnica sobre el bug DMABUF de WebKitGTK.
+- Dependencias de desarrollo Linux (`libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev`, `libwebkit2gtk-4.1-dev`) documentadas en la sección de desarrollo local del README.
+
+### Fixed
+
+- **Linux/Ubuntu 24.04: ventana en blanco** por bug DMABUF de WebKitGTK 2.52+. La app ahora setea automáticamente `WEBKIT_DISABLE_DMABUF_RENDERER=1` al iniciar en Linux (siguiendo el mismo patrón que el fix de WebView2 en Windows), respetando el valor si el usuario ya lo ha definido.
+
 ## [1.6.1] - 2026-05-29
 
 ### Added

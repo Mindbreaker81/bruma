@@ -83,9 +83,11 @@ Para usuarios finales, usamos **GitHub Releases** con archivos listos para desca
   - `bruma-vX.Y.Z-windows-arm64-portable-full.zip`
   - Incluye **Fixed WebView2 Runtime**, pensado para arrancar incluso si falta WebView2 en el sistema.
 - **Linux**:
-  - `bruma-vX.Y.Z-linux-x86_64.AppImage`
+  - `bruma-vX.Y.Z-linux-x86_64.AppImage` (portátil, sin instalación)
+  - `bruma-vX.Y.Z-linux-x86_64.deb` (Debian/Ubuntu)
+  - `bruma-vX.Y.Z-linux-x86_64.rpm` (Fedora/RHEL/openSUSE)
 
-## Ejecutar builds en macOS y Windows
+## Ejecutar builds en macOS, Windows y Linux
 
 ### macOS
 
@@ -128,6 +130,52 @@ Las builds de **CI** (job `Tauri` en cada PR) son internas, sin firma, y por eso
 - **macOS**: firmadas con Developer ID y notarizadas por Apple → no aparecen avisos.
 - **Windows**: aún sin firma Authenticode → puede aparecer SmartScreen ("More info → Run anyway").
 
+### Linux
+
+#### AppImage (portátil, sin instalación)
+
+1. Descargar `bruma-vX.Y.Z-linux-x86_64.AppImage`.
+2. Dar permiso de ejecución:
+
+```bash
+chmod +x bruma-vX.Y.Z-linux-x86_64.AppImage
+```
+
+3. Ejecutar con doble click o desde terminal:
+
+```bash
+./bruma-vX.Y.Z-linux-x86_64.AppImage
+```
+
+4. **Si no abre en Ubuntu 24.04**: el sistema trae `fuse3` pero no `libfuse2`, que los AppImage necesitan. Instalarlo:
+
+```bash
+sudo apt install libfuse2
+```
+
+#### .deb (Debian/Ubuntu)
+
+```bash
+sudo dpkg -i bruma-vX.Y.Z-linux-x86_64.deb
+sudo apt install -f   # resuelve dependencias si faltan
+```
+
+Después buscar "Bruma" en el menú de aplicaciones.
+
+#### .rpm (Fedora/RHEL/openSUSE)
+
+```bash
+sudo rpm -i bruma-vX.Y.Z-linux-x86_64.rpm
+```
+
+#### Nota técnica: WebKitGTK en Ubuntu 24.04
+
+WebKitGTK 2.52+ usa el renderer DMABUF por defecto, que puede causar una **ventana en blanco** en Ubuntu 24.04 con GPU real. Bruma setea automáticamente `WEBKIT_DISABLE_DMABUF_RENDERER=1` al iniciar en Linux para evitar este problema. Si la ventana sigue en blanco, verifica la variable manualmente:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 ./bruma-vX.Y.Z-linux-x86_64.AppImage
+```
+
 ## Desarrollo local
 
 Requisitos:
@@ -138,6 +186,7 @@ Requisitos:
 - Toolchain Tauri por plataforma:
   - macOS: Xcode Command Line Tools
   - Windows: Microsoft C++ Build Tools + WebView2 Runtime
+  - Linux: `libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev`, `libwebkit2gtk-4.1-dev`
 
 Comandos:
 
@@ -244,7 +293,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 - `v1.6` (entregado): diálogo de atajos, tooltips con shortcuts en toolbar, barra de estado interactiva (idioma/tema + línea/columna), drag&drop nativo por ruta en Tauri, fix de consola extra en Windows.
 - Siguiente:
   - Firma Authenticode para Windows (.msi / .exe).
-  - Builds nativas oficiales para Linux (deb/rpm/Flatpak) además del AppImage.
+  - Builds nativas oficiales para Linux (deb/rpm/AppImage) ya disponibles; Flatpak como futuro.
   - Build macOS universal (`x86_64 + aarch64`) para no depender de Rosetta 2 en Intel.
 
 ## Sitio web

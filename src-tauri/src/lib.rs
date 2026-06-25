@@ -26,8 +26,22 @@ fn configure_fixed_webview2_runtime_if_present() {
 #[cfg(not(target_os = "windows"))]
 fn configure_fixed_webview2_runtime_if_present() {}
 
+#[cfg(target_os = "linux")]
+fn configure_webkit_linux_workarounds() {
+    // WebKitGTK on Ubuntu 24.04 (and other distros with newer GTK/WebKit) can
+    // render a blank window due to the DMABUF renderer. Disable it if the user
+    // hasn't already set a preference.
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn configure_webkit_linux_workarounds() {}
+
 pub fn run() {
     configure_fixed_webview2_runtime_if_present();
+    configure_webkit_linux_workarounds();
 
     tauri::Builder::default()
         .manage(menu::RecentFilesMenuState::default())
