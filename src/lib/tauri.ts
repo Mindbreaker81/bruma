@@ -2,6 +2,19 @@ export function isTauriRuntime(): boolean {
   return '__TAURI_INTERNALS__' in window;
 }
 
+export function isLinuxTauri(): boolean {
+  return isTauriRuntime() && /Linux/i.test(navigator.userAgent);
+}
+
+/** WebKitGTK needs simpler surfaces than macOS/Windows (no backdrop-filter). */
+export function bootstrapLinuxWebviewCompat(): void {
+  if (!isLinuxTauri()) {
+    return;
+  }
+
+  document.documentElement.classList.add('linux-tauri');
+}
+
 export async function setAppWindowTitle(title: string): Promise<void> {
   if (!isTauriRuntime()) {
     document.title = title;

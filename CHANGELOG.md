@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-06-27
+
+### Fixed
+
+- **Linux: UI en blanco o recortada con WebKitGTK**. Los workarounds de WebKit (`WEBKIT_DISABLE_DMABUF_RENDERER`, `WEBKIT_DISABLE_COMPOSITING_MODE`, `__NV_DISABLE_EXPLICIT_SYNC`) ahora se aplican en `main.rs` antes de arrancar Tauri, y el `.desktop` de deb/rpm/AppImage los incluye en `Exec`. Además, en Linux Tauri se desactivan `backdrop-filter` y las capas decorativas con blur de `AppShell`, que WebKitGTK no compone bien y dejaban la ventana vacía aunque React sí montaba.
+
 ## [1.7.1] - 2026-06-27
 
 ### Fixed

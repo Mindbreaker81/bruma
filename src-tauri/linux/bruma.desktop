@@ -1,0 +1,9 @@
+[Desktop Entry]
+Categories={{categories}}
+Comment={{comment}}
+Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 __NV_DISABLE_EXPLICIT_SYNC=1 {{exec}}
+StartupWMClass=bruma
+Icon={{icon}}
+Name={{name}}
+Terminal=false
+Type=Application

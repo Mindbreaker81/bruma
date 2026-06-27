@@ -328,3 +328,32 @@ textarea {
     height: auto !important;
   }
 }
+
+/* WebKitGTK on Linux: backdrop-filter and decorative blur layers often fail to
+   paint (blank or clipped UI) when DMABUF/compositing workarounds are active. */
+.linux-tauri,
+.linux-tauri body {
+  height: 100%;
+}
+
+.linux-tauri #root,
+.linux-tauri .bruma-shell {
+  height: 100%;
+  min-height: 100%;
+}
+
+.linux-tauri * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.linux-tauri .blur-3xl,
+.linux-tauri .blur-xl,
+.linux-tauri .blur-sm {
+  filter: none !important;
+}
+
+.linux-tauri .bruma-shell > .pointer-events-none,
+.linux-tauri .bruma-shell::after {
+  display: none !important;
+}

@@ -57,6 +57,12 @@ Thumbs.db
 # Tauri
 src-tauri/gen/
 src-tauri/WixTools/
+*.AppImage
+*.deb
+*.rpm
+
+# Local release artifacts (manual builds for testing)
+release-assets-local/
 
 # Cache and temp
 .cache/
