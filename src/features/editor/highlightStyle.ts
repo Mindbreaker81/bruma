@@ -8,10 +8,29 @@ import { tags as t } from '@lezer/highlight';
  */
 export const brumaHighlightStyle = HighlightStyle.define([
   // Encabezados: mayor peso y tamaño escalonado.
-  { tag: t.heading1, fontSize: '1.4em', fontWeight: '600', color: 'hsl(var(--foreground))' },
-  { tag: t.heading2, fontSize: '1.25em', fontWeight: '600', color: 'hsl(var(--foreground))' },
-  { tag: t.heading3, fontSize: '1.1em', fontWeight: '600', color: 'hsl(var(--foreground))' },
-  { tag: [t.heading4, t.heading5, t.heading6], fontWeight: '600', color: 'hsl(var(--foreground))' },
+  {
+    tag: t.heading1,
+    fontSize: '1.4em',
+    fontWeight: '600',
+    color: 'hsl(var(--foreground))',
+  },
+  {
+    tag: t.heading2,
+    fontSize: '1.25em',
+    fontWeight: '600',
+    color: 'hsl(var(--foreground))',
+  },
+  {
+    tag: t.heading3,
+    fontSize: '1.1em',
+    fontWeight: '600',
+    color: 'hsl(var(--foreground))',
+  },
+  {
+    tag: [t.heading4, t.heading5, t.heading6],
+    fontWeight: '600',
+    color: 'hsl(var(--foreground))',
+  },
 
   // Énfasis.
   { tag: t.strong, fontWeight: '700' },
@@ -26,7 +45,11 @@ export const brumaHighlightStyle = HighlightStyle.define([
   },
 
   // Enlaces: color de acento + subrayado.
-  { tag: [t.link, t.url], color: 'hsl(var(--primary))', textDecoration: 'underline' },
+  {
+    tag: [t.link, t.url],
+    color: 'hsl(var(--primary))',
+    textDecoration: 'underline',
+  },
 
   // Citas: color atenuado.
   { tag: t.quote, color: 'hsl(var(--muted-foreground))' },

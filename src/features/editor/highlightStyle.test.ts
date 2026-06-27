@@ -23,10 +23,12 @@ describe('brumaHighlightStyle', () => {
   });
 
   it('styles heading1 with bold weight and larger font', () => {
-    const spec = specFor(t.heading1) as {
-      fontWeight?: string;
-      fontSize?: string;
-    } | undefined;
+    const spec = specFor(t.heading1) as
+      | {
+          fontWeight?: string;
+          fontSize?: string;
+        }
+      | undefined;
     expect(spec).toBeDefined();
     expect(spec?.fontWeight).toBe('600');
     expect(spec?.fontSize).toBe('1.4em');
@@ -39,19 +41,23 @@ describe('brumaHighlightStyle', () => {
   });
 
   it('styles link tags with the primary accent color and underline', () => {
-    const spec = specFor(t.link) as {
-      color?: string;
-      textDecoration?: string;
-    } | undefined;
+    const spec = specFor(t.link) as
+      | {
+          color?: string;
+          textDecoration?: string;
+        }
+      | undefined;
     expect(spec).toBeDefined();
     expect(spec?.color).toBe('hsl(var(--primary))');
     expect(spec?.textDecoration).toBe('underline');
   });
 
   it('attenuates markdown markers via muted-foreground', () => {
-    const spec = specFor(t.processingInstruction) as {
-      color?: string;
-    } | undefined;
+    const spec = specFor(t.processingInstruction) as
+      | {
+          color?: string;
+        }
+      | undefined;
     expect(spec).toBeDefined();
     expect(spec?.color).toBe('hsl(var(--muted-foreground))');
   });
