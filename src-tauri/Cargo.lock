@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "bruma"
-version = "1.7.0"
+version = "1.7.1"
 dependencies = [
  "base64 0.22.1",
  "rfd",

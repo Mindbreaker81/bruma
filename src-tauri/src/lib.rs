@@ -29,10 +29,16 @@ fn configure_fixed_webview2_runtime_if_present() {}
 #[cfg(target_os = "linux")]
 fn configure_webkit_linux_workarounds() {
     // WebKitGTK on Ubuntu 24.04 (and other distros with newer GTK/WebKit) can
-    // render a blank window due to the DMABUF renderer. Disable it if the user
-    // hasn't already set a preference.
+    // render a blank window. Two independent workarounds are needed depending on
+    // the GPU/driver combination, and disabling only the DMABUF renderer is not
+    // enough on several setups (notably NVIDIA), where accelerated compositing
+    // itself must be turned off. Both are applied unless the user has already
+    // expressed a preference, so the override `WEBKIT_DISABLE_*=0` still wins.
     if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+    if std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     }
 }
 

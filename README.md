@@ -170,10 +170,15 @@ sudo rpm -i bruma-vX.Y.Z-linux-x86_64.rpm
 
 #### Nota técnica: WebKitGTK en Ubuntu 24.04
 
-WebKitGTK 2.52+ usa el renderer DMABUF por defecto, que puede causar una **ventana en blanco** en Ubuntu 24.04 con GPU real. Bruma setea automáticamente `WEBKIT_DISABLE_DMABUF_RENDERER=1` al iniciar en Linux para evitar este problema. Si la ventana sigue en blanco, verifica la variable manualmente:
+WebKitGTK 2.52+ puede mostrar una **ventana en blanco** (solo se ve la barra de menú y el área de contenido vacía) en Ubuntu 24.04 con GPU real, especialmente con drivers NVIDIA. Esto se debe al renderer DMABUF y al compositing acelerado. Bruma setea automáticamente al iniciar en Linux:
+
+- `WEBKIT_DISABLE_DMABUF_RENDERER=1`
+- `WEBKIT_DISABLE_COMPOSITING_MODE=1`
+
+Ambas variables respetan el valor si ya las has definido, por lo que puedes forzar la ruta acelerada con `WEBKIT_DISABLE_COMPOSITING_MODE=0`. Si la ventana sigue en blanco, prueba a lanzar la app con las variables explícitas:
 
 ```bash
-WEBKIT_DISABLE_DMABUF_RENDERER=1 ./bruma-vX.Y.Z-linux-x86_64.AppImage
+WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 ./bruma-vX.Y.Z-linux-x86_64.AppImage
 ```
 
 ## Desarrollo local

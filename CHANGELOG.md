@@ -6,6 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-27
+
+### Fixed
+
+- **Linux/Ubuntu 24.04: ventana en blanco (continuación)**. Deshabilitar solo el renderer DMABUF no bastaba en algunos equipos (especialmente con GPU NVIDIA), donde la ventana seguía mostrando el frontend en blanco. La app ahora también setea automáticamente `WEBKIT_DISABLE_COMPOSITING_MODE=1` al iniciar en Linux, respetando el valor si el usuario ya lo ha definido (`WEBKIT_DISABLE_COMPOSITING_MODE=0` lo sobreescribe).
+- **Release CI: el `.deb` (y `.rpm`) no se generaban ni se publicaban**. El job de Linux solo construía `--bundles appimage` y solo recolectaba el `.AppImage`. Ahora se construyen `deb` y `rpm` en un paso propio (independiente del AppImage, que puede fallar en CI) y se publican como assets `bruma-vX.Y.Z-linux-x86_64.deb` y `bruma-vX.Y.Z-linux-x86_64.rpm`.
+
 ## [1.7.0] - 2026-06-25
 
 ### Added

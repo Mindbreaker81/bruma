@@ -185,7 +185,17 @@ jobs:
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
         run: pnpm exec tauri build --target aarch64-pc-windows-msvc --no-bundle
 
-      - name: Build unsigned bundle (Linux)
+      - name: Build unsigned bundles deb + rpm (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # .deb and .rpm bundling does not need to execute an AppImage, so it is
+          # reliable in CI. Build them on their own so a flaky AppImage step can
+          # never prevent the package installers from being produced.
+          pnpm exec tauri build --bundles deb,rpm
+
+      - name: Build unsigned bundle AppImage (Linux)
         if: matrix.platform == 'ubuntu-latest'
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
@@ -314,24 +324,40 @@ jobs:
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
 
-      - name: Collect release assets (Linux AppImage)
+      - name: Collect release assets (Linux)
         if: matrix.platform == 'ubuntu-latest'
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p release-assets
           shopt -s nullglob
+          version="${{ steps.app_version.outputs.value }}"
+
           appimages=(src-tauri/target/release/bundle/appimage/*.AppImage src-tauri/*.AppImage)
           if [[ ${#appimages[@]} -lt 1 ]]; then
             echo "No .AppImage found in src-tauri/target/release/bundle/appimage/"
             exit 1
           fi
-          cp "${appimages[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage"
+          cp "${appimages[0]}" "release-assets/bruma-v${version}-linux-x86_64.AppImage"
           if [[ -f "${appimages[0]}.sig" ]]; then
-            cp "${appimages[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-linux-x86_64.AppImage.sig"
+            cp "${appimages[0]}.sig" "release-assets/bruma-v${version}-linux-x86_64.AppImage.sig"
           else
             echo "No .sig file found (updater artifacts disabled)"
           fi
+
+          debs=(src-tauri/target/release/bundle/deb/*.deb)
+          if [[ ${#debs[@]} -lt 1 ]]; then
+            echo "No .deb found in src-tauri/target/release/bundle/deb/"
+            exit 1
+          fi
+          cp "${debs[0]}" "release-assets/bruma-v${version}-linux-x86_64.deb"
+
+          rpms=(src-tauri/target/release/bundle/rpm/*.rpm)
+          if [[ ${#rpms[@]} -lt 1 ]]; then
+            echo "No .rpm found in src-tauri/target/release/bundle/rpm/"
+            exit 1
+          fi
+          cp "${rpms[0]}" "release-assets/bruma-v${version}-linux-x86_64.rpm"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
