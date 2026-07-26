@@ -43,6 +43,7 @@ import {
   saveExportDialog,
   saveFile,
   saveFileDialog,
+  setMenuLabels,
   syncRecentFilesMenu,
 } from './features/files/ipc';
 import { TabBar } from './features/files/TabBar';
@@ -189,6 +190,7 @@ export default function App() {
       closeTab: state.closeTab,
     }))
   );
+  const localizedDisplayName = displayName ?? t('document.untitled');
   const {
     activateTab,
     moveTab,
@@ -498,14 +500,15 @@ export default function App() {
       try {
         const { buildExportHtml } = await import('./lib/export');
         const html = buildExportHtml(document.content, {
-          title: displayName,
+          title: localizedDisplayName,
           includeStyles,
         });
         await saveExportDialog({
           content: html,
           extension: 'html',
           label: 'HTML',
-          suggested: displayName.replace(/\.(md|markdown)$/i, '') || 'export',
+          suggested:
+            localizedDisplayName.replace(/\.(md|markdown)$/i, '') || 'export',
         });
         setIsExportMenuOpen(false);
       } catch (error) {
@@ -513,7 +516,7 @@ export default function App() {
         showError(t('errors.exportFailed'));
       }
     },
-    [displayName, document.content, showError, t]
+    [document.content, localizedDisplayName, showError, t]
   );
 
   const handlePrint = useCallback(() => {
@@ -708,7 +711,7 @@ export default function App() {
       const savedFile = await saveFileDialog({
         content: document.content,
         eol: document.eol,
-        suggested: displayName,
+        suggested: localizedDisplayName,
       });
 
       if (savedFile) {
@@ -721,7 +724,14 @@ export default function App() {
     }
 
     return false;
-  }, [displayName, document.content, document.eol, markSaved, showError, t]);
+  }, [
+    document.content,
+    document.eol,
+    localizedDisplayName,
+    markSaved,
+    showError,
+    t,
+  ]);
 
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!document.path) {
@@ -882,10 +892,10 @@ export default function App() {
   }, [handleOpenPath, showError, t]);
 
   useEffect(() => {
-    const title = `${isDirty ? '*' : ''}${displayName} - Bruma`;
+    const title = `${isDirty ? '*' : ''}${localizedDisplayName} - Bruma`;
 
     void setAppWindowTitle(title);
-  }, [displayName, isDirty]);
+  }, [isDirty, localizedDisplayName]);
 
   useEffect(() => {
     const session = readSession();
@@ -923,6 +933,36 @@ export default function App() {
     if (i18n.language !== resolvedLanguage) {
       void i18n.changeLanguage(resolvedLanguage);
     }
+  }, [i18n, resolvedLanguage]);
+
+  useEffect(() => {
+    const menuT = i18n.getFixedT(resolvedLanguage);
+    void setMenuLabels({
+      file: menuT('menu.file'),
+      newDocument: menuT('menu.newDocument'),
+      open: menuT('menu.open'),
+      openRecent: menuT('menu.openRecent'),
+      noRecent: menuT('menu.noRecent'),
+      save: menuT('menu.save'),
+      saveAs: menuT('menu.saveAs'),
+      print: menuT('menu.print'),
+      edit: menuT('menu.edit'),
+      find: menuT('menu.find'),
+      view: menuT('menu.view'),
+      toggleView: menuT('menu.toggleView'),
+      editor: menuT('menu.editor'),
+      preview: menuT('menu.preview'),
+      split: menuT('menu.split'),
+      toggleTheme: menuT('menu.toggleTheme'),
+      language: menuT('menu.language'),
+      spanish: menuT('menu.spanish'),
+      english: menuT('menu.english'),
+      help: menuT('menu.help'),
+      preferences: menuT('menu.preferences'),
+      shortcuts: menuT('menu.shortcuts'),
+      checkUpdates: menuT('menu.checkUpdates'),
+      about: menuT('menu.about'),
+    });
   }, [i18n, resolvedLanguage]);
 
   useEffect(() => {
@@ -1181,7 +1221,7 @@ export default function App() {
                   {t('app.name')}
                 </h1>
                 <p className="truncate text-sm text-muted-foreground">
-                  {displayName}
+                  {localizedDisplayName}
                   {isDirty ? ` ${t('document.dirtyMark')}` : ''}
                 </p>
               </div>
@@ -1561,7 +1601,7 @@ export default function App() {
             autosaveStatus={autosaveStatus}
             characters={textStats.characters}
             cursorPosition={cursorPosition}
-            displayName={displayName}
+            displayName={localizedDisplayName}
             encoding={document.encoding}
             eol={document.eol}
             isDirty={isDirty}

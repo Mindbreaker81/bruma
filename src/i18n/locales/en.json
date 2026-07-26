@@ -114,6 +114,32 @@
       "system": "System language"
     }
   },
+  "menu": {
+    "file": "File",
+    "newDocument": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "noRecent": "No Recent Files",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "print": "Print…",
+    "edit": "Edit",
+    "find": "Find",
+    "view": "View",
+    "toggleView": "Change View",
+    "editor": "Editor",
+    "preview": "Preview",
+    "split": "Split",
+    "toggleTheme": "Change Theme",
+    "language": "Language",
+    "spanish": "Spanish",
+    "english": "English",
+    "help": "Help",
+    "preferences": "Preferences",
+    "shortcuts": "Keyboard Shortcuts",
+    "checkUpdates": "Check for Updates",
+    "about": "About Bruma"
+  },
   "search": {
     "caseSensitive": "Match case",
     "close": "Close search",

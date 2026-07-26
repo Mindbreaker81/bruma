@@ -15,8 +15,6 @@ export type Tab = {
   document: Document;
 };
 
-export const UNTITLED_DOCUMENT_NAME = 'Sin titulo';
-
 type LoadedDocumentInput = {
   path: string;
   content: string;
@@ -51,12 +49,12 @@ export function isDirty(document: Document): boolean {
   return document.content !== document.savedContent;
 }
 
-export function getDocumentDisplayName(document: Document): string {
+export function getDocumentDisplayName(document: Document): string | null {
   if (!document.path) {
-    return UNTITLED_DOCUMENT_NAME;
+    return null;
   }
 
-  return document.path.split(/[\\/]/).pop() || UNTITLED_DOCUMENT_NAME;
+  return document.path.split(/[\\/]/).pop() || null;
 }
 
 export function isMarkdownPath(path: string): boolean {

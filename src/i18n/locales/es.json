@@ -20,7 +20,7 @@
     "dirtyMark": "(sin guardar)",
     "saved": "Guardado",
     "unsaved": "Sin guardar",
-    "untitled": "Sin titulo"
+    "untitled": "Sin título"
   },
   "confirmDirty": {
     "body": "Hay cambios sin guardar. Guarda antes de continuar o descarta los cambios.",
@@ -109,10 +109,36 @@
   "language": {
     "toggle": "Cambiar idioma: {{language}}",
     "preference": {
-      "en": "Ingles",
-      "es": "Espanol",
+      "en": "Inglés",
+      "es": "Español",
       "system": "Idioma del sistema"
     }
+  },
+  "menu": {
+    "file": "Archivo",
+    "newDocument": "Nuevo",
+    "open": "Abrir…",
+    "openRecent": "Abrir recientes",
+    "noRecent": "Sin recientes",
+    "save": "Guardar",
+    "saveAs": "Guardar como…",
+    "print": "Imprimir…",
+    "edit": "Editar",
+    "find": "Buscar",
+    "view": "Ver",
+    "toggleView": "Cambiar vista",
+    "editor": "Editor",
+    "preview": "Vista previa",
+    "split": "Dividido",
+    "toggleTheme": "Cambiar tema",
+    "language": "Idioma",
+    "spanish": "Español",
+    "english": "Inglés",
+    "help": "Ayuda",
+    "preferences": "Preferencias",
+    "shortcuts": "Atajos de teclado",
+    "checkUpdates": "Buscar actualizaciones",
+    "about": "Acerca de Bruma"
   },
   "search": {
     "caseSensitive": "Distinguir mayúsculas",

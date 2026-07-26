@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::{path::Path, sync::Mutex};
 use tauri::{
     menu::{IsMenuItem, Menu, MenuId, MenuItem, PredefinedMenuItem, Submenu},
@@ -16,8 +17,71 @@ pub struct RecentFilesMenuState(pub Mutex<Vec<String>>);
 #[derive(Default)]
 pub struct UpdateMenuState(pub Mutex<bool>);
 
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuLabels {
+    file: String,
+    new_document: String,
+    open: String,
+    open_recent: String,
+    no_recent: String,
+    save: String,
+    save_as: String,
+    print: String,
+    edit: String,
+    find: String,
+    view: String,
+    toggle_view: String,
+    editor: String,
+    preview: String,
+    split: String,
+    toggle_theme: String,
+    language: String,
+    spanish: String,
+    english: String,
+    help: String,
+    preferences: String,
+    shortcuts: String,
+    check_updates: String,
+    about: String,
+}
+
+impl Default for MenuLabels {
+    fn default() -> Self {
+        Self {
+            file: "Archivo".into(),
+            new_document: "Nuevo".into(),
+            open: "Abrir…".into(),
+            open_recent: "Abrir recientes".into(),
+            no_recent: "Sin recientes".into(),
+            save: "Guardar".into(),
+            save_as: "Guardar como…".into(),
+            print: "Imprimir…".into(),
+            edit: "Editar".into(),
+            find: "Buscar".into(),
+            view: "Ver".into(),
+            toggle_view: "Cambiar vista".into(),
+            editor: "Editor".into(),
+            preview: "Vista previa".into(),
+            split: "Dividido".into(),
+            toggle_theme: "Cambiar tema".into(),
+            language: "Idioma".into(),
+            spanish: "Español".into(),
+            english: "Inglés".into(),
+            help: "Ayuda".into(),
+            preferences: "Preferencias".into(),
+            shortcuts: "Atajos de teclado".into(),
+            check_updates: "Buscar actualizaciones".into(),
+            about: "Acerca de Bruma".into(),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct MenuLabelsState(pub Mutex<MenuLabels>);
+
 pub fn install(app: &App) -> tauri::Result<()> {
-    app.set_menu(build_menu(app, &[], false)?)?;
+    app.set_menu(build_menu(app, &[], false, &MenuLabels::default())?)?;
 
     Ok(())
 }
@@ -26,6 +90,7 @@ pub fn sync_recent_files<R: Runtime>(
     app: &AppHandle<R>,
     state: &RecentFilesMenuState,
     update_state: &UpdateMenuState,
+    labels_state: &MenuLabelsState,
     paths: Vec<String>,
 ) -> Result<(), String> {
     let mut recent_files = state
@@ -38,13 +103,19 @@ pub fn sync_recent_files<R: Runtime>(
         .0
         .lock()
         .map_err(|_| "update_menu_lock_failed".to_string())?;
-    refresh_menu(app, &recent_files, update_available).map_err(|error| error.to_string())
+    let labels = labels_state
+        .0
+        .lock()
+        .map_err(|_| "menu_labels_lock_failed".to_string())?
+        .clone();
+    refresh_menu(app, &recent_files, update_available, &labels).map_err(|error| error.to_string())
 }
 
 pub fn set_update_available<R: Runtime>(
     app: &AppHandle<R>,
     recent_state: &RecentFilesMenuState,
     update_state: &UpdateMenuState,
+    labels_state: &MenuLabelsState,
     available: bool,
 ) -> Result<(), String> {
     let recent_files = recent_state
@@ -57,7 +128,35 @@ pub fn set_update_available<R: Runtime>(
         .lock()
         .map_err(|_| "update_menu_lock_failed".to_string())?;
     *update_available = available;
-    refresh_menu(app, &recent_files, available).map_err(|error| error.to_string())
+    let labels = labels_state
+        .0
+        .lock()
+        .map_err(|_| "menu_labels_lock_failed".to_string())?
+        .clone();
+    refresh_menu(app, &recent_files, available, &labels).map_err(|error| error.to_string())
+}
+
+pub fn set_labels<R: Runtime>(
+    app: &AppHandle<R>,
+    recent_state: &RecentFilesMenuState,
+    update_state: &UpdateMenuState,
+    labels_state: &MenuLabelsState,
+    labels: MenuLabels,
+) -> Result<(), String> {
+    let recent_files = recent_state
+        .0
+        .lock()
+        .map_err(|_| "recent_files_lock_failed".to_string())?
+        .clone();
+    let update_available = *update_state
+        .0
+        .lock()
+        .map_err(|_| "update_menu_lock_failed".to_string())?;
+    *labels_state
+        .0
+        .lock()
+        .map_err(|_| "menu_labels_lock_failed".to_string())? = labels.clone();
+    refresh_menu(app, &recent_files, update_available, &labels).map_err(|error| error.to_string())
 }
 
 pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &MenuId) {
@@ -84,8 +183,9 @@ fn refresh_menu<R: Runtime>(
     app: &AppHandle<R>,
     recent_files: &[String],
     update_available: bool,
+    labels: &MenuLabels,
 ) -> tauri::Result<()> {
-    app.set_menu(build_menu(app, recent_files, update_available)?)?;
+    app.set_menu(build_menu(app, recent_files, update_available, labels)?)?;
     Ok(())
 }
 
@@ -93,36 +193,37 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
     update_available: bool,
+    labels: &MenuLabels,
 ) -> tauri::Result<Menu<R>> {
     #[cfg(target_os = "macos")]
     let app_menu = build_app_menu(app)?;
-    let file_menu = build_file_menu(app, recent_files)?;
+    let file_menu = build_file_menu(app, recent_files, labels)?;
 
-    let edit_find = MenuItem::with_id(app, "edit_find", "Buscar", true, Some("CmdOrCtrl+F"))?;
-    let edit_menu = Submenu::with_items(app, "Editar", true, &[&edit_find])?;
+    let edit_find = MenuItem::with_id(app, "edit_find", &labels.find, true, Some("CmdOrCtrl+F"))?;
+    let edit_menu = Submenu::with_items(app, &labels.edit, true, &[&edit_find])?;
 
     let view_toggle_mode = MenuItem::with_id(
         app,
         "view_toggle_mode",
-        "Cambiar vista",
+        &labels.toggle_view,
         true,
         Some("CmdOrCtrl+Shift+V"),
     )?;
     let view_separator_top = PredefinedMenuItem::separator(app)?;
-    let view_editor = MenuItem::with_id(app, "view_editor", "Editor", true, None::<&str>)?;
-    let view_preview = MenuItem::with_id(app, "view_preview", "Preview", true, None::<&str>)?;
-    let view_split = MenuItem::with_id(app, "view_split", "Dividido", true, None::<&str>)?;
+    let view_editor = MenuItem::with_id(app, "view_editor", &labels.editor, true, None::<&str>)?;
+    let view_preview = MenuItem::with_id(app, "view_preview", &labels.preview, true, None::<&str>)?;
+    let view_split = MenuItem::with_id(app, "view_split", &labels.split, true, None::<&str>)?;
     let view_separator_bottom = PredefinedMenuItem::separator(app)?;
     let view_toggle_theme = MenuItem::with_id(
         app,
         "view_toggle_theme",
-        "Cambiar tema",
+        &labels.toggle_theme,
         true,
         Some("CmdOrCtrl+Shift+T"),
     )?;
     let view_menu = Submenu::with_items(
         app,
-        "Ver",
+        &labels.view,
         true,
         &[
             &view_toggle_mode,
@@ -135,36 +236,32 @@ fn build_menu<R: Runtime, M: Manager<R>>(
         ],
     )?;
 
-    let language_es = MenuItem::with_id(app, "language_es", "Espanol", true, None::<&str>)?;
-    let language_en = MenuItem::with_id(app, "language_en", "English", true, None::<&str>)?;
-    let language_menu = Submenu::with_items(app, "Idioma", true, &[&language_es, &language_en])?;
+    let language_es = MenuItem::with_id(app, "language_es", &labels.spanish, true, None::<&str>)?;
+    let language_en = MenuItem::with_id(app, "language_en", &labels.english, true, None::<&str>)?;
+    let language_menu =
+        Submenu::with_items(app, &labels.language, true, &[&language_es, &language_en])?;
 
     let help_preferences = MenuItem::with_id(
         app,
         "help_preferences",
-        "Preferencias",
+        &labels.preferences,
         true,
         Some("CmdOrCtrl+,"),
     )?;
-    let help_shortcuts = MenuItem::with_id(
-        app,
-        "help_shortcuts",
-        "Atajos de teclado",
-        true,
-        None::<&str>,
-    )?;
+    let help_shortcuts =
+        MenuItem::with_id(app, "help_shortcuts", &labels.shortcuts, true, None::<&str>)?;
     let help_check_updates = MenuItem::with_id(
         app,
         "help_check_updates",
-        update_menu_item_label(update_available),
+        update_menu_item_label(&labels.check_updates, update_available),
         true,
         None::<&str>,
     )?;
     let help_separator = PredefinedMenuItem::separator(app)?;
-    let help_about = MenuItem::with_id(app, "help_about", "Acerca de Bruma", true, None::<&str>)?;
+    let help_about = MenuItem::with_id(app, "help_about", &labels.about, true, None::<&str>)?;
     let help_menu = Submenu::with_items(
         app,
-        "Ayuda",
+        &labels.help,
         true,
         &[
             &help_preferences,
@@ -221,26 +318,33 @@ fn build_app_menu<R: Runtime, M: Manager<R>>(app: &M) -> tauri::Result<Submenu<R
 fn build_file_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
+    labels: &MenuLabels,
 ) -> tauri::Result<Submenu<R>> {
-    let file_new = MenuItem::with_id(app, "file_new", "Nuevo", true, Some("CmdOrCtrl+N"))?;
-    let file_open = MenuItem::with_id(app, "file_open", "Abrir...", true, Some("CmdOrCtrl+O"))?;
-    let recent_menu = build_recent_menu(app, recent_files)?;
+    let file_new = MenuItem::with_id(
+        app,
+        "file_new",
+        &labels.new_document,
+        true,
+        Some("CmdOrCtrl+N"),
+    )?;
+    let file_open = MenuItem::with_id(app, "file_open", &labels.open, true, Some("CmdOrCtrl+O"))?;
+    let recent_menu = build_recent_menu(app, recent_files, labels)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let file_save = MenuItem::with_id(app, "file_save", "Guardar", true, Some("CmdOrCtrl+S"))?;
+    let file_save = MenuItem::with_id(app, "file_save", &labels.save, true, Some("CmdOrCtrl+S"))?;
     let file_save_as = MenuItem::with_id(
         app,
         "file_save_as",
-        "Guardar como...",
+        &labels.save_as,
         true,
         Some("CmdOrCtrl+Shift+S"),
     )?;
     let print_separator = PredefinedMenuItem::separator(app)?;
     let file_print =
-        MenuItem::with_id(app, "file_print", "Imprimir...", true, Some("CmdOrCtrl+P"))?;
+        MenuItem::with_id(app, "file_print", &labels.print, true, Some("CmdOrCtrl+P"))?;
 
     Submenu::with_items(
         app,
-        "Archivo",
+        &labels.file,
         true,
         &[
             &file_new,
@@ -258,8 +362,9 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
 fn build_recent_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
+    labels: &MenuLabels,
 ) -> tauri::Result<Submenu<R>> {
-    let recent_items = build_recent_menu_items(app, recent_files)?;
+    let recent_items = build_recent_menu_items(app, recent_files, labels)?;
     let recent_item_refs = recent_items
         .iter()
         .map(|item| item as &dyn IsMenuItem<R>)
@@ -268,7 +373,7 @@ fn build_recent_menu<R: Runtime, M: Manager<R>>(
     Submenu::with_id_and_items(
         app,
         RECENT_MENU_ID,
-        "Abrir recientes",
+        &labels.open_recent,
         true,
         &recent_item_refs,
     )
@@ -277,12 +382,13 @@ fn build_recent_menu<R: Runtime, M: Manager<R>>(
 fn build_recent_menu_items<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
+    labels: &MenuLabels,
 ) -> tauri::Result<Vec<MenuItem<R>>> {
     if recent_files.is_empty() {
         return Ok(vec![MenuItem::with_id(
             app,
             RECENT_EMPTY_ID,
-            "Sin recientes",
+            &labels.no_recent,
             false,
             None::<&str>,
         )?]);
@@ -326,11 +432,11 @@ fn parse_recent_menu_index(id: &str) -> Option<usize> {
     id.strip_prefix(RECENT_ITEM_ID_PREFIX)?.parse().ok()
 }
 
-fn update_menu_item_label(update_available: bool) -> &'static str {
+fn update_menu_item_label(label: &str, update_available: bool) -> String {
     if update_available {
-        "* Buscar actualizaciones"
+        format!("* {label}")
     } else {
-        "Buscar actualizaciones"
+        label.to_string()
     }
 }
 
@@ -338,7 +444,7 @@ fn update_menu_item_label(update_available: bool) -> &'static str {
 mod tests {
     use super::{
         parse_recent_menu_index, recent_menu_item_id, recent_menu_item_label,
-        update_menu_item_label,
+        update_menu_item_label, MenuLabels,
     };
 
     #[test]
@@ -372,7 +478,22 @@ mod tests {
 
     #[test]
     fn marks_update_menu_item_when_update_is_available() {
-        assert_eq!(update_menu_item_label(false), "Buscar actualizaciones");
-        assert_eq!(update_menu_item_label(true), "* Buscar actualizaciones");
+        assert_eq!(
+            update_menu_item_label("Check for updates", false),
+            "Check for updates"
+        );
+        assert_eq!(
+            update_menu_item_label("Check for updates", true),
+            "* Check for updates"
+        );
+    }
+
+    #[test]
+    fn uses_accented_spanish_fallback_labels() {
+        let labels = MenuLabels::default();
+
+        assert_eq!(labels.spanish, "Español");
+        assert_eq!(labels.english, "Inglés");
+        assert_eq!(labels.preview, "Vista previa");
     }
 }

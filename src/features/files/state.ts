@@ -16,7 +16,7 @@ type FileState = {
   activeTabId: string | null;
   document: Document;
   isDirty: boolean;
-  displayName: string;
+  displayName: string | null;
   recentFiles: string[];
   addRecentFile: (path: string) => void;
   removeRecentFile: (path: string) => void;

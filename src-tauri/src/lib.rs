@@ -35,6 +35,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(menu::RecentFilesMenuState::default())
         .manage(menu::UpdateMenuState::default())
+        .manage(menu::MenuLabelsState::default())
         .manage(commands::fs::AllowedPaths::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -47,6 +48,7 @@ pub fn run() {
             commands::fs::save_file,
             commands::fs::save_file_dialog,
             commands::app_menu::set_update_available_menu_state,
+            commands::app_menu::set_menu_labels,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
             commands::e2e::e2e_emit_recent_open,

@@ -11,7 +11,7 @@ describe('file store', () => {
       activeTabId: 'test-tab',
       document: doc,
       isDirty: false,
-      displayName: 'Sin titulo',
+      displayName: null,
       recentFiles: [],
     });
   });

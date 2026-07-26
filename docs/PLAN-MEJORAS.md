@@ -254,7 +254,7 @@ ventana son hipótesis razonables, no resultados de esta auditoría.
 
 ---
 
-## F5 · i18n del menú nativo
+## F5 · i18n del menú nativo **[completado]**
 
 **Problema.** `src-tauri/src/menu.rs` tiene las etiquetas fijas en español
 mientras la app ofrece selector es/en — incluido dentro del propio menú. Además
@@ -278,6 +278,16 @@ Evita duplicar catálogos en Rust y deja a quien traduzca tocando solo JSON.
 (`files/document.ts:18`) se muestra en la interfaz sin acento y sin traducir.
 `getDocumentDisplayName` es una función pura usada en el store, así que lo limpio
 es devolver `null` para documentos sin ruta y traducir en el punto de render.
+
+**Implementación:** `MenuLabels` y `MenuLabelsState` conservan las etiquetas
+activas junto a recientes y disponibilidad de actualización. El frontend las
+envía desde `menu.*` al montar y al cambiar `resolvedLanguage`; todas las
+reconstrucciones posteriores reutilizan ese estado. El fallback de arranque está
+en español correctamente acentuado.
+
+`getDocumentDisplayName` devuelve `null` para documentos sin ruta, y `App` y
+`TabBar` traducen `document.untitled` al renderizar. También se corrigieron los
+acentos de las preferencias de idioma.
 
 ---
 

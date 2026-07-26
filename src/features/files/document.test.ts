@@ -14,7 +14,7 @@ describe('document model', () => {
     expect(document.path).toBeNull();
     expect(document.content).toBe('');
     expect(isDirty(document)).toBe(false);
-    expect(getDocumentDisplayName(document)).toBe('Sin titulo');
+    expect(getDocumentDisplayName(document)).toBeNull();
   });
 
   it('detects dirty state from content changes', () => {

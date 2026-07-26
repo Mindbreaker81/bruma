@@ -14,6 +14,33 @@ export type SavedFile = {
   savedAt: number;
 };
 
+export type MenuLabels = {
+  file: string;
+  newDocument: string;
+  open: string;
+  openRecent: string;
+  noRecent: string;
+  save: string;
+  saveAs: string;
+  print: string;
+  edit: string;
+  find: string;
+  view: string;
+  toggleView: string;
+  editor: string;
+  preview: string;
+  split: string;
+  toggleTheme: string;
+  language: string;
+  spanish: string;
+  english: string;
+  help: string;
+  preferences: string;
+  shortcuts: string;
+  checkUpdates: string;
+  about: string;
+};
+
 function isFileIpcError(error: unknown, code: string): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return message === code || message.startsWith(`${code}:`);
@@ -109,4 +136,12 @@ export async function syncRecentFilesMenu(paths: string[]): Promise<void> {
   }
 
   await invoke('sync_recent_files_menu', { paths });
+}
+
+export async function setMenuLabels(labels: MenuLabels): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+
+  await invoke('set_menu_labels', { labels });
 }

@@ -155,7 +155,7 @@ home y a esas carpetas concedidas; una ruta hermana o inventada continúa
 bloqueada. `path_not_allowed` muestra ahora cómo volver a conceder acceso sin
 eliminar por error la entrada de recientes.
 
-### 7. El menú nativo está fijo en español
+### 7. El menú nativo está fijo en español **[corregido]**
 
 `src-tauri/src/menu.rs` construye todas las etiquetas en literales españoles
 ("Archivo", "Guardar como...", "Buscar actualizaciones"). La app tiene i18n
@@ -165,9 +165,11 @@ sistema. Además, las cadenas van sin acentos ("Espanol", "Sin recientes"), igua
 que `UNTITLED_DOCUMENT_NAME = 'Sin titulo'` en `document.ts`, que sí se muestra
 en la interfaz.
 
-Corrección: pasar las etiquetas desde el frontend al reconstruir el menú (ya
-existe el mecanismo: `sync_recent_files_menu` reconstruye el menú entero), o
-mantener un pequeño catálogo es/en en Rust indexado por el idioma resuelto.
+Corregido pasando un `MenuLabels` construido desde los catálogos `menu.*` del
+frontend. Rust conserva las etiquetas activas y las reutiliza al reconstruir el
+menú por cambios en recientes o en el updater; antes de arrancar el frontend usa
+un fallback español correctamente acentuado. Los documentos sin ruta se
+traducen ahora como `document.untitled` en cada punto de render.
 
 ### 8. Sin límite de tamaño al abrir archivos **[backend corregido]**
 

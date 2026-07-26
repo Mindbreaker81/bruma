@@ -62,7 +62,8 @@ export function TabBar({
       {tabs.map((tab) => {
         const dirty = isDirty(tab.document);
         const active = tab.id === activeTabId;
-        const name = getDocumentDisplayName(tab.document);
+        const name =
+          getDocumentDisplayName(tab.document) ?? t('document.untitled');
         return (
           <div
             key={tab.id}
