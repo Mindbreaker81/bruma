@@ -61,14 +61,13 @@ anunciarse en las notas de la release y en la landing.
 2. **Completado:** `createUpdaterArtifacts: true` en
    `src-tauri/tauri.conf.json`.
 
-3. **Implementado; pendiente de confirmar con la matriz completa:** recoger y
-   exigir las firmas de cada plataforma.
+3. **Completado:** recoger y exigir las firmas de cada plataforma.
 
    - macOS: exigir el `.app.tar.gz` y su `.sig`; el `.dmg` es un instalador para
      descarga manual, no el artefacto preferido por el updater.
    - Linux: exigir el `.AppImage.sig`.
-   - Windows x64: el workflow actual copia `.msi` y `.exe`, pero no copia ningún
-     `.sig`. Elegir el bundle que consumirá el updater y copiar también su firma.
+   - Windows x64: exigir y copiar las firmas tanto del `.msi` como del instalador
+     NSIS `.exe`; el manifiesto usa el `.msi`.
 
    Los dos mensajes que hoy toleran la ausencia de artefactos updater deben
    convertirse en fallos, y Windows debe ganar una comprobación equivalente. Un
@@ -92,14 +91,21 @@ anunciarse en las notas de la release y en la landing.
    problema. macOS Intel tampoco se compila; si se quiere soportar, necesita otra
    entrada de matriz y su propio bundle firmado.
 
-6. **Test de humo del manifiesto.** La prueba local con fixtures ya confirma que
-   un manifiesto completo se genera y que una firma ausente se rechaza. Falta
-   repetirlo con los artefactos reales de una matriz completa:
+6. **Completado: test de humo del manifiesto.** La prueba local con fixtures
+   confirma que un manifiesto completo se genera y que una firma ausente se
+   rechaza. La matriz completa
+   [`Release #38`](https://github.com/Mindbreaker81/bruma/actions/runs/30211995558)
+   generó los bundles reales, recogió sus firmas y publicó correctamente el
+   `update.json` estricto en una release borrador:
 
    - conjunto exacto de plataformas que la release declara soportar;
    - `url` y `signature` no vacíos en todas ellas;
    - que cada URL apunta al tipo de bundle elegido para el updater;
    - que los assets y `.sig` referenciados existen en `release-assets`.
+
+   La ejecución terminó correctamente en macOS ARM64, Linux x64, Windows x64 y
+   Windows ARM64. La release quedó como borrador y no sustituyó a
+   `releases/latest`.
 
 7. **Validación posterior a la publicación.** Descargar el `update.json` desde el
    endpoint `releases/latest`, verificar de nuevo el esquema y ejecutar una

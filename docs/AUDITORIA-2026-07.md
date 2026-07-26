@@ -76,10 +76,14 @@ verifica la firma contra la pública incorporada. No se publicó una release.
 
 La corrección de esta rama activa `createUpdaterArtifacts`, exige y recoge los
 `.sig` de macOS, Linux y Windows x64, y hace que tanto el workflow como el
-generador fallen ante cualquier asset o firma ausente. Queda por ejecutar la
-matriz completa con artefactos reales. Windows ARM64 necesita además un bundle
-instalable por el updater: hoy solo se compila con `--no-bundle` y se publica un
-ZIP portable, por lo que añadir `windows-aarch64` al manifiesto no basta.
+generador fallen ante cualquier asset o firma ausente. La matriz completa
+[`Release #38`](https://github.com/Mindbreaker81/bruma/actions/runs/30211995558)
+terminó correctamente en sus seis jobs: produjo los bundles reales de macOS
+ARM64, Linux x64 y Windows x64 con sus `.sig`, y el generador estricto creó el
+`update.json` dentro de una release borrador. Windows ARM64 también compiló, pero
+necesita además un bundle instalable por el updater: hoy solo se compila con
+`--no-bundle` y se publica un ZIP portable, por lo que añadir
+`windows-aarch64` al manifiesto no basta.
 
 La rotación rompe necesariamente la cadena con 1.7.x: la primera versión que
 lleve la clave nueva debe distribuirse como reinstalación manual y explicarlo en
