@@ -29,7 +29,7 @@ type FileState = {
   closeTab: (id: string) => void;
   activateTab: (id: string) => void;
   moveTab: (id: string, toIndex: number) => void;
-  resetUntitled: () => void;
+  openUntitledTab: () => void;
   markSaved: (savedAt?: number, path?: string) => void;
   restoreSession: (tabs: Tab[], activeTabId: string | null) => void;
 };
@@ -97,6 +97,12 @@ export const useFileStore = create<FileState>((set) => ({
       patchConfig({ recentFiles });
 
       if (existingIndex >= 0) {
+        if (isDirty(state.tabs[existingIndex]!.document)) {
+          return {
+            activeTabId: state.tabs[existingIndex]!.id,
+            ...deriveTabState(state.tabs, state.tabs[existingIndex]!.id),
+          };
+        }
         const tabs = [...state.tabs];
         const existingTab = tabs[existingIndex]!;
         tabs[existingIndex] = { ...existingTab, document };
@@ -161,7 +167,7 @@ export const useFileStore = create<FileState>((set) => ({
       tabs.splice(toIndex, 0, moved!);
       return { tabs };
     }),
-  resetUntitled: () =>
+  openUntitledTab: () =>
     set((state) => {
       const newTab: Tab = {
         id: crypto.randomUUID(),

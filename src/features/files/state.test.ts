@@ -60,6 +60,24 @@ describe('file store', () => {
     expect(useFileStore.getState().document.content).toBe('# Updated');
   });
 
+  it('does not overwrite dirty content when reopening an existing tab', () => {
+    useFileStore.getState().openTab({
+      path: '/tmp/bruma.md',
+      content: '# Original',
+      eol: 'lf',
+    });
+    useFileStore.getState().updateContent('# Unsaved');
+
+    useFileStore.getState().openTab({
+      path: '/tmp/bruma.md',
+      content: '# Disk',
+      eol: 'lf',
+    });
+
+    expect(useFileStore.getState().document.content).toBe('# Unsaved');
+    expect(useFileStore.getState().isDirty).toBe(true);
+  });
+
   it('closes tab and selects next when closing active', () => {
     useFileStore.getState().openTab({
       path: '/tmp/a.md',

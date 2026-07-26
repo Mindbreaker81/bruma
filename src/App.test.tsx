@@ -10,7 +10,7 @@ import './i18n';
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear();
-    useFileStore.getState().resetUntitled();
+    useFileStore.getState().openUntitledTab();
     useThemeStore.getState().setLanguage('system');
   });
 

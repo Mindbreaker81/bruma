@@ -92,6 +92,7 @@
     "templateLoadFailed": "No se pudo cargar la plantilla."
   },
   "export": {
+    "embedImages": "Incrustar imágenes locales",
     "open": "Exportar",
     "htmlStyled": "HTML con estilos",
     "htmlPlain": "HTML simple"

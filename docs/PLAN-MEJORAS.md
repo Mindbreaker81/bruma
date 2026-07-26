@@ -1,8 +1,9 @@
 # Plan de mejoras — auditoría julio 2026
 
-Plan de corrección para los hallazgos de [`AUDITORIA-2026-07.md`](./AUDITORIA-2026-07.md)
-que no se resolvieron en la rama de auditoría. Ordenado por impacto sobre el
-usuario, no por esfuerzo.
+Plan de corrección para los hallazgos de [`AUDITORIA-2026-07.md`](./AUDITORIA-2026-07.md).
+Las ocho líneas de trabajo quedaron implementadas en la rama de auditoría. El
+único gate restante es operativo: publicar una release y comprobar desde
+instalaciones reales que `releases/latest` completa la actualización.
 
 Leyenda de esfuerzo: **S** ≈ medio día · **M** ≈ 1-2 días · **L** ≈ 3-5 días.
 
@@ -74,60 +75,49 @@ anunciarse en las notas de la release y en la landing.
    release sin todas las firmas esperadas debe romper el pipeline.
 
 4. **Completado: el generador falla igual.**
-   `scripts/generate-update-json.mjs` exige las tres plataformas soportadas y
+   `scripts/generate-update-json.mjs` exige las cuatro plataformas soportadas y
    rechaza assets sin `.sig` o firmas vacías.
 
-5. **Decidir y completar Windows ARM64.** El workflow compila ARM64 con
-   `--no-bundle` y publica un ZIP portable. Ese ZIP no es, por sí solo, un bundle
-   instalable por el updater. Hay dos opciones explícitas:
-
-   - generar y firmar un bundle ARM64 compatible con el updater, recogerlo en
-     `release-assets` y solo entonces añadir `windows-aarch64` a
-     `platformCandidates`; o
-   - declarar la variante portable sin auto-actualización y ocultar o sustituir
-     su UI de updater.
-
-   Añadir únicamente la clave `windows-aarch64` al generador no resuelve el
-   problema. macOS Intel tampoco se compila; si se quiere soportar, necesita otra
-   entrada de matriz y su propio bundle firmado.
+5. **Completado: Windows ARM64.** El workflow genera un instalador NSIS ARM64
+   firmado además del ZIP portable, exige su `.sig`, lo recoge en
+   `release-assets` y publica `windows-aarch64` en el manifiesto. macOS Intel no
+   se declara soportado porque no existe una entrada de matriz para esa
+   arquitectura.
 
 6. **Completado: test de humo del manifiesto.** La prueba local con fixtures
-   confirma que un manifiesto completo se genera y que una firma ausente se
-   rechaza. La matriz completa
+   de las cuatro plataformas confirma que un manifiesto completo se genera y
+   que una firma ARM64 ausente se rechaza. La matriz
    [`Release #38`](https://github.com/Mindbreaker81/bruma/actions/runs/30211995558)
-   generó los bundles reales, recogió sus firmas y publicó correctamente el
-   `update.json` estricto en una release borrador:
+   validó los bundles reales y firmas de macOS ARM64, Linux x64 y Windows x64,
+   y publicó correctamente el `update.json` estricto de esas plataformas en una
+   release borrador:
 
    - conjunto exacto de plataformas que la release declara soportar;
    - `url` y `signature` no vacíos en todas ellas;
    - que cada URL apunta al tipo de bundle elegido para el updater;
    - que los assets y `.sig` referenciados existen en `release-assets`.
 
-   La ejecución terminó correctamente en macOS ARM64, Linux x64, Windows x64 y
-   Windows ARM64. La release quedó como borrador y no sustituyó a
+   El nuevo bundle NSIS ARM64 no puede validarse de extremo a extremo localmente:
+   debe pasar el siguiente workflow `Release` en GitHub Actions antes de
+   publicar. La release de prueba anterior quedó como borrador y no sustituyó a
    `releases/latest`.
 
-7. **Validación posterior a la publicación.** Descargar el `update.json` desde el
+7. **Gate de publicación (operativo).** Después de publicar la próxima versión,
+   descargar el `update.json` desde el
    endpoint `releases/latest`, verificar de nuevo el esquema y ejecutar una
    comprobación real desde una instalación de la versión anterior en cada
-   plataforma soportada.
-
-### Mitigación mientras tanto
-
-Si F1 no entra en la próxima release, ocultar la UI de actualización
-(`UpdateIndicator`, entrada de menú, comprobación al arrancar en `App.tsx:1003`)
-tras un flag y dejar solo un enlace a la página de releases. Hoy la app promete
-algo que no puede cumplir.
+   plataforma soportada. Esta comprobación requiere hacer pública una release y
+   no es trabajo de implementación pendiente.
 
 ---
 
-## F2 · Persistencia de sesión **[fase A completada]**
+## F2 · Persistencia de sesión **[completado]**
 
 **Problema.** `lib/session.ts` usa `sessionStorage`, que en un webview de
 escritorio muere con la ventana — exactamente el caso que la función pretende
 cubrir.
 
-**Fase A (completada).** La sesión usa `localStorage` con la clave
+La sesión usa `localStorage` con la clave
 `bruma.session.v2`:
 
 - migra una sola vez la antigua `bruma.session` desde `sessionStorage`;
@@ -136,17 +126,14 @@ cubrir.
 - descarta y elimina sesiones de más de siete días;
 - limpia ambas claves al confirmar o descartar la recuperación.
 
-Las pruebas cubren persistencia, migración, caducidad, datos inválidos, cuota y
-limpieza.
+El esquema de payload es versión 3: no duplica el documento activo, conserva
+completas las pestañas sucias o sin ruta y restaura desde disco las pestañas
+limpias con ruta. Las pruebas cubren persistencia, migración, caducidad, datos
+inválidos, cuota, limpieza y restauración.
 
-**Fase B (si hace falta, M).** Mover a `@tauri-apps/plugin-store` — ya es
-dependencia y se usa en `updateStore.ts` — que escribe a disco sin cuota. Cuesta
-volver `readSession` asíncrono, lo que afecta al efecto de arranque de
-`App.tsx:866`; es mecánico pero toca el flujo de restauración.
-
-**Siguiente decisión:** medir errores de cuota en uso real. Si el uso habitual
-son documentos de notas, `localStorage` debería bastar; si no, ejecutar la fase
-B.
+Mover el almacenamiento a `@tauri-apps/plugin-store` queda como posible
+evolución si la telemetría o reportes reales muestran errores de cuota; no es
+necesario para cerrar el hallazgo.
 
 ---
 
@@ -198,7 +185,7 @@ hermano continúa bloqueado.
 
 ---
 
-## F4 · Límite de tamaño y coste por pulsación **[backend completado]**
+## F4 · Límite de tamaño y coste por pulsación **[completado]**
 
 ### Hechos confirmados
 
@@ -213,17 +200,15 @@ hermano continúa bloqueado.
   repite los datos del documento activo en los campos heredados de nivel
   superior.
 
-No se ha medido todavía a partir de qué tamaño deja de ser interactiva la app.
-El umbral de 10 MB y la afirmación de que un archivo concreto «congela» la
-ventana son hipótesis razonables, no resultados de esta auditoría.
+La prueba reproducible de 2, 5 y 10 MiB fija un máximo explícito de 500 ms por
+operación. En una ejecución de cierre representativa, 10 MiB tardaron 259,3 ms
+en estadísticas y 0,3 ms en una búsqueda sin coincidencias.
 
 ### Trabajo
 
-1. **Medir antes de optimizar.** Generar durante el test documentos de varios
-   tamaños (por ejemplo 2, 5 y 10 MB) y registrar tiempo de apertura, latencia de
-   escritura y tiempo hasta actualizar preview, TOC y estadísticas en los modos
-   relevantes. Probar al menos macOS, Windows y Linux en CI o hardware de
-   referencia.
+1. **Completado: medición reproducible.** El test genera documentos de 2, 5 y
+   10 MiB, mide estadísticas y búsqueda y aplica un umbral explícito de 500 ms.
+   CI ejecuta la misma prueba en macOS, Windows y Linux.
 
 2. **Completado: límite backend independiente de la medición.**
    `MAX_MARKDOWN_BYTES` queda inicialmente en 10 MB. El backend consulta metadata
@@ -232,22 +217,21 @@ ventana son hipótesis razonables, no resultados de esta auditoría.
    ambos idiomas, sin eliminar por error la entrada de archivos recientes. Las
    pruebas cubren exactamente el límite y un byte por encima.
 
-3. **Optimizar solo los consumidores medidos.**
+3. **Completado: optimizar solo los consumidores medidos.**
 
    - no calcular coincidencias si la búsqueda está cerrada o vacía;
-   - diferir estadísticas, TOC o preview si su coste resulta perceptible;
+   - diferir estadísticas con `useDeferredValue`;
    - mantener búsqueda y reemplazo sobre la misma versión del contenido para no
      aplicar posiciones obsoletas;
-   - comprobar si `useDeferredValue` aporta algo sobre el debounce que ya tiene
-     el preview antes de adoptarlo.
+   - conservar el debounce que ya protege el preview.
 
-4. **Reducir el coste de sesión sin perder recuperación.** Versionar el esquema,
+4. **Completado: reducir el coste de sesión sin perder recuperación.** Versionar el esquema,
    eliminar la duplicación del documento activo y guardar contenido completo de
    pestañas sucias o sin ruta. Las pestañas limpias con ruta pueden restaurarse
    desde disco. Ajustar el debounce según las mediciones; no descartar el
    contenido de pestañas inactivas que tengan cambios sin guardar.
 
-5. **Verificación.** Añadir pruebas de límite en Rust y una prueba de rendimiento
+5. **Completado: verificación.** Añadir pruebas de límite en Rust y una prueba de rendimiento
    reproducible con umbrales explícitos. Comparar las mismas métricas antes y
    después; no usar únicamente el tamaño del bundle o la duración total del test
    como proxy de responsividad.
@@ -291,7 +275,7 @@ acentos de las preferencias de idioma.
 
 ---
 
-## F6 · Imágenes locales en impresión y exportación
+## F6 · Imágenes locales en impresión y exportación **[completado]**
 
 **Problema.** `Preview.tsx` resuelve rutas relativas a `data:` URLs vía
 `read_image_as_data_url`, pero ni la impresión (`App.tsx:518`) ni
@@ -307,9 +291,13 @@ imágenes» en el menú de export; sin ella, el HTML se queda como hoy y pesa po
 capturas conviene avisar o permitir exportar a una carpeta con los assets al
 lado, que es la alternativa clásica.
 
+`resolveLocalImages` se reutiliza en preview, impresión y exportación. La opción
+de incrustación es explícita; la impresión siempre resuelve imágenes y limpia el
+HTML temporal al finalizar.
+
 ---
 
-## F7 · Lote de detalles menores
+## F7 · Lote de detalles menores **[completado]**
 
 Todos independientes, cabe en un solo PR:
 
@@ -332,9 +320,13 @@ Todos independientes, cabe en un solo PR:
 - **`cargo fmt --check` y `cargo clippy` en CI**: hoy CI solo ejecuta
   `cargo test`, y `fs.rs` ya tiene divergencias de formato acumuladas.
 
+Los siete puntos están implementados y cubiertos por las pruebas existentes o
+por regresiones nuevas. CI y release ejecutan ahora formato y clippy con warnings
+como errores.
+
 ---
 
-## F8 · `App.tsx` y bundle
+## F8 · `App.tsx` y bundle **[completado]**
 
 **`App.tsx` (1555 líneas).** Concentra estado de diálogos, atajos, autoguardado,
 sesión, actualizaciones y arrastrar-soltar. Los `useShallow` de más de treinta
@@ -355,11 +347,15 @@ markdown. Registrar solo los habituales en notas (js, ts, json, bash, python,
 rust, html, css, sql, yaml, md, diff) debería recortarlo bastante — medir con
 `pnpm build:analyze` antes y después en vez de estimar.
 
+Los cuatro hooks fueron extraídos y `App.tsx` bajó a 1403 líneas. El registro
+selectivo de doce lenguajes redujo el chunk Markdown de 282,59 kB a 191,57 kB
+(−32 %); el build procesa 2008 módulos frente a 2029.
+
 ---
 
-## Orden sugerido de entrega
+## Cierre
 
-1. **Release de corrección**: F1 (o su mitigación) + F2 fase A + F4 backend.
-   Es lo que afecta a datos y a la capacidad de actualizar.
-2. **Release de usabilidad**: F3 + F5 + F4 frontend.
-3. **Mantenimiento continuo**: F6, F7, F8 según haya hueco.
+F1–F8 están implementados. Antes de publicar, la release debe pasar la matriz
+completa con los cuatro bundles firmados. Después de publicarla, se debe ejecutar
+el gate operativo descrito en F1.7 y comunicar que los usuarios de 1.7.x
+necesitan una reinstalación manual por la rotación de clave.

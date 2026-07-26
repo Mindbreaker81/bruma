@@ -3,6 +3,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -13,7 +14,6 @@ import { toast } from 'sonner';
 
 import type { MarkdownEditorHandle } from './features/editor/MarkdownEditor';
 import type { FormatCommandId } from './features/editor/formatCommands';
-import { type Tab } from './features/files/document';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,15 +51,13 @@ import { useFileStore } from './features/files/state';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from './features/settings/state';
 import { useTauriMenuBridge } from './hooks/useTauriMenuBridge';
-import {
-  type UpdateInfo,
-  type UpdateProgress,
-  useUpdateChecker,
-} from './hooks/useUpdateChecker';
-import type { UpdateDialogStatus } from './features/settings/UpdateDialog';
+import { useAppShortcuts } from './hooks/useAppShortcuts';
+import { useAutosave } from './hooks/useAutosave';
+import { useSessionRestore } from './hooks/useSessionRestore';
+import { useUpdateFlow } from './hooks/useUpdateFlow';
 import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
-import { clearSession, readSession, writeSession } from './lib/session';
+import { clearSession } from './lib/session';
 import { stripFrontmatter } from './lib/frontmatter';
 import {
   findSearchMatches,
@@ -163,22 +161,6 @@ type MenuHandlers = {
   setViewMode: (nextViewMode: ViewMode) => void;
 };
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  if (target.isContentEditable) {
-    return true;
-  }
-
-  if (target.closest('[contenteditable="true"]')) {
-    return true;
-  }
-
-  return Boolean(target.closest('input, textarea, select, [role="textbox"]'));
-}
-
 export default function App() {
   const { i18n, t } = useTranslation();
   const { document, displayName, isDirty, openTab, closeTab } = useFileStore(
@@ -200,7 +182,7 @@ export default function App() {
     restoreSession,
     recentFiles,
     removeRecentFile,
-    resetUntitled,
+    openUntitledTab,
     updateContent,
   } = useFileStore(
     useShallow((state) => ({
@@ -212,7 +194,7 @@ export default function App() {
       restoreSession: state.restoreSession,
       recentFiles: state.recentFiles,
       removeRecentFile: state.removeRecentFile,
-      resetUntitled: state.resetUntitled,
+      openUntitledTab: state.openUntitledTab,
       updateContent: state.updateContent,
     }))
   );
@@ -344,14 +326,6 @@ export default function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
-  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
-  const [updateStatus, setUpdateStatus] =
-    useState<UpdateDialogStatus>('checking');
-  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(
-    null
-  );
-  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Load custom templates on mount
   useEffect(() => {
@@ -377,9 +351,6 @@ export default function App() {
   const [pendingDirtyAction, setPendingDirtyAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
-  const [autosaveStatus, setAutosaveStatus] = useState<string | null>(null);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   const [isMarkdownGuideOpen, setIsMarkdownGuideOpen] = useState(false);
   const [activeFormats, setActiveFormats] = useState<
@@ -389,23 +360,29 @@ export default function App() {
     null
   );
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
-  const pendingSessionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pendingSession, setPendingSession] = useState<{
-    path: string | null;
-    content: string;
-    eol: 'lf' | 'crlf';
-    tabs?: Tab[];
-    activeTabId?: string | null;
-  } | null>(null);
+  const {
+    isRestoreDialogOpen,
+    pendingSession,
+    setIsRestoreDialogOpen,
+    setPendingSession,
+  } = useSessionRestore({
+    activeTabId,
+    tabs,
+  });
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const previewRef = useRef<HTMLElement | null>(null);
-  const { checkForUpdates, downloadAndInstall, ignoreVersion, relaunch } =
-    useUpdateChecker();
-  const hasUpdateAvailable =
-    Boolean(updateInfo) &&
-    (updateStatus === 'available' ||
-      updateStatus === 'downloading' ||
-      updateStatus === 'installing');
+  const {
+    check: handleCheckUpdates,
+    error: updateError,
+    hasUpdateAvailable,
+    ignore: handleIgnoreUpdate,
+    install: handleInstallUpdate,
+    isOpen: isUpdateOpen,
+    progress: updateProgress,
+    setIsOpen: setIsUpdateOpen,
+    status: updateStatus,
+    update: updateInfo,
+  } = useUpdateFlow();
 
   useSplitScrollSync({
     enabled: viewMode === 'split' && splitScrollSync,
@@ -427,13 +404,17 @@ export default function App() {
     setViewMode: () => {},
   });
   const searchMatches = useMemo(
-    () => findSearchMatches(document.content, searchQuery, searchCaseSensitive),
-    [document.content, searchCaseSensitive, searchQuery]
+    () =>
+      isSearchOpen && searchQuery
+        ? findSearchMatches(document.content, searchQuery, searchCaseSensitive)
+        : [],
+    [document.content, isSearchOpen, searchCaseSensitive, searchQuery]
   );
   const searchMatchCount = searchMatches.length;
+  const deferredStatsContent = useDeferredValue(document.content);
   const textStats = useMemo(
-    () => getTextStats(document.content),
-    [document.content]
+    () => getTextStats(deferredStatsContent),
+    [deferredStatsContent]
   );
   const isWelcomeCandidate =
     tabs.length === 1 &&
@@ -496,13 +477,17 @@ export default function App() {
   }, []);
 
   const handleExportHtml = useCallback(
-    async (includeStyles: boolean) => {
+    async (includeStyles: boolean, embedImages: boolean) => {
       try {
         const { buildExportHtml } = await import('./lib/export');
-        const html = buildExportHtml(document.content, {
+        let html = buildExportHtml(document.content, {
           title: localizedDisplayName,
           includeStyles,
         });
+        if (embedImages) {
+          const { resolveLocalImages } = await import('./lib/images');
+          html = await resolveLocalImages(html, document.path);
+        }
         await saveExportDialog({
           content: html,
           extension: 'html',
@@ -516,7 +501,7 @@ export default function App() {
         showError(t('errors.exportFailed'));
       }
     },
-    [document.content, localizedDisplayName, showError, t]
+    [document.content, document.path, localizedDisplayName, showError, t]
   );
 
   const handlePrint = useCallback(() => {
@@ -526,88 +511,25 @@ export default function App() {
 
     // Imported on demand so markdown-it/highlight.js/DOMPurify stay out of the
     // entry chunk; the preview loads the same module lazily.
-    void import('./lib/markdown').then(({ renderSafeMarkdown }) => {
-      setPrintHtml(renderSafeMarkdown(source));
-
-      window.setTimeout(() => {
-        void printCurrentWindow().catch((error) => {
-          console.error('Print failed:', error);
-          window.print();
-        });
-      }, PRINT_DELAY_MS);
-    });
-  }, [document.content, showFrontmatter]);
-
-  const handleCheckUpdates = useCallback(
-    async (manual = true) => {
-      setUpdateStatus('checking');
-      setUpdateError(null);
-      setUpdateProgress(null);
-      if (manual) {
-        setIsUpdateOpen(true);
-      }
-
-      try {
-        const result = await checkForUpdates({ includeIgnored: manual });
-
-        if (result.status === 'available') {
-          setUpdateInfo(result.update);
-          setUpdateStatus('available');
-          setIsUpdateOpen(true);
-          return;
-        }
-
-        if (result.status === 'ignored') {
-          if (manual) {
-            setUpdateInfo(result.update);
-            setUpdateStatus('available');
-            setIsUpdateOpen(true);
-          }
-          return;
-        }
-
-        setUpdateInfo(null);
-        setUpdateStatus('up_to_date');
-        if (manual) {
-          setIsUpdateOpen(true);
-        }
-      } catch (error) {
-        console.error('Update check failed:', error);
-        setUpdateStatus('error');
-        setUpdateError(
-          error instanceof Error ? error.message : t('updates.error')
+    void Promise.all([import('./lib/markdown'), import('./lib/images')]).then(
+      async ([{ renderSafeMarkdown }, { resolveLocalImages }]) => {
+        const html = await resolveLocalImages(
+          renderSafeMarkdown(source),
+          document.path
         );
-        if (manual) {
-          setIsUpdateOpen(true);
-        }
+        setPrintHtml(html);
+
+        window.setTimeout(() => {
+          void printCurrentWindow()
+            .catch((error) => {
+              console.error('Print failed:', error);
+              window.print();
+            })
+            .finally(() => setPrintHtml(null));
+        }, PRINT_DELAY_MS);
       }
-    },
-    [checkForUpdates, t]
-  );
-
-  const handleInstallUpdate = useCallback(() => {
-    setUpdateStatus('downloading');
-    setUpdateError(null);
-    void downloadAndInstall((progress) => setUpdateProgress(progress))
-      .then(async () => {
-        setUpdateStatus('installing');
-        await relaunch();
-      })
-      .catch((error) => {
-        console.error('Update install failed:', error);
-        setUpdateStatus('error');
-        setUpdateError(
-          error instanceof Error ? error.message : t('updates.error')
-        );
-      });
-  }, [downloadAndInstall, relaunch, t]);
-
-  const handleIgnoreUpdate = useCallback(() => {
-    if (updateInfo) {
-      void ignoreVersion(updateInfo.version);
-    }
-    setIsUpdateOpen(false);
-  }, [ignoreVersion, updateInfo]);
+    );
+  }, [document.content, document.path, showFrontmatter]);
 
   const handleExternalLinkClick = useCallback((href: string) => {
     setExternalLinkPrompt(href);
@@ -762,13 +684,23 @@ export default function App() {
     t,
   ]);
 
+  const autosaveStatus = useAutosave({
+    content: document.content,
+    delayMs: autosaveDelayMs,
+    enabled: autosaveEnabled,
+    isDirty,
+    path: document.path,
+    resolvedLanguage,
+    save: handleSave,
+  });
+
   const handleNewDocument = useCallback(() => {
     requestDirtyConfirmation(() => {
       clearSession();
-      resetUntitled();
+      openUntitledTab();
       setIsRecentMenuOpen(false);
     });
-  }, [requestDirtyConfirmation, resetUntitled]);
+  }, [openUntitledTab, requestDirtyConfirmation]);
 
   const handleOpenWithConfirmation = useCallback(() => {
     requestDirtyConfirmation(async () => {
@@ -898,36 +830,6 @@ export default function App() {
   }, [isDirty, localizedDisplayName]);
 
   useEffect(() => {
-    const session = readSession();
-    if (!session) return;
-    setPendingSession(session);
-
-    if (session.tabs && session.tabs.length > 0) {
-      setIsRestoreDialogOpen(true);
-      return;
-    }
-
-    const path = session.path;
-    if (path) {
-      void (async () => {
-        try {
-          const file = await readFile(path);
-          if (file.content !== session.content) {
-            setIsRestoreDialogOpen(true);
-          } else {
-            clearSession();
-            setPendingSession(null);
-          }
-        } catch {
-          setIsRestoreDialogOpen(true);
-        }
-      })();
-    } else {
-      setIsRestoreDialogOpen(true);
-    }
-  }, []);
-
-  useEffect(() => {
     window.document.documentElement.lang = resolvedLanguage;
 
     if (i18n.language !== resolvedLanguage) {
@@ -979,52 +881,6 @@ export default function App() {
 
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [isDirty]);
-
-  useEffect(() => {
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-
-    if (!autosaveEnabled || !isDirty || !document.path) {
-      return;
-    }
-
-    setAutosaveStatus(t('autosave.savingNow'));
-
-    autosaveTimerRef.current = setTimeout(() => {
-      void (async () => {
-        const saved = await handleSave();
-        if (saved) {
-          const now = new Date();
-          const timeStr = now.toLocaleTimeString(resolvedLanguage, {
-            hour: '2-digit',
-            minute: '2-digit',
-          });
-          setAutosaveStatus(t('autosave.lastSavedAt', { time: timeStr }));
-        } else {
-          setAutosaveStatus(null);
-        }
-        window.setTimeout(() => setAutosaveStatus(null), 3000);
-      })();
-    }, autosaveDelayMs);
-
-    return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-        autosaveTimerRef.current = null;
-      }
-    };
-  }, [
-    autosaveEnabled,
-    autosaveDelayMs,
-    document.content,
-    document.path,
-    handleSave,
-    isDirty,
-    resolvedLanguage,
-    t,
-  ]);
 
   useEffect(() => {
     menuHandlersRef.current = {
@@ -1083,90 +939,14 @@ export default function App() {
     void syncRecentFilesMenu(recentFiles);
   }, [recentFiles]);
 
-  useEffect(() => {
-    if (pendingSessionRef.current) {
-      clearTimeout(pendingSessionRef.current);
-      pendingSessionRef.current = null;
-    }
-
-    if (!isDirty) {
-      return;
-    }
-
-    pendingSessionRef.current = setTimeout(() => {
-      writeSession({
-        path: document.path,
-        content: document.content,
-        eol: document.eol,
-        savedAt: Date.now(),
-        tabs,
-        activeTabId,
-      });
-    }, 500);
-
-    return () => {
-      if (pendingSessionRef.current) {
-        clearTimeout(pendingSessionRef.current);
-        pendingSessionRef.current = null;
-      }
-    };
-  }, [
-    document.content,
-    document.path,
-    document.eol,
-    isDirty,
-    tabs,
-    activeTabId,
-  ]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === '?' &&
-        !event.metaKey &&
-        !event.ctrlKey &&
-        !event.altKey &&
-        !isEditableTarget(event.target)
-      ) {
-        event.preventDefault();
-        setIsShortcutsOpen(true);
-        return;
-      }
-
-      const modifier = event.metaKey || event.ctrlKey;
-      if (!modifier) return;
-
-      if (event.key === '+' || event.key === '=') {
-        event.preventDefault();
-        increaseFontScale();
-      } else if (event.key === '-' || event.key === '_') {
-        event.preventDefault();
-        decreaseFontScale();
-      } else if (event.key === '0') {
-        event.preventDefault();
-        resetFontScale();
-      } else if (
-        isTauriRuntime() &&
-        event.shiftKey &&
-        event.key.toLowerCase() === 'm'
-      ) {
-        event.preventDefault();
-        toggleFocusMode();
-      } else if (event.shiftKey && event.key.toLowerCase() === 'h') {
-        event.preventDefault();
-        toggleToc();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [
+  useAppShortcuts({
     decreaseFontScale,
     increaseFontScale,
+    openShortcuts: () => setIsShortcutsOpen(true),
     resetFontScale,
     toggleFocusMode,
     toggleToc,
-  ]);
+  });
 
   useTauriMenuBridge({
     handlers: menuHandlersRef,
@@ -1240,7 +1020,7 @@ export default function App() {
               customTemplates={customTemplates}
               requestDirtyConfirmation={requestDirtyConfirmation}
               clearSession={clearSession}
-              resetUntitled={resetUntitled}
+              openUntitledTab={openUntitledTab}
               updateContent={updateContent}
               setWelcomeDismissed={setWelcomeDismissed}
               handleOpenWithConfirmation={handleOpenWithConfirmation}

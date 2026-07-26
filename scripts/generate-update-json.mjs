@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(
   readFileSync(path.join(root, 'package.json'), 'utf8')
 );
@@ -65,6 +66,7 @@ const platformCandidates = {
     `bruma-v${version}-windows-x64-setup.exe`,
     `bruma-v${version}-windows-x64-setup.msi`,
   ],
+  'windows-aarch64': [`bruma-v${version}-windows-arm64-setup.exe`],
 };
 
 const platforms = {};

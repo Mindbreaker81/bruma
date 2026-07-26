@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import { stripFrontmatter } from '../../lib/frontmatter';
 import { renderSafeMarkdown } from '../../lib/markdown';
+import { resolveLocalImages } from '../../lib/images';
 
 type PreviewProps = {
   content: string;
@@ -21,14 +22,6 @@ type PreviewProps = {
 };
 
 const RENDER_DEBOUNCE_MS = 150;
-
-function isAbsoluteUrl(value: string): boolean {
-  try {
-    return Boolean(new URL(value));
-  } catch {
-    return false;
-  }
-}
 
 export function Preview({
   content,
@@ -59,22 +52,20 @@ export function Preview({
     return () => window.clearTimeout(timeout);
   }, [sourceForRender]);
 
-  // Resolve local images to data URLs after each render.
   useEffect(() => {
-    if (!onLocalImageRequest || !containerRef.current) return;
-    const root = containerRef.current;
-    const images = Array.from(root.querySelectorAll('img'));
-
-    images.forEach((img) => {
-      const original = img.getAttribute('src') ?? '';
-      if (!original || isAbsoluteUrl(original)) return;
-      if (img.dataset.brumaResolved === original) return;
-      img.dataset.brumaResolved = original;
-      void onLocalImageRequest(original).then((dataUrl) => {
-        if (dataUrl) img.setAttribute('src', dataUrl);
-      });
+    if (!onLocalImageRequest) return;
+    let cancelled = false;
+    void resolveLocalImages(html, documentPath, (_basePath, relativeSrc) =>
+      onLocalImageRequest(relativeSrc)
+    ).then((resolvedHtml) => {
+      if (!cancelled && resolvedHtml !== html) {
+        setHtml(resolvedHtml);
+      }
     });
-  }, [html, onLocalImageRequest, documentPath]);
+    return () => {
+      cancelled = true;
+    };
+  }, [documentPath, html, onLocalImageRequest]);
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     const anchor = (event.target as HTMLElement | null)?.closest('a');

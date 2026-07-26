@@ -51,6 +51,7 @@ pub fn run() {
             commands::app_menu::set_menu_labels,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
+            #[cfg(debug_assertions)]
             commands::e2e::e2e_emit_recent_open,
             commands::print::print_current_window,
             commands::recent::sync_recent_files_menu

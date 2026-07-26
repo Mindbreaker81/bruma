@@ -140,6 +140,20 @@ describe('app config', () => {
     expect(migrateConfig({ previewMaxWidth: 5 }).previewMaxWidth).toBe(65);
     expect(migrateConfig({ previewMaxWidth: 300 }).previewMaxWidth).toBe(65);
   });
+
+  it('keeps only structurally valid custom templates', () => {
+    const config = migrateConfig({
+      customTemplates: [
+        { id: 'ok', name: 'Valid', content: '# Note', locale: 'en' },
+        { id: 'missing-content', name: 'Invalid' },
+        null,
+      ] as never,
+    });
+
+    expect(config.customTemplates).toEqual([
+      { id: 'ok', name: 'Valid', content: '# Note', locale: 'en' },
+    ]);
+  });
 });
 
 class MapStorage implements Storage {

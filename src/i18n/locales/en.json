@@ -92,6 +92,7 @@
     "templateLoadFailed": "The template could not be loaded."
   },
   "export": {
+    "embedImages": "Embed local images",
     "open": "Export",
     "htmlStyled": "Styled HTML",
     "htmlPlain": "Plain HTML"

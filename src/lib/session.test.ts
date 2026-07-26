@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  createSessionSnapshot,
+  hasRecoverableChanges,
   readSession,
   writeSession,
   clearSession,
@@ -99,6 +101,84 @@ describe('session storage', () => {
         },
       ],
       activeTabId: '2',
+    });
+  });
+
+  it('preserves the version and disk-restore marker of compact sessions', () => {
+    const session: PendingSession = {
+      version: 3,
+      path: null,
+      content: '',
+      eol: 'lf',
+      savedAt: now.getTime(),
+      tabs: [
+        {
+          id: 'clean',
+          restoreFromDisk: true,
+          document: {
+            id: 'doc-clean',
+            path: '/clean.md',
+            content: '',
+            savedContent: '',
+            encoding: 'utf-8',
+            eol: 'lf',
+            lastSavedAt: now.getTime(),
+          },
+        },
+      ],
+      activeTabId: 'clean',
+    };
+
+    writeSession(session);
+
+    expect(readSession()).toEqual(session);
+  });
+
+  it('keeps inactive dirty tabs and compacts clean tabs for recovery', () => {
+    const tabs: NonNullable<PendingSession['tabs']> = [
+      {
+        id: 'dirty',
+        document: {
+          id: 'doc-dirty',
+          path: '/dirty.md',
+          content: 'unsaved',
+          savedContent: 'saved',
+          encoding: 'utf-8',
+          eol: 'lf',
+          lastSavedAt: now.getTime(),
+        },
+      },
+      {
+        id: 'clean',
+        document: {
+          id: 'doc-clean',
+          path: '/clean.md',
+          content: 'on disk',
+          savedContent: 'on disk',
+          encoding: 'utf-8',
+          eol: 'lf',
+          lastSavedAt: now.getTime(),
+        },
+      },
+    ];
+
+    expect(hasRecoverableChanges(tabs)).toBe(true);
+    expect(createSessionSnapshot(tabs, 'clean', now.getTime())).toMatchObject({
+      version: 3,
+      path: null,
+      content: '',
+      tabs: [
+        {
+          id: 'dirty',
+          document: { content: 'unsaved', savedContent: 'saved' },
+        },
+        {
+          id: 'clean',
+          restoreFromDisk: true,
+          document: { content: '', savedContent: '' },
+        },
+      ],
+      activeTabId: 'clean',
     });
   });
 

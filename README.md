@@ -6,7 +6,8 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
 - Version de app: se lee desde `package.json` y se sincroniza con Tauri/Rust con `npm run sync:version`.
 - Plataformas objetivo MVP: macOS, Windows y Linux
-- Estado de entrega: build y tests CI en macOS/Windows en verde; pendiente QA manual de aceptacion final
+- Estado de entrega: plan de mejoras implementado y validación automatizada local
+  en verde; la próxima release requiere QA manual de actualización
 - Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
 ## Que incluye la version actual
@@ -55,7 +56,8 @@ El workflow `Release` genera artifacts de updater firmados y publica `update.jso
 - Local-first estricto: sin nube y sin telemetria
 - Sanitizacion de HTML del preview (bloquea scripts y payloads peligrosos)
 - CSP de Tauri endurecida para build de escritorio
-- Lectura/escritura Markdown del backend restringida al home del usuario tras canonicalizacion de paths
+- Lectura/escritura Markdown del backend restringida al home y a directorios
+  concedidos explícitamente mediante diálogo nativo o drag-and-drop
 
 ## Descargar builds desde GitHub Actions
 
@@ -78,6 +80,7 @@ Para usuarios finales, usamos **GitHub Releases** con archivos listos para desca
 - **Windows (instaladores)**:
   - `bruma-vX.Y.Z-windows-x64.msi`
   - `bruma-vX.Y.Z-windows-x64-setup.exe`
+  - `bruma-vX.Y.Z-windows-arm64-setup.exe`
 - **Windows (portable-full)**:
   - `bruma-vX.Y.Z-windows-x64-portable-full.zip`
   - `bruma-vX.Y.Z-windows-arm64-portable-full.zip`

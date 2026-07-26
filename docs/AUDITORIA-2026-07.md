@@ -6,16 +6,18 @@ build y pipeline de release.
 
 ## Estado general
 
-El proyecto está bien construido para su tamaño. La verificación local pasa
-completa:
+El proyecto está bien construido para su tamaño. Tras aplicar el plan de
+corrección, la verificación local de cierre pasa completa:
 
-| Comprobación      | Resultado                       |
-| ----------------- | ------------------------------- |
-| `pnpm test`       | 146 tests, 29 archivos, en verde |
-| `pnpm lint`       | Sin avisos (`--max-warnings 0`) |
-| `pnpm format:check` | Limpio                        |
-| `pnpm build`      | Correcto                        |
-| `cargo test`      | No ejecutable en este entorno (faltan GTK/WebKit dev) |
+| Comprobación        | Resultado                         |
+| ------------------- | --------------------------------- |
+| `pnpm test`         | 161 tests, 32 archivos, en verde |
+| `pnpm lint`         | Sin avisos (`--max-warnings 0`)  |
+| `pnpm format:check` | Limpio                            |
+| `pnpm build`        | Correcto                          |
+| `cargo fmt --check` | Limpio                            |
+| `cargo clippy`      | Sin warnings                      |
+| `cargo test`        | 20 tests, en verde                |
 
 Aciertos que conviene no perder al refactorizar:
 
@@ -39,10 +41,9 @@ Aciertos que conviene no perder al refactorizar:
 
 ## Hallazgos
 
-Ordenados por impacto. Los marcados **[corregido]** se arreglan en esta misma
-rama; el resto queda documentado con la corrección propuesta.
+Ordenados por impacto. Todos quedaron corregidos en esta rama.
 
-### 1. El auto-actualizador está roto en producción
+### 1. El auto-actualizador está roto en producción **[corregido]**
 
 `src-tauri/tauri.conf.json` declara `"createUpdaterArtifacts": false` mientras el
 plugin `updater` sigue configurado con `pubkey` y endpoint. Como consecuencia,
@@ -80,10 +81,11 @@ generador fallen ante cualquier asset o firma ausente. La matriz completa
 [`Release #38`](https://github.com/Mindbreaker81/bruma/actions/runs/30211995558)
 terminó correctamente en sus seis jobs: produjo los bundles reales de macOS
 ARM64, Linux x64 y Windows x64 con sus `.sig`, y el generador estricto creó el
-`update.json` dentro de una release borrador. Windows ARM64 también compiló, pero
-necesita además un bundle instalable por el updater: hoy solo se compila con
-`--no-bundle` y se publica un ZIP portable, por lo que añadir
-`windows-aarch64` al manifiesto no basta.
+`update.json` dentro de una release borrador. Windows ARM64 genera ahora un
+instalador NSIS firmado y se incorpora como `windows-aarch64`, además de
+conservar el ZIP portable. Este nuevo job debe validarse en la siguiente
+ejecución de `Release` antes de publicar; localmente se verificó el generador con
+fixtures completos y el rechazo de una firma ARM64 ausente.
 
 La rotación rompe necesariamente la cadena con 1.7.x: la primera versión que
 lleve la clave nueva debe distribuirse como reinstalación manual y explicarlo en
@@ -171,7 +173,7 @@ menú por cambios en recientes o en el updater; antes de arrancar el frontend us
 un fallback español correctamente acentuado. Los documentos sin ruta se
 traducen ahora como `document.untitled` en cada punto de render.
 
-### 8. Sin límite de tamaño al abrir archivos **[backend corregido]**
+### 8. Sin límite de tamaño al abrir archivos **[corregido]**
 
 `read_markdown_file` leía el archivo completo a memoria sin comprobar tamaño.
 Ahora rechaza más de 10 MB antes de reservar, acota la lectura y comprueba de
@@ -181,14 +183,11 @@ frontera.
 Varios consumidores frontend mantienen coste lineal respecto al contenido. Las
 estadísticas dependen de cada cambio; la búsqueda puede terminar pronto si no
 hay consulta, el índice solo existe cuando el TOC está montado y el preview solo
-se monta en los modos correspondientes y ya usa un debounce de 150 ms. Todavía
-hay que medir apertura y latencia de escritura antes de seleccionar
-optimizaciones frontend.
-`useDeferredValue` es una opción para los consumidores cuyo coste se confirme,
-pero la búsqueda y el reemplazo deben mantenerse sobre la misma versión del
-contenido para evitar posiciones obsoletas.
+se monta en los modos correspondientes y ya usa un debounce de 150 ms. La prueba
+reproducible de 2, 5 y 10 MiB confirmó el coste: las estadísticas usan ahora
+`useDeferredValue` y la búsqueda no se calcula con el panel cerrado o vacío.
 
-### 9. La impresión no resuelve las imágenes locales
+### 9. La impresión no resuelve las imágenes locales **[corregido]**
 
 `Preview.tsx` convierte las rutas relativas a `data:` URLs mediante
 `read_image_as_data_url`, pero `handlePrint` renderiza un HTML aparte
@@ -197,10 +196,10 @@ con imágenes locales las deja rotas. El mismo problema afecta a
 `buildExportHtml`: el HTML exportado conserva rutas relativas que solo funcionan
 si el destino queda en la misma carpeta que el original.
 
-Corrección: extraer la resolución de imágenes a una función reutilizable y
-aplicarla también en impresión y exportación.
+Corregido con `resolveLocalImages`, compartido por preview, impresión y
+exportación. La exportación permite elegir si incrusta imágenes.
 
-### 10. Detalles menores
+### 10. Detalles menores **[corregidos]**
 
 - **`printHtml` nunca se limpia** (`App.tsx:342`). Tras imprimir una vez, el
   HTML queda montado en el DOM con `display: none` durante toda la sesión y se
@@ -229,17 +228,17 @@ aplicarla también en impresión y exportación.
   devuelva error fuera de `debug_assertions`. Compilarlo bajo
   `#[cfg(debug_assertions)]` eliminaría el comando de los binarios de release.
 
+Todos estos puntos quedaron corregidos en la rama: regresión para pestañas
+sucias, nombre `openUntitledTab`, validación estructural de plantillas,
+`fileURLToPath`, comando E2E solo en debug, formato/clippy en CI, cuatro hooks
+extraídos y registro selectivo de lenguajes.
+
 ---
 
-## Recomendaciones por orden
+## Cierre
 
-1. Arreglar la firma del updater (#1) o retirar la UI que promete actualizar.
-2. Mover la sesión a un almacenamiento persistente (#5) — hoy la recuperación
-   ante fallos no existe.
-3. Permitir abrir archivos elegidos en el diálogo nativo fuera del home (#6).
-4. Límite de tamaño al abrir (#8).
-5. Localizar el menú nativo (#7).
-6. Imágenes locales en impresión y exportación (#9).
-
-El plan de corrección detallado, con enfoque técnico, esfuerzo y orden de
-entrega para cada punto, está en [`PLAN-MEJORAS.md`](./PLAN-MEJORAS.md).
+Los diez hallazgos y las ocho líneas de trabajo derivadas quedaron corregidos.
+El detalle técnico y las evidencias están en
+[`PLAN-MEJORAS.md`](./PLAN-MEJORAS.md). Solo resta el gate operativo posterior a
+publicar: comprobar `releases/latest` y una actualización real en cada
+plataforma soportada.

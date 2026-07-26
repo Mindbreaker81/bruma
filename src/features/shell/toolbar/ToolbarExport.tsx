@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  DropdownMenuCheckboxItem,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -13,7 +15,7 @@ import { Download } from 'lucide-react';
 type ToolbarExportProps = {
   isExportMenuOpen: boolean;
   setIsExportMenuOpen: (open: boolean) => void;
-  handleExportHtml: (styled: boolean) => Promise<void>;
+  handleExportHtml: (styled: boolean, embedImages: boolean) => Promise<void>;
 };
 
 export function ToolbarExport({
@@ -22,6 +24,7 @@ export function ToolbarExport({
   handleExportHtml,
 }: ToolbarExportProps) {
   const { t } = useTranslation();
+  const [embedImages, setEmbedImages] = useState(false);
 
   return (
     <ToolbarGroup label={t('toolbar.export')}>
@@ -37,10 +40,21 @@ export function ToolbarExport({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => void handleExportHtml(true)}>
+          <DropdownMenuCheckboxItem
+            checked={embedImages}
+            onCheckedChange={(checked) => setEmbedImages(checked === true)}
+            onSelect={(event) => event.preventDefault()}
+          >
+            {t('export.embedImages')}
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuItem
+            onClick={() => void handleExportHtml(true, embedImages)}
+          >
             {t('export.htmlStyled')}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void handleExportHtml(false)}>
+          <DropdownMenuItem
+            onClick={() => void handleExportHtml(false, embedImages)}
+          >
             {t('export.htmlPlain')}
           </DropdownMenuItem>
         </DropdownMenuContent>

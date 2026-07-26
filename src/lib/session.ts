@@ -1,17 +1,54 @@
-import type { DocumentEol, Tab } from '../features/files/document';
+import {
+  isDirty as isDocumentDirty,
+  type DocumentEol,
+  type Tab,
+} from '../features/files/document';
 
 export type PendingSession = {
+  version?: 3;
   path: string | null;
   content: string;
   eol: DocumentEol;
   savedAt: number;
-  tabs?: Tab[];
+  tabs?: Array<Tab & { restoreFromDisk?: boolean }>;
   activeTabId?: string | null;
 };
 
 const SESSION_STORAGE_KEY = 'bruma.session.v2';
 const LEGACY_SESSION_STORAGE_KEY = 'bruma.session';
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function hasRecoverableChanges(tabs: Tab[]): boolean {
+  return tabs.some((tab) => isDocumentDirty(tab.document));
+}
+
+export function createSessionSnapshot(
+  tabs: Tab[],
+  activeTabId: string | null,
+  savedAt = Date.now()
+): PendingSession {
+  return {
+    version: 3,
+    path: null,
+    content: '',
+    eol: 'lf',
+    savedAt,
+    tabs: tabs.map((tab) =>
+      tab.document.path && !isDocumentDirty(tab.document)
+        ? {
+            ...tab,
+            document: {
+              ...tab.document,
+              content: '',
+              savedContent: '',
+            },
+            restoreFromDisk: true,
+          }
+        : tab
+    ),
+    activeTabId,
+  };
+}
 
 function parseSession(stored: string): PendingSession | null {
   try {
@@ -26,6 +63,7 @@ function parseSession(stored: string): PendingSession | null {
       return null;
     }
     return {
+      version: parsed.version === 3 ? 3 : undefined,
       path: typeof parsed.path === 'string' ? parsed.path : null,
       content: parsed.content,
       eol: parsed.eol,

@@ -77,6 +77,14 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
+      - name: Check Rust format
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: Check Rust clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
       - name: Import Apple Developer ID certificate (macOS)
         if: startsWith(matrix.platform, 'macos-')
         env:
@@ -128,7 +136,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm exec tauri build
       - name: Prefetch NSIS tools (retry)
-        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -181,9 +189,9 @@ jobs:
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         run: pnpm exec tauri build
 
-      - name: Build unsigned app (Windows arm64, no bundle)
+      - name: Build unsigned bundle (Windows arm64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
-        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --no-bundle
+        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --bundles nsis
 
       - name: Build unsigned bundles deb + rpm (Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -337,6 +345,20 @@ jobs:
           Copy-Item "webview2pkg\\contentFiles\\any\\any\\WebView2\\*" "$portableDir\\WebView2" -Recurse -Force
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
+
+      - name: Collect release assets (Windows arm64 updater)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.app_version.outputs.value }}"
+          $nsis = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe" | Select-Object -First 1
+          if (-not $nsis) { throw "Expected Windows ARM64 NSIS installer not found" }
+          $signature = "$($nsis.FullName).sig"
+          if (-not (Test-Path $signature) -or (Get-Item $signature).Length -eq 0) {
+            throw "Expected non-empty updater signature not found: $signature"
+          }
+          Copy-Item $nsis.FullName "release-assets/bruma-v$version-windows-arm64-setup.exe"
+          Copy-Item $signature "release-assets/bruma-v$version-windows-arm64-setup.exe.sig"
 
       - name: Collect release assets (Linux)
         if: matrix.platform == 'ubuntu-latest'
