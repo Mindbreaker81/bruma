@@ -97,10 +97,12 @@ anunciarse en las notas de la release y en la landing.
    - que cada URL apunta al tipo de bundle elegido para el updater;
    - que los assets y `.sig` referenciados existen en `release-assets`.
 
-   El nuevo bundle NSIS ARM64 no puede validarse de extremo a extremo localmente:
-   debe pasar el siguiente workflow `Release` en GitHub Actions antes de
-   publicar. La release de prueba anterior quedó como borrador y no sustituyó a
-   `releases/latest`.
+   La matriz
+   [`Release #30218306355`](https://github.com/Mindbreaker81/bruma/actions/runs/30218306355)
+   validó después el flujo completo de las cuatro plataformas. Windows ARM64
+   produjo el NSIS, el portable y una firma no vacía; el instalador descargado
+   se verificó criptográficamente contra la pública `AFC106CF2079DD11`. La
+   release de prueba quedó como borrador y no sustituyó a `releases/latest`.
 
 7. **Gate de publicación (operativo).** Después de publicar la próxima versión,
    descargar el `update.json` desde el

@@ -83,9 +83,11 @@ terminó correctamente en sus seis jobs: produjo los bundles reales de macOS
 ARM64, Linux x64 y Windows x64 con sus `.sig`, y el generador estricto creó el
 `update.json` dentro de una release borrador. Windows ARM64 genera ahora un
 instalador NSIS firmado y se incorpora como `windows-aarch64`, además de
-conservar el ZIP portable. Este nuevo job debe validarse en la siguiente
-ejecución de `Release` antes de publicar; localmente se verificó el generador con
-fixtures completos y el rechazo de una firma ARM64 ausente.
+conservar el ZIP portable. La ejecución
+[`Release #30218306355`](https://github.com/Mindbreaker81/bruma/actions/runs/30218306355)
+completó la matriz de cuatro plataformas, recogió el instalador ARM64 y su
+`.sig`, y generó el manifiesto estricto. La firma del instalador descargado se
+verificó además contra la pública `AFC106CF2079DD11`.
 
 La rotación rompe necesariamente la cadena con 1.7.x: la primera versión que
 lleve la clave nueva debe distribuirse como reinstalación manual y explicarlo en

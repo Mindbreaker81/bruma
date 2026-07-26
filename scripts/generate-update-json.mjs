@@ -43,7 +43,7 @@ function notesFromChangelog() {
   if (!existsSync(changelogPath)) return '';
   const changelog = readFileSync(changelogPath, 'utf8');
   const heading = new RegExp(
-    `^## \[?v?${version.replaceAll('.', '\\.')}[^\n]*`,
+    `^## \\[?v?${version.replaceAll('.', '\\.')}\\]?(?:\\s+-[^\\n]*)?$`,
     'm'
   );
   const match = heading.exec(changelog);
