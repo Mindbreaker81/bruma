@@ -347,8 +347,8 @@ fn now_millis() -> u128 {
 #[cfg(test)]
 mod tests {
     use super::{
-        ensure_extension, image_mime_for_path, is_markdown_path, normalize_eol, read_file,
-        read_image_as_data_url, save_file, user_home_dir, DocumentEol,
+        ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
+        normalize_eol, read_file, read_image_as_data_url, save_file, user_home_dir, DocumentEol,
     };
     use std::{
         fs,
@@ -515,6 +515,19 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[test]
+    fn rejects_template_ids_that_escape_the_templates_directory() {
+        assert!(is_safe_template_id("daily-note"));
+        assert!(is_safe_template_id("acta.v2"));
+
+        assert!(!is_safe_template_id(""));
+        assert!(!is_safe_template_id(".."));
+        assert!(!is_safe_template_id("../../.ssh/notes"));
+        assert!(!is_safe_template_id("..\\..\\notes"));
+        assert!(!is_safe_template_id("sub/dir"));
+        assert!(!is_safe_template_id("/etc/passwd"));
+    }
+
     #[cfg(target_family = "unix")]
     fn forbidden_system_path() -> PathBuf {
         PathBuf::from("/etc/passwd")
@@ -575,8 +588,27 @@ pub fn list_custom_templates(app: AppHandle) -> Result<Vec<CustomTemplate>, Stri
     Ok(templates)
 }
 
+/// Template ids come from the frontend, so they must not be able to walk out of
+/// the templates directory: `../../.ssh/notes` would otherwise canonicalize to
+/// any `.md` file inside the user's home.
+fn is_safe_template_id(id: &str) -> bool {
+    !id.is_empty()
+        && id != "."
+        && id != ".."
+        && !id.contains("..")
+        && !id.contains('/')
+        && !id.contains('\\')
+        && !id.contains('\0')
+        && !Path::new(id).is_absolute()
+        && Path::new(id).components().count() == 1
+}
+
 #[tauri::command]
 pub fn read_custom_template(app: AppHandle, id: String) -> Result<String, String> {
+    if !is_safe_template_id(&id) {
+        return Err("invalid_template_name".to_string());
+    }
+
     let config_dir = app
         .path()
         .app_config_dir()
