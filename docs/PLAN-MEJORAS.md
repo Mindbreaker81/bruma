@@ -36,11 +36,20 @@ comprobación manual falla.
 ### Decisión previa: ¿se conserva la clave privada original?
 
 La pública embebida en `tauri.conf.json` corresponde al key id `97F1D5CFD8779B7D`.
-Antes de nada hay que responder si existe todavía la privada correspondiente,
-porque **rotar la clave deja sin auto-actualización a todos los instalados de
-1.7.x**: sus binarios llevan la pública antigua y rechazarán cualquier bundle
-firmado con otra. En ese caso hay que asumir una reinstalación manual y
-anunciarla en las notas de la release y en la landing.
+El diagnóstico aislado ejecutado en GitHub Actions el 26 de julio de 2026
+confirmó que `TAURI_SIGNING_PRIVATE_KEY` existe y no está vacío, pero no existe
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Tauri 2.10.1 llega a compilar el bundle y
+falla al firmarlo con `incorrect updater private key password: failed to fill
+whole buffer`. Por tanto, la clave almacenada no es utilizable con contraseña
+vacía. Este resultado no distingue entre una clave cifrada cuya contraseña falta
+y una clave defectuosa o truncada.
+
+Hay que recuperar la contraseña original o confirmar que se conserva otra copia
+de la privada correspondiente, porque **rotar la clave deja sin
+auto-actualización a todos los instalados de 1.7.x**: sus binarios llevan la
+pública antigua y rechazarán cualquier bundle firmado con otra. En ese caso hay
+que asumir una reinstalación manual y anunciarla en las notas de la release y en
+la landing.
 
 - **Si se conserva** → validar la clave y el pipeline completo. El repositorio no
   permite concluir que el único problema sea el formato del secret.

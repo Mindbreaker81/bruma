@@ -67,10 +67,18 @@ rama dinámica sin `platforms`, no a este manifiesto; la interfaz sí muestra cr
 el `message` recibido cuando una comprobación manual falla. La versión 1.7.2 no
 puede llegar a los usuarios de 1.7.x por esa vía.
 
-Corrección: confirmar primero si se conserva la privada correspondiente a la
-pública embebida; el repositorio no permite saberlo. Después hay que validar la
-clave localmente y averiguar con qué CLI se creó: Tauri CLI 2.10.1 corrigió las
-claves sin contraseña defectuosas generadas por 2.9.3–2.10.0. Después hay que
+La comprobación aislada de GitHub Actions del 26 de julio de 2026 confirmó que
+`TAURI_SIGNING_PRIVATE_KEY` existe y no está vacío, pero no hay un secreto
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Tauri 2.10.1 compiló el bundle y falló al
+firmarlo con `incorrect updater private key password: failed to fill whole
+buffer`. Esto demuestra que la clave guardada no funciona con contraseña vacía;
+no permite distinguir por sí solo entre una clave cifrada cuya contraseña se
+perdió y una clave defectuosa o truncada.
+
+Corrección: recuperar la contraseña original o la privada correspondiente a la
+pública embebida. Después hay que validar la clave y averiguar con qué CLI se
+creó: Tauri CLI 2.10.1 corrigió las claves sin contraseña defectuosas generadas
+por 2.9.3–2.10.0. Después hay que
 volver a `createUpdaterArtifacts: true`, recoger y exigir los `.sig` de macOS,
 Linux y Windows x64, y hacer que tanto el workflow como el generador fallen ante
 cualquier firma ausente. Windows ARM64 necesita además un bundle instalable por

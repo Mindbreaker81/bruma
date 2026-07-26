@@ -7,65 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  verify-updater-key:
-    if: github.event_name == 'workflow_dispatch'
-    name: Verify updater signing key
-    runs-on: macos-14
-    permissions:
-      contents: read
-    env:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Enable updater artifacts for this diagnostic build
-        shell: bash
-        run: |
-          node -e "const fs=require('node:fs');const p='src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.bundle.createUpdaterArtifacts=true;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n')"
-
-      - name: Confirm updater secret is configured
-        shell: bash
-        run: |
-          if [[ -z "$TAURI_SIGNING_PRIVATE_KEY" ]]; then
-            echo "TAURI_SIGNING_PRIVATE_KEY is not configured"
-            exit 1
-          fi
-          echo "TAURI_SIGNING_PRIVATE_KEY is configured"
-
-      - name: Build updater artifact without publishing
-        run: pnpm exec tauri build --bundles app
-
-      - name: Verify updater signature was generated
-        shell: bash
-        run: |
-          signature="$(find src-tauri/target/release/bundle/macos -type f -name '*.app.tar.gz.sig' -size +0c -print -quit)"
-          if [[ -z "$signature" ]]; then
-            echo "No non-empty updater signature was generated"
-            exit 1
-          fi
-          echo "Updater signature generated successfully: $signature"
-
   build:
-    if: github.event_name != 'workflow_dispatch'
     name: Build ${{ matrix.platform }}${{ matrix.win_arch && format(' ({0})', matrix.win_arch) || '' }}
     runs-on: ${{ matrix.platform }}
     permissions:
