@@ -55,12 +55,16 @@ echo "No .sig file found (updater artifacts disabled)"
 ```
 
 `UPDATE_SYSTEM_TROUBLESHOOTING.md` lo documenta como "solución temporal" tras un
-problema al descifrar la clave minisign. El efecto para el usuario es que el
-updater de Tauri v2 exige `signature` en el manifiesto: la comprobación falla al
-deserializar. Es decir, la app comprueba actualizaciones al arrancar
-(`App.tsx:1003`), muestra el diálogo y el botón "Instalar", y nunca puede
-instalar nada. La versión 1.7.2 ya no puede llegar a los usuarios de 1.7.x por
-esa vía.
+problema al descifrar la clave minisign.
+
+El efecto para el usuario está confirmado contra el código del plugin
+(`tauri-plugin-updater-2.10.1/src/updater.rs`): `ReleaseManifestPlatform.signature`
+es un `String` obligatorio y la deserialización falla de forma explícita con
+`the 'signature' field was not set on the updater response`. Es decir, la app
+comprueba actualizaciones al arrancar (`App.tsx:1003`), muestra el diálogo y el
+botón "Instalar", y nunca puede instalar nada; quien pulsa "Buscar
+actualizaciones" ve ese texto crudo como mensaje de error. La versión 1.7.2 ya no
+puede llegar a los usuarios de 1.7.x por esa vía.
 
 Corrección: regenerar el par de claves con `pnpm tauri signer generate`, cargar
 la privada **sin saltos de línea** en `TAURI_SIGNING_PRIVATE_KEY` (el error
@@ -218,3 +222,6 @@ aplicarla también en impresión y exportación.
 4. Límite de tamaño al abrir (#8).
 5. Localizar el menú nativo (#7).
 6. Imágenes locales en impresión y exportación (#9).
+
+El plan de corrección detallado, con enfoque técnico, esfuerzo y orden de
+entrega para cada punto, está en [`PLAN-MEJORAS.md`](./PLAN-MEJORAS.md).
