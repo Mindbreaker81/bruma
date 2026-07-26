@@ -73,8 +73,8 @@ jobs:
             brew untap aws/tap || true
             brew install minisign
           fi
-          node -e "const fs=require('node:fs');const c=require('./src-tauri/tauri.conf.json');fs.writeFileSync(process.argv[1],Buffer.from(c.plugins.updater.pubkey,'base64'))" "$RUNNER_TEMP/bruma.pub"
-          minisign -Vm "${artifacts[0]}" -p "$RUNNER_TEMP/bruma.pub" -x "$signature"
+          node -e "const fs=require('node:fs');const c=require('./src-tauri/tauri.conf.json');fs.writeFileSync(process.argv[1],Buffer.from(c.plugins.updater.pubkey,'base64'));fs.writeFileSync(process.argv[2],Buffer.from(fs.readFileSync(process.argv[3],'utf8').trim(),'base64'))" "$RUNNER_TEMP/bruma.pub" "$RUNNER_TEMP/bruma.minisig" "$signature"
+          minisign -Vm "${artifacts[0]}" -p "$RUNNER_TEMP/bruma.pub" -x "$RUNNER_TEMP/bruma.minisig"
           echo "Updater signature matches the rotated public key"
 
   build:
