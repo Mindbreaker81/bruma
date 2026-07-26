@@ -138,7 +138,7 @@ Corregido con `localStorage` y la clave versionada `bruma.session.v2`, migració
 cuota. El plugin `@tauri-apps/plugin-store` queda como fase posterior solo si las
 mediciones muestran que la cuota del navegador no es suficiente.
 
-### 6. Ámbito limitado al home: archivos legítimos rechazados
+### 6. Ámbito limitado al home: archivos legítimos rechazados **[corregido]**
 
 `is_allowed_path` exige que la ruta canónica empiece por `$HOME`/`%USERPROFILE%`.
 La decisión está documentada y es defendible, pero se aplica también a
@@ -148,11 +148,12 @@ en el diálogo nativo del sistema**. En la práctica no se pueden abrir notas en
 disco en Windows (`D:\`), y el error que ve el usuario es `path_not_allowed` sin
 más explicación.
 
-Corrección propuesta: tratar la elección en el diálogo nativo como consentimiento
-explícito (es el patrón de las apps de escritorio) y mantener la restricción solo
-para rutas que llegan por IPC sin intervención del usuario, como `read_file` con
-un path de recientes. Como mínimo, traducir el error a un mensaje que explique el
-motivo.
+Corregido con concesiones de directorio en memoria por sesión. Los diálogos
+nativos y el evento Rust de drag-and-drop conceden la carpeta elegida después de
+canonicalizarla. Las rutas recibidas directamente por IPC siguen limitadas al
+home y a esas carpetas concedidas; una ruta hermana o inventada continúa
+bloqueada. `path_not_allowed` muestra ahora cómo volver a conceder acceso sin
+eliminar por error la entrada de recientes.
 
 ### 7. El menú nativo está fijo en español
 

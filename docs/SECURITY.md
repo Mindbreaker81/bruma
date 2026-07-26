@@ -25,20 +25,32 @@ Recomendaciones al publicar:
 
 ## Sistema de archivos
 
-Bruma restringe las operaciones de lectura y escritura Markdown del backend Tauri al home del usuario actual.
+Bruma restringe las operaciones de lectura y escritura Markdown del backend
+Tauri al home del usuario y a directorios concedidos explícitamente durante la
+sesión.
 
 Reglas aplicadas en `src-tauri/src/commands/fs.rs`:
 
 - Los paths de lectura se canonicalizan antes de abrir el archivo.
 - Los paths de escritura se canonicalizan sobre el archivo existente o sobre su directorio padre si el archivo aun no existe.
 - Los symlinks se resuelven antes de validar el alcance.
-- Solo se permite operar sobre paths cuyo destino final quede dentro del home del usuario.
+- El home del usuario está permitido por defecto.
+- Elegir un archivo o destino en un diálogo nativo concede únicamente su
+  directorio durante la sesión.
+- Soltar un archivo concede su directorio desde el evento nativo de Tauri; el
+  frontend no dispone de un comando para fabricar concesiones.
+- Las rutas directas por IPC, las imágenes relativas y los archivos recientes
+  se validan contra el home y las concesiones activas.
 - Los intentos fuera de ese alcance devuelven `path_not_allowed`.
 
-Esto reduce el riesgo de path traversal y evita que el frontend pueda leer o sobrescribir archivos arbitrarios del sistema mediante IPC.
+Esto reduce el riesgo de path traversal y evita que el frontend pueda leer o
+sobrescribir archivos arbitrarios del sistema mediante IPC, sin impedir trabajar
+en discos externos o recursos de red elegidos por el usuario.
 
 ## Validacion
 
-- Tests Rust de traversal ejecutados correctamente en Ubuntu 24.04.
-- Casos cubiertos: lectura valida en home, rechazo de paths absolutos del sistema y rechazo de escrituras fuera del home.
+- Tests Rust de traversal ejecutados correctamente.
+- Casos cubiertos: lectura valida en home, rechazo de paths absolutos del
+  sistema, rechazo de escrituras fuera del alcance y concesión limitada al
+  directorio externo seleccionado sin incluir directorios hermanos.
 - Dependencias nativas usadas para habilitar `cargo test`: `libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev`, `libwebkit2gtk-4.1-dev`.

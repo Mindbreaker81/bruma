@@ -36,6 +36,7 @@ import { TooltipProvider } from './components/ui/tooltip';
 import type { CursorPosition } from './features/editor/cursorPosition';
 import {
   isFileTooLargeError,
+  isPathNotAllowedError,
   openFileDialog,
   readFile,
   readImageAsDataUrl,
@@ -777,6 +778,8 @@ export default function App() {
         } catch (error) {
           if (isFileTooLargeError(error)) {
             showError(t('errors.fileTooLarge'));
+          } else if (isPathNotAllowedError(error)) {
+            showError(t('errors.pathNotAllowed'));
           } else {
             removeRecentFile(path);
             showError(t('errors.recentMissing'));
@@ -796,13 +799,13 @@ export default function App() {
           openTab(openedFile);
           setWelcomeDismissed(true);
         } catch (error) {
-          showError(
-            t(
-              isFileTooLargeError(error)
-                ? 'errors.fileTooLarge'
-                : 'errors.openFailed'
-            )
-          );
+          if (isFileTooLargeError(error)) {
+            showError(t('errors.fileTooLarge'));
+          } else if (isPathNotAllowedError(error)) {
+            showError(t('errors.pathNotAllowed'));
+          } else {
+            showError(t('errors.openFailed'));
+          }
         }
       });
     },

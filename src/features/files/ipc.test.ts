@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isFileTooLargeError } from './ipc';
+import { isFileTooLargeError, isPathNotAllowedError } from './ipc';
 
 describe('file IPC errors', () => {
   it('recognizes the backend size error', () => {
@@ -12,5 +12,11 @@ describe('file IPC errors', () => {
   it('does not classify unrelated errors as size errors', () => {
     expect(isFileTooLargeError('read_failed: permission denied')).toBe(false);
     expect(isFileTooLargeError(null)).toBe(false);
+  });
+
+  it('recognizes denied paths without confusing other errors', () => {
+    expect(isPathNotAllowedError('path_not_allowed')).toBe(true);
+    expect(isPathNotAllowedError(new Error('path_not_allowed'))).toBe(true);
+    expect(isPathNotAllowedError('invalid_path')).toBe(false);
   });
 });

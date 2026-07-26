@@ -14,9 +14,17 @@ export type SavedFile = {
   savedAt: number;
 };
 
-export function isFileTooLargeError(error: unknown): boolean {
+function isFileIpcError(error: unknown, code: string): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return message === 'file_too_large' || message.startsWith('file_too_large:');
+  return message === code || message.startsWith(`${code}:`);
+}
+
+export function isFileTooLargeError(error: unknown): boolean {
+  return isFileIpcError(error, 'file_too_large');
+}
+
+export function isPathNotAllowedError(error: unknown): boolean {
+  return isFileIpcError(error, 'path_not_allowed');
 }
 
 export async function openFileDialog(): Promise<OpenedFile | null> {

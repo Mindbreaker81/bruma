@@ -150,7 +150,7 @@ B.
 
 ---
 
-## F3 · Ámbito de archivos fuera del home
+## F3 · Ámbito de archivos fuera del home **[completado]**
 
 **Problema.** `is_allowed_path` rechaza incluso archivos que el usuario acaba de
 elegir en el diálogo nativo del sistema. En la práctica no se puede trabajar en
@@ -184,6 +184,17 @@ leer rutas arbitrarias por IPC*) sin castigar la elección explícita del usuari
 **Alternativa más simple** si se prefiere no gestionar estado: eliminar la
 restricción para todo lo que venga de diálogo y mantener el home solo para
 `read_file`. Menos preciso pero mucho menos código.
+
+**Implementación:** se adoptó el enfoque de concesiones por sesión. El home
+permanece permitido; los diálogos nativos de apertura, guardado y exportación
+conceden únicamente el directorio elegido. Los drops se conceden desde
+`WindowEvent::DragDrop` en Rust, de modo que el renderer no puede inventar una
+concesión mediante IPC. Las rutas se canonicalizan antes de conceder o validar,
+y `read_file`, `save_file` e imágenes relativas mantienen la comprobación.
+
+La prueba de regresión demuestra que una ruta externa se rechaza antes de la
+concesión, que el archivo seleccionado funciona después y que un directorio
+hermano continúa bloqueado.
 
 ---
 

@@ -85,6 +85,7 @@
     "exportFailed": "No se pudo exportar el documento.",
     "fileTooLarge": "El archivo supera el límite de 10 MB.",
     "openFailed": "No se pudo abrir el archivo.",
+    "pathNotAllowed": "Vuelve a elegir este archivo desde Abrir para conceder acceso a su carpeta.",
     "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",
     "unsupportedFile": "Solo se admiten archivos .md y .markdown.",
