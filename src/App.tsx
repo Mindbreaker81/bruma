@@ -58,7 +58,6 @@ import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession, readSession, writeSession } from './lib/session';
 import { stripFrontmatter } from './lib/frontmatter';
-import { renderSafeMarkdown } from './lib/markdown';
 import {
   findSearchMatches,
   replaceAllMatches,
@@ -519,14 +518,19 @@ export default function App() {
     const source = showFrontmatter
       ? document.content
       : stripFrontmatter(document.content);
-    setPrintHtml(renderSafeMarkdown(source));
 
-    window.setTimeout(() => {
-      void printCurrentWindow().catch((error) => {
-        console.error('Print failed:', error);
-        window.print();
-      });
-    }, PRINT_DELAY_MS);
+    // Imported on demand so markdown-it/highlight.js/DOMPurify stay out of the
+    // entry chunk; the preview loads the same module lazily.
+    void import('./lib/markdown').then(({ renderSafeMarkdown }) => {
+      setPrintHtml(renderSafeMarkdown(source));
+
+      window.setTimeout(() => {
+        void printCurrentWindow().catch((error) => {
+          console.error('Print failed:', error);
+          window.print();
+        });
+      }, PRINT_DELAY_MS);
+    });
   }, [document.content, showFrontmatter]);
 
   const handleCheckUpdates = useCallback(
