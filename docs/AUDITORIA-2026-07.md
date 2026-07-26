@@ -59,21 +59,25 @@ problema al descifrar la clave minisign.
 
 El efecto para el usuario está confirmado contra el código del plugin
 (`tauri-plugin-updater-2.10.1/src/updater.rs`): `ReleaseManifestPlatform.signature`
-es un `String` obligatorio y la deserialización falla de forma explícita con
-`the 'signature' field was not set on the updater response`. Es decir, la app
-comprueba actualizaciones al arrancar (`App.tsx:1003`), muestra el diálogo y el
-botón "Instalar", y nunca puede instalar nada; quien pulsa "Buscar
-actualizaciones" ve ese texto crudo como mensaje de error. La versión 1.7.2 ya no
+es un `String` obligatorio. El manifiesto publicado usa el formato estático
+`platforms`, y sus tres entradas carecen de ese campo, así que la deserialización
+falla antes de ofrecer una descarga. El mensaje exacto citado anteriormente
+(`the 'signature' field was not set on the updater response`) corresponde a la
+rama dinámica sin `platforms`, no a este manifiesto; la interfaz sí muestra crudo
+el `message` recibido cuando una comprobación manual falla. La versión 1.7.2 no
 puede llegar a los usuarios de 1.7.x por esa vía.
 
-Corrección: regenerar el par de claves con `pnpm tauri signer generate`, cargar
-la privada **sin saltos de línea** en `TAURI_SIGNING_PRIVATE_KEY` (el error
-`failed to fill whole buffer` es típico de un base64 truncado o con `\n` de más)
-y `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` vacío si se generó sin contraseña, volver
-a `createUpdaterArtifacts: true` y hacer que el workflow **falle** si falta un
-`.sig` en lugar de continuar. Mientras tanto, lo honesto es ocultar la UI de
-actualización o sustituirla por un enlace a la página de releases: hoy promete
-algo que no puede cumplir.
+Corrección: confirmar primero si se conserva la privada correspondiente a la
+pública embebida; el repositorio no permite saberlo. Después hay que validar la
+clave localmente y averiguar con qué CLI se creó: Tauri CLI 2.10.1 corrigió las
+claves sin contraseña defectuosas generadas por 2.9.3–2.10.0. Después hay que
+volver a `createUpdaterArtifacts: true`, recoger y exigir los `.sig` de macOS,
+Linux y Windows x64, y hacer que tanto el workflow como el generador fallen ante
+cualquier firma ausente. Windows ARM64 necesita además un bundle instalable por
+el updater: hoy solo se compila con `--no-bundle` y se publica un ZIP portable,
+por lo que añadir `windows-aarch64` al manifiesto no basta. Mientras tanto, lo
+honesto es ocultar la UI de actualización o sustituirla por un enlace a la página
+de releases.
 
 ### 2. Un enlace relativo en el preview deja la ventana en blanco **[corregido]**
 
@@ -160,15 +164,19 @@ mantener un pequeño catálogo es/en en Rust indexado por el idioma resuelto.
 ### 8. Sin límite de tamaño al abrir archivos
 
 `read_markdown_file` lee el archivo completo a memoria sin comprobar tamaño, y
-todo el pipeline del frontend es O(n) por pulsación: `findSearchMatches`,
-`getTextStats` y `parseHeadings` se recalculan sobre el documento entero en cada
-cambio del store (`App.tsx:426-434`), y el preview vuelve a parsear y sanear todo
-cada 150 ms. Abrir por error un `.md` de decenas de MB (un volcado, un log
-renombrado) congela la ventana sin mensaje.
+varios consumidores tienen coste lineal respecto al contenido. Las estadísticas
+dependen de cada cambio; la búsqueda puede terminar pronto si no hay consulta,
+el índice solo existe cuando el TOC está montado y el preview solo se monta en
+los modos correspondientes y ya usa un debounce de 150 ms. No está demostrado
+que los cuatro trabajos ocurran en cada pulsación ni se ha medido el tamaño a
+partir del cual la ventana deja de responder.
 
-Corrección: rechazar por encima de un umbral (p. ej. 10 MB) con un error
-traducido, y considerar `useDeferredValue` para el contenido que alimenta
-preview e índice.
+Corrección: añadir un límite backend con error traducido, elegido como decisión
+de producto y cubierto por tests, y medir apertura y latencia de escritura con
+documentos grandes antes de seleccionar optimizaciones frontend.
+`useDeferredValue` es una opción para los consumidores cuyo coste se confirme,
+pero la búsqueda y el reemplazo deben mantenerse sobre la misma versión del
+contenido para evitar posiciones obsoletas.
 
 ### 9. La impresión no resuelve las imágenes locales
 

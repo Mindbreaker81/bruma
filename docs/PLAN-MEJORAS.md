@@ -24,14 +24,14 @@ Leyenda de esfuerzo: **S** ≈ medio día · **M** ≈ 1-2 días · **L** ≈ 3-
 **Por qué primero.** Es el único hallazgo que deja a los usuarios instalados sin
 camino de actualización. Confirmado contra el código del plugin
 (`tauri-plugin-updater-2.10.1/src/updater.rs`): `ReleaseManifestPlatform.signature`
-es un `String` obligatorio y la deserialización falla explícitamente con
-
-```
-the `signature` field was not set on the updater response
-```
-
-Es decir, `check()` lanza y el diálogo de actualización muestra ese texto crudo
-al usuario que pulsa «Buscar actualizaciones».
+es un `String` obligatorio. El `update.json` publicado para 1.7.2 usa el formato
+estático (`platforms`) y ninguna de sus tres entradas tiene `signature`, por lo
+que `check()` falla durante la deserialización antes de poder ofrecer una
+descarga. El texto exacto depende de la rama de deserialización del plugin; el
+mensaje `the 'signature' field was not set on the updater response` pertenece a
+la respuesta dinámica sin `platforms` y no debe citarse como el error exacto de
+este manifiesto. La interfaz sí muestra crudo el `message` recibido cuando la
+comprobación manual falla.
 
 ### Decisión previa: ¿se conserva la clave privada original?
 
@@ -42,15 +42,20 @@ porque **rotar la clave deja sin auto-actualización a todos los instalados de
 firmado con otra. En ese caso hay que asumir una reinstalación manual y
 anunciarla en las notas de la release y en la landing.
 
-- **Si se conserva** → el problema es solo el formato del secret. Ir a los pasos.
+- **Si se conserva** → validar la clave y el pipeline completo. El repositorio no
+  permite concluir que el único problema sea el formato del secret.
 - **Si se perdió** → generar par nuevo, aceptar la ruptura y comunicarla.
 
 ### Pasos
 
 1. **Reproducir en local antes de tocar CI.** El error histórico
-   (`failed to decode secret key: ... failed to fill whole buffer`) indica un
-   valor truncado o remanipulado, no una contraseña incorrecta. Verificar el
-   formato exacto antes de volver a subirlo:
+   (`failed to decode secret key: ... failed to fill whole buffer`) es compatible
+   con una clave malformada o truncada, pero el log por sí solo no demuestra la
+   causa. Tauri CLI 2.10.1 corrigió además un defecto de las claves generadas sin
+   contraseña por las versiones 2.9.3–2.10.0, que la propia release indica que
+   deben regenerarse. Averiguar con qué versión se creó la clave original antes
+   de atribuir el fallo al secret de GitHub. Verificar después que la privada
+   corresponde a la pública embebida y que el formato y la contraseña funcionan:
 
    ```bash
    # con createUpdaterArtifacts: true
@@ -59,30 +64,53 @@ anunciarla en las notas de la release y en la landing.
    pnpm tauri build
    ```
 
-   Éxito = aparecen `.sig` junto al AppImage, al `.app.tar.gz` y al `-setup.exe`.
-   Solo cuando esto funciona en local se vuelve a cargar el secret, con el mismo
-   valor byte a byte (sin saltos de línea añadidos por la interfaz web de GitHub).
+   En cada sistema anfitrión, éxito significa que el bundle actualizable
+   generado tiene su `.sig`. Solo entonces se vuelve a cargar el secret en CI
+   conservando el valor byte a byte.
 
 2. `createUpdaterArtifacts: true` en `src-tauri/tauri.conf.json`.
 
-3. **Que el workflow falle en lugar de continuar.** Sustituir los dos
-   `echo "No .sig file found (updater artifacts disabled)"` de
-   `.github/workflows/release.yml` por `exit 1`. Un release sin firmas debe
-   romper el pipeline, no publicarse a medias.
+3. **Recoger y exigir las firmas de cada plataforma.**
+
+   - macOS: exigir el `.app.tar.gz` y su `.sig`; el `.dmg` es un instalador para
+     descarga manual, no el artefacto preferido por el updater.
+   - Linux: exigir el `.AppImage.sig`.
+   - Windows x64: el workflow actual copia `.msi` y `.exe`, pero no copia ningún
+     `.sig`. Elegir el bundle que consumirá el updater y copiar también su firma.
+
+   Los dos mensajes que hoy toleran la ausencia de artefactos updater deben
+   convertirse en fallos, y Windows debe ganar una comprobación equivalente. Un
+   release sin todas las firmas esperadas debe romper el pipeline.
 
 4. **Que el generador falle igual.** En `scripts/generate-update-json.mjs`, el
    `if (signature)` de la línea 81 es lo que permite emitir un manifiesto
    inválido. Cambiar a: si un asset existe pero no tiene `.sig`, lanzar.
 
-5. **Cubrir las plataformas que faltan.** `platformCandidates` solo contempla
-   `darwin-aarch64`, `linux-x86_64` y `windows-x86_64`. El workflow compila
-   además Windows ARM64, que hoy nunca recibiría actualizaciones. Añadir
-   `windows-aarch64`. (macOS Intel no se compila en absoluto: el `.dmg` es
-   aarch64; si se quiere dar soporte, es otra entrada de matriz.)
+5. **Decidir y completar Windows ARM64.** El workflow compila ARM64 con
+   `--no-bundle` y publica un ZIP portable. Ese ZIP no es, por sí solo, un bundle
+   instalable por el updater. Hay dos opciones explícitas:
 
-6. **Test de humo del manifiesto.** Un test que cargue el `update.json`
-   generado y compruebe que cada plataforma tiene `url` y `signature` no vacíos.
-   Barato y habría atrapado esto.
+   - generar y firmar un bundle ARM64 compatible con el updater, recogerlo en
+     `release-assets` y solo entonces añadir `windows-aarch64` a
+     `platformCandidates`; o
+   - declarar la variante portable sin auto-actualización y ocultar o sustituir
+     su UI de updater.
+
+   Añadir únicamente la clave `windows-aarch64` al generador no resuelve el
+   problema. macOS Intel tampoco se compila; si se quiere soportar, necesita otra
+   entrada de matriz y su propio bundle firmado.
+
+6. **Test de humo del manifiesto.** Cargar el `update.json` generado y comprobar:
+
+   - conjunto exacto de plataformas que la release declara soportar;
+   - `url` y `signature` no vacíos en todas ellas;
+   - que cada URL apunta al tipo de bundle elegido para el updater;
+   - que los assets y `.sig` referenciados existen en `release-assets`.
+
+7. **Validación posterior a la publicación.** Descargar el `update.json` desde el
+   endpoint `releases/latest`, verificar de nuevo el esquema y ejecutar una
+   comprobación real desde una instalación de la versión anterior en cada
+   plataforma soportada.
 
 ### Mitigación mientras tanto
 
@@ -158,23 +186,56 @@ restricción para todo lo que venga de diálogo y mantener el home solo para
 
 ## F4 · Límite de tamaño y coste por pulsación
 
-**Backend (S).** En `read_markdown_file`, comprobar `fs::metadata(path)?.len()`
-antes de leer y rechazar por encima de un umbral (10 MB es holgado para
-Markdown) con `file_too_large`. Añadir la clave de error a los dos locales. Hoy
-abrir por error un log renombrado a `.md` congela la ventana sin mensaje.
+### Hechos confirmados
 
-**Frontend (S).** El contenido alimenta cuatro cálculos O(n) en cada cambio del
-store — `findSearchMatches`, `getTextStats`, `parseHeadings` y el render del
-preview. Envolver el valor que consumen preview, índice y estadísticas en
-`useDeferredValue`, dejando el editor sobre el valor inmediato: la escritura
-sigue instantánea y el resto se recalcula cuando hay hueco.
+- `read_markdown_file` usa `fs::read` sin límite y carga el archivo completo.
+- `getTextStats` recibe el contenido en cada cambio. La búsqueda también depende
+  del contenido, aunque puede terminar pronto si no hay consulta.
+- El índice solo se calcula cuando el TOC está montado y el preview solo en los
+  modos que lo muestran; además, el preview ya aplica un debounce de 150 ms. Por
+  tanto, no es correcto afirmar que los cuatro trabajos se ejecutan en cada
+  pulsación en todos los modos.
+- La sesión serializa todas las pestañas 500 ms después de un cambio y además
+  repite los datos del documento activo en los campos heredados de nivel
+  superior.
 
-**Sesión.** El efecto de `App.tsx:1032` serializa el contenido de *todas* las
-pestañas cada 500 ms. Subir el debounce y/o guardar solo la pestaña activa más
-los metadatos del resto.
+No se ha medido todavía a partir de qué tamaño deja de ser interactiva la app.
+El umbral de 10 MB y la afirmación de que un archivo concreto «congela» la
+ventana son hipótesis razonables, no resultados de esta auditoría.
 
-**Verificación.** Añadir un fixture grande (~2 MB) a los tests de Playwright y
-medir el tiempo hasta interacción antes y después.
+### Trabajo
+
+1. **Medir antes de optimizar.** Generar durante el test documentos de varios
+   tamaños (por ejemplo 2, 5 y 10 MB) y registrar tiempo de apertura, latencia de
+   escritura y tiempo hasta actualizar preview, TOC y estadísticas en los modos
+   relevantes. Probar al menos macOS, Windows y Linux en CI o hardware de
+   referencia.
+
+2. **Límite backend independiente de la medición.** Definir
+   `MAX_MARKDOWN_BYTES`, consultar metadata antes de reservar memoria y verificar
+   también el tamaño realmente leído. Devolver `file_too_large` con traducción.
+   Elegir el valor inicial como decisión de producto y dejarlo cubierto por tests
+   justo por debajo y por encima del límite.
+
+3. **Optimizar solo los consumidores medidos.**
+
+   - no calcular coincidencias si la búsqueda está cerrada o vacía;
+   - diferir estadísticas, TOC o preview si su coste resulta perceptible;
+   - mantener búsqueda y reemplazo sobre la misma versión del contenido para no
+     aplicar posiciones obsoletas;
+   - comprobar si `useDeferredValue` aporta algo sobre el debounce que ya tiene
+     el preview antes de adoptarlo.
+
+4. **Reducir el coste de sesión sin perder recuperación.** Versionar el esquema,
+   eliminar la duplicación del documento activo y guardar contenido completo de
+   pestañas sucias o sin ruta. Las pestañas limpias con ruta pueden restaurarse
+   desde disco. Ajustar el debounce según las mediciones; no descartar el
+   contenido de pestañas inactivas que tengan cambios sin guardar.
+
+5. **Verificación.** Añadir pruebas de límite en Rust y una prueba de rendimiento
+   reproducible con umbrales explícitos. Comparar las mismas métricas antes y
+   después; no usar únicamente el tamaño del bundle o la duración total del test
+   como proxy de responsividad.
 
 ---
 
