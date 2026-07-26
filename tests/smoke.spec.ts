@@ -96,7 +96,7 @@ test('shows the Bruma shell', async ({ page }) => {
   await page.getByRole('button', { name: /Descartar|Discard/i }).click();
 
   await expect(
-    page.locator('footer').getByText(/Sin titulo|Untitled/i)
+    page.locator('footer').getByText(/Sin título|Untitled/i)
   ).toBeVisible();
 
   // Open recent files

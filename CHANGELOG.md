@@ -6,6 +6,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-07-26
+
+### Added
+
+- Recuperación de la sesión de edición tras un cierre inesperado, con diálogo para restaurar o descartar el contenido.
+- Acceso seguro a archivos Markdown ubicados fuera del directorio personal cuando el usuario concede explícitamente el directorio mediante el diálogo nativo o drag-and-drop.
+- Menú nativo traducido dinámicamente al español o inglés.
+- Soporte de imágenes locales en impresión y exportación.
+- Updater firmado para macOS ARM64, Linux x64, Windows x64 y Windows ARM64, con manifiesto `update.json` generado y validado contra los artifacts reales.
+
+### Changed
+
+- Estadísticas de texto calculadas en una sola pasada para mantener fluidez en documentos grandes.
+- Carga diferida de editor, preview, búsqueda, diálogos, exportación y pipeline de Markdown para reducir el JavaScript inicial.
+- `App.tsx` dividido en componentes y hooks más pequeños para aislar responsabilidades y facilitar el mantenimiento.
+- La clave de firma del updater fue rotada. **Los usuarios de 1.7.x deben instalar manualmente 1.8.0 una vez** porque esas versiones confían en la clave anterior; las actualizaciones automáticas posteriores a 1.8.0 usarán la clave nueva.
+
+### Fixed
+
+- Límite de tamaño al abrir archivos y eliminación de trabajo costoso por pulsación en documentos grandes.
+- Navegación de enlaces del preview: los enlaces relativos ya no dejan la ventana en blanco y las anclas internas funcionan correctamente.
+- Validación del identificador de plantillas antes de resolver rutas, evitando path traversal.
+- Persistencia de sesión efectiva al cerrar la aplicación.
+- Notas de la versión correctas en el manifiesto del updater.
+- Prueba visual de documento sin título ajustada a la traducción correcta «Sin título».
+
+### Security
+
+- Rotación y verificación criptográfica de la clave Minisign del updater; la clave privada permanece exclusivamente en los secretos de GitHub Actions.
+- Lectura y escritura del backend restringidas al directorio personal o a directorios concedidos explícitamente por el usuario.
+
 ## [1.7.2] - 2026-06-27
 
 ### Fixed
