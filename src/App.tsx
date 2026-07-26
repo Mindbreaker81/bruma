@@ -35,6 +35,7 @@ import { Button } from './components/ui/button';
 import { TooltipProvider } from './components/ui/tooltip';
 import type { CursorPosition } from './features/editor/cursorPosition';
 import {
+  isFileTooLargeError,
   openFileDialog,
   readFile,
   readImageAsDataUrl,
@@ -690,8 +691,14 @@ export default function App() {
         clearSession();
         openTab(openedFile);
       }
-    } catch {
-      showError(t('errors.openFailed'));
+    } catch (error) {
+      showError(
+        t(
+          isFileTooLargeError(error)
+            ? 'errors.fileTooLarge'
+            : 'errors.openFailed'
+        )
+      );
     }
   }, [openTab, showError, t]);
 
@@ -767,9 +774,13 @@ export default function App() {
           clearSession();
           openTab(openedFile);
           setIsRecentMenuOpen(false);
-        } catch {
-          removeRecentFile(path);
-          showError(t('errors.recentMissing'));
+        } catch (error) {
+          if (isFileTooLargeError(error)) {
+            showError(t('errors.fileTooLarge'));
+          } else {
+            removeRecentFile(path);
+            showError(t('errors.recentMissing'));
+          }
         }
       });
     },
@@ -784,8 +795,14 @@ export default function App() {
           clearSession();
           openTab(openedFile);
           setWelcomeDismissed(true);
-        } catch {
-          showError(t('errors.openFailed'));
+        } catch (error) {
+          showError(
+            t(
+              isFileTooLargeError(error)
+                ? 'errors.fileTooLarge'
+                : 'errors.openFailed'
+            )
+          );
         }
       });
     },

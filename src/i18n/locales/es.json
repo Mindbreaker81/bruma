@@ -83,6 +83,7 @@
   },
   "errors": {
     "exportFailed": "No se pudo exportar el documento.",
+    "fileTooLarge": "El archivo supera el límite de 10 MB.",
     "openFailed": "No se pudo abrir el archivo.",
     "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",

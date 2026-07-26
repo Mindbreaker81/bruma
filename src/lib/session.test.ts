@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   readSession,
   writeSession,
@@ -7,8 +7,18 @@ import {
 } from './session';
 
 describe('session storage', () => {
+  const now = new Date('2026-07-26T12:00:00Z');
+
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    localStorage.clear();
     sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('returns null when nothing is stored', () => {
@@ -20,7 +30,7 @@ describe('session storage', () => {
       path: '/home/test.md',
       content: '# Hello',
       eol: 'lf',
-      savedAt: 12345,
+      savedAt: now.getTime(),
     };
     writeSession(session);
     expect(readSession()).toEqual(session);
@@ -31,7 +41,7 @@ describe('session storage', () => {
       path: null,
       content: 'untitled content',
       eol: 'crlf',
-      savedAt: 999,
+      savedAt: now.getTime(),
     };
     writeSession(session);
     expect(readSession()).toEqual(session);
@@ -42,7 +52,7 @@ describe('session storage', () => {
       path: '/home/test.md',
       content: '# Hello',
       eol: 'lf',
-      savedAt: 12345,
+      savedAt: now.getTime(),
       tabs: [
         {
           id: '1',
@@ -53,7 +63,7 @@ describe('session storage', () => {
             savedContent: 'a',
             encoding: 'utf-8',
             eol: 'lf',
-            lastSavedAt: 12345,
+            lastSavedAt: now.getTime(),
           },
         },
         {
@@ -65,7 +75,7 @@ describe('session storage', () => {
             savedContent: 'b',
             encoding: 'utf-8',
             eol: 'lf',
-            lastSavedAt: 12345,
+            lastSavedAt: now.getTime(),
           },
         },
       ],
@@ -77,7 +87,7 @@ describe('session storage', () => {
       path: '/home/test.md',
       content: '# Hello',
       eol: 'lf',
-      savedAt: 12345,
+      savedAt: now.getTime(),
       tabs: [
         {
           id: '1',
@@ -93,21 +103,84 @@ describe('session storage', () => {
   });
 
   it('returns null for invalid stored data', () => {
-    sessionStorage.setItem('bruma.session', 'not-json');
+    localStorage.setItem('bruma.session.v2', 'not-json');
     expect(readSession()).toBeNull();
+    expect(localStorage.getItem('bruma.session.v2')).toBeNull();
   });
 
   it('returns null for missing content field', () => {
-    sessionStorage.setItem(
-      'bruma.session',
-      JSON.stringify({ path: '/x.md', eol: 'lf', savedAt: 1 })
+    localStorage.setItem(
+      'bruma.session.v2',
+      JSON.stringify({
+        path: '/x.md',
+        eol: 'lf',
+        savedAt: now.getTime(),
+      })
     );
     expect(readSession()).toBeNull();
   });
 
+  it('migrates a valid legacy session once', () => {
+    const legacySession: PendingSession = {
+      path: '/legacy.md',
+      content: 'legacy',
+      eol: 'lf',
+      savedAt: now.getTime(),
+    };
+    sessionStorage.setItem('bruma.session', JSON.stringify(legacySession));
+
+    expect(readSession()).toEqual(legacySession);
+    expect(sessionStorage.getItem('bruma.session')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('bruma.session.v2') ?? '')).toEqual(
+      legacySession
+    );
+  });
+
+  it('discards sessions older than seven days', () => {
+    localStorage.setItem(
+      'bruma.session.v2',
+      JSON.stringify({
+        path: '/old.md',
+        content: 'old',
+        eol: 'lf',
+        savedAt: now.getTime() - 7 * 24 * 60 * 60 * 1000 - 1,
+      })
+    );
+
+    expect(readSession()).toBeNull();
+    expect(localStorage.getItem('bruma.session.v2')).toBeNull();
+  });
+
+  it('does not throw when persistent storage quota is exceeded', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage
+    ) {
+      if (this === localStorage) {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      }
+    });
+
+    expect(() =>
+      writeSession({
+        path: '/x.md',
+        content: 'x',
+        eol: 'lf',
+        savedAt: now.getTime(),
+      })
+    ).not.toThrow();
+  });
+
   it('clears session', () => {
-    writeSession({ path: '/x.md', content: 'x', eol: 'lf', savedAt: 1 });
+    writeSession({
+      path: '/x.md',
+      content: 'x',
+      eol: 'lf',
+      savedAt: now.getTime(),
+    });
+    sessionStorage.setItem('bruma.session', 'legacy');
     clearSession();
     expect(readSession()).toBeNull();
+    expect(localStorage.getItem('bruma.session.v2')).toBeNull();
+    expect(sessionStorage.getItem('bruma.session')).toBeNull();
   });
 });

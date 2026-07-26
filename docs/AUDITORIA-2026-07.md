@@ -127,19 +127,16 @@ el frontend pueda leer archivos arbitrarios del sistema mediante IPC".
 
 Corregido rechazando ids con separadores, `..` o rutas absolutas.
 
-### 5. La recuperación de sesión no sobrevive a un cierre
+### 5. La recuperación de sesión no sobrevive a un cierre **[corregido]**
 
-`lib/session.ts` guarda el borrador en `sessionStorage`. En un navegador eso
-dura lo que dura la pestaña; en un webview de escritorio se pierde al cerrar la
-ventana, que es exactamente el caso que la función pretende cubrir. El diálogo
-"recuperar sesión" solo aparece tras un recargado en caliente durante el
-desarrollo, no tras un cierre inesperado en producción.
+`lib/session.ts` guardaba el borrador en `sessionStorage`. En un webview de
+escritorio se perdía al cerrar la ventana, que es exactamente el caso que la
+función pretende cubrir.
 
-Corrección: mover a `localStorage` (como ya hace `lib/config.ts`) o, mejor, al
-plugin `@tauri-apps/plugin-store`, que ya es dependencia y se usa en
-`updateStore.ts`. Ojo con el tamaño: el borrador serializa el contenido de
-**todas** las pestañas cada 500 ms (`App.tsx:1032`), lo que con documentos
-grandes se acerca a la cuota de `localStorage` (~5 MB).
+Corregido con `localStorage` y la clave versionada `bruma.session.v2`, migración
+única desde la clave anterior, caducidad de siete días y manejo de errores de
+cuota. El plugin `@tauri-apps/plugin-store` queda como fase posterior solo si las
+mediciones muestran que la cuota del navegador no es suficiente.
 
 ### 6. Ámbito limitado al home: archivos legítimos rechazados
 
@@ -171,19 +168,19 @@ Corrección: pasar las etiquetas desde el frontend al reconstruir el menú (ya
 existe el mecanismo: `sync_recent_files_menu` reconstruye el menú entero), o
 mantener un pequeño catálogo es/en en Rust indexado por el idioma resuelto.
 
-### 8. Sin límite de tamaño al abrir archivos
+### 8. Sin límite de tamaño al abrir archivos **[backend corregido]**
 
-`read_markdown_file` lee el archivo completo a memoria sin comprobar tamaño, y
-varios consumidores tienen coste lineal respecto al contenido. Las estadísticas
-dependen de cada cambio; la búsqueda puede terminar pronto si no hay consulta,
-el índice solo existe cuando el TOC está montado y el preview solo se monta en
-los modos correspondientes y ya usa un debounce de 150 ms. No está demostrado
-que los cuatro trabajos ocurran en cada pulsación ni se ha medido el tamaño a
-partir del cual la ventana deja de responder.
+`read_markdown_file` leía el archivo completo a memoria sin comprobar tamaño.
+Ahora rechaza más de 10 MB antes de reservar, acota la lectura y comprueba de
+nuevo el tamaño obtenido. El error `file_too_large` tiene traducción y pruebas de
+frontera.
 
-Corrección: añadir un límite backend con error traducido, elegido como decisión
-de producto y cubierto por tests, y medir apertura y latencia de escritura con
-documentos grandes antes de seleccionar optimizaciones frontend.
+Varios consumidores frontend mantienen coste lineal respecto al contenido. Las
+estadísticas dependen de cada cambio; la búsqueda puede terminar pronto si no
+hay consulta, el índice solo existe cuando el TOC está montado y el preview solo
+se monta en los modos correspondientes y ya usa un debounce de 150 ms. Todavía
+hay que medir apertura y latencia de escritura antes de seleccionar
+optimizaciones frontend.
 `useDeferredValue` es una opción para los consumidores cuyo coste se confirme,
 pero la búsqueda y el reemplazo deben mantenerse sobre la misma versión del
 contenido para evitar posiciones obsoletas.

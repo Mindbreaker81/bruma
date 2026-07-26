@@ -2,10 +2,13 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use serde::{Deserialize, Serialize};
 use std::{
     env, fs,
+    io::Read,
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Manager};
+
+const MAX_MARKDOWN_BYTES: usize = 10 * 1024 * 1024;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -97,8 +100,8 @@ pub fn read_image_as_data_url(base: String, relative: String) -> Result<String, 
         return Err("unsupported_file_type".to_string());
     }
 
-    let mime = image_mime_for_path(&canonical)
-        .ok_or_else(|| "unsupported_file_type".to_string())?;
+    let mime =
+        image_mime_for_path(&canonical).ok_or_else(|| "unsupported_file_type".to_string())?;
     let bytes = fs::read(&canonical).map_err(|error| format!("read_failed: {error}"))?;
     let encoded = BASE64.encode(&bytes);
 
@@ -274,7 +277,21 @@ fn read_markdown_file(path: &Path) -> Result<OpenedFile, String> {
         return Err("unsupported_file_type".to_string());
     }
 
-    let bytes = fs::read(path).map_err(|error| format!("read_failed: {error}"))?;
+    let metadata = fs::metadata(path).map_err(|error| format!("read_failed: {error}"))?;
+    if metadata.len() > MAX_MARKDOWN_BYTES as u64 {
+        return Err("file_too_large".to_string());
+    }
+
+    let file = fs::File::open(path).map_err(|error| format!("read_failed: {error}"))?;
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    file.take(MAX_MARKDOWN_BYTES as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|error| format!("read_failed: {error}"))?;
+
+    if bytes.len() > MAX_MARKDOWN_BYTES {
+        return Err("file_too_large".to_string());
+    }
+
     let content_bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes);
     let content = String::from_utf8(content_bytes.to_vec())
         .map_err(|error| format!("utf8_failed: {error}"))?;
@@ -348,7 +365,8 @@ fn now_millis() -> u128 {
 mod tests {
     use super::{
         ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
-        normalize_eol, read_file, read_image_as_data_url, save_file, user_home_dir, DocumentEol,
+        normalize_eol, read_file, read_image_as_data_url, read_markdown_file, save_file,
+        user_home_dir, DocumentEol, MAX_MARKDOWN_BYTES,
     };
     use std::{
         fs,
@@ -398,6 +416,30 @@ mod tests {
         );
 
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn reads_markdown_at_the_size_limit() {
+        let path = create_test_path(std::env::temp_dir().join("bruma-size-limit.md"));
+        let file = fs::File::create(&path).unwrap();
+        file.set_len(MAX_MARKDOWN_BYTES as u64).unwrap();
+
+        let result = read_markdown_file(&path).unwrap();
+
+        assert_eq!(result.content.len(), MAX_MARKDOWN_BYTES);
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn rejects_markdown_above_the_size_limit() {
+        let path = create_test_path(std::env::temp_dir().join("bruma-size-over.md"));
+        let file = fs::File::create(&path).unwrap();
+        file.set_len(MAX_MARKDOWN_BYTES as u64 + 1).unwrap();
+
+        let result = read_markdown_file(&path);
+
+        assert_eq!(result.unwrap_err(), "file_too_large");
+        fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -456,7 +498,10 @@ mod tests {
     fn maps_image_extensions_to_mime() {
         assert_eq!(image_mime_for_path(Path::new("a.png")), Some("image/png"));
         assert_eq!(image_mime_for_path(Path::new("a.JPG")), Some("image/jpeg"));
-        assert_eq!(image_mime_for_path(Path::new("a.svg")), Some("image/svg+xml"));
+        assert_eq!(
+            image_mime_for_path(Path::new("a.svg")),
+            Some("image/svg+xml")
+        );
         assert_eq!(image_mime_for_path(Path::new("a.bmp")), None);
     }
 
@@ -495,11 +540,9 @@ mod tests {
         let base = dir.join("note.md");
         fs::write(&base, "# x").unwrap();
 
-        let result = read_image_as_data_url(
-            base.to_string_lossy().into_owned(),
-            "logo.png".to_string(),
-        )
-        .unwrap();
+        let result =
+            read_image_as_data_url(base.to_string_lossy().into_owned(), "logo.png".to_string())
+                .unwrap();
 
         assert!(result.starts_with("data:image/png;base64,"));
 
@@ -564,8 +607,8 @@ pub fn list_custom_templates(app: AppHandle) -> Result<Vec<CustomTemplate>, Stri
 
     let mut templates = Vec::new();
 
-    let entries = fs::read_dir(&templates_dir)
-        .map_err(|e| format!("read_templates_dir_error: {e}"))?;
+    let entries =
+        fs::read_dir(&templates_dir).map_err(|e| format!("read_templates_dir_error: {e}"))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("read_entry_error: {e}"))?;
@@ -622,8 +665,8 @@ pub fn read_custom_template(app: AppHandle, id: String) -> Result<String, String
         return Err("unsupported_file_type".to_string());
     }
 
-    let content = fs::read_to_string(&canonical_path)
-        .map_err(|e| format!("read_template_error: {e}"))?;
+    let content =
+        fs::read_to_string(&canonical_path).map_err(|e| format!("read_template_error: {e}"))?;
 
     Ok(content)
 }

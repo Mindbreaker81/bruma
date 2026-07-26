@@ -121,29 +121,32 @@ algo que no puede cumplir.
 
 ---
 
-## F2 · Persistencia de sesión
+## F2 · Persistencia de sesión **[fase A completada]**
 
 **Problema.** `lib/session.ts` usa `sessionStorage`, que en un webview de
 escritorio muere con la ventana — exactamente el caso que la función pretende
 cubrir.
 
-**Fase A (inmediata, S).** Cambiar a `localStorage`, igual que `lib/config.ts`:
+**Fase A (completada).** La sesión usa `localStorage` con la clave
+`bruma.session.v2`:
 
-- Clave nueva (`bruma.session.v2`) y lectura única de la antigua para migrar.
-- `try/catch` en `writeSession`: hoy no lo hay, y con varias pestañas grandes se
-  supera la cuota (~5 MB) — `setItem` lanza `QuotaExceededError` dentro del
-  efecto de `App.tsx:1032` y se lleva por delante el guardado de sesión.
-- Descartar sesiones con `savedAt` de más de N días al leer (el campo ya existe
-  y no se usa para nada).
-- Adaptar `lib/session.test.ts`, que ya cubre el contrato.
+- migra una sola vez la antigua `bruma.session` desde `sessionStorage`;
+- conserva la copia antigua si la persistencia falla durante la migración;
+- absorbe `QuotaExceededError` y otros fallos de almacenamiento;
+- descarta y elimina sesiones de más de siete días;
+- limpia ambas claves al confirmar o descartar la recuperación.
+
+Las pruebas cubren persistencia, migración, caducidad, datos inválidos, cuota y
+limpieza.
 
 **Fase B (si hace falta, M).** Mover a `@tauri-apps/plugin-store` — ya es
 dependencia y se usa en `updateStore.ts` — que escribe a disco sin cuota. Cuesta
 volver `readSession` asíncrono, lo que afecta al efecto de arranque de
 `App.tsx:866`; es mecánico pero toca el flujo de restauración.
 
-**Recomendación:** hacer la Fase A ya y medir. Si el uso real son documentos de
-notas, `localStorage` sobra.
+**Siguiente decisión:** medir errores de cuota en uso real. Si el uso habitual
+son documentos de notas, `localStorage` debería bastar; si no, ejecutar la fase
+B.
 
 ---
 
@@ -184,11 +187,11 @@ restricción para todo lo que venga de diálogo y mantener el home solo para
 
 ---
 
-## F4 · Límite de tamaño y coste por pulsación
+## F4 · Límite de tamaño y coste por pulsación **[backend completado]**
 
 ### Hechos confirmados
 
-- `read_markdown_file` usa `fs::read` sin límite y carga el archivo completo.
+- `read_markdown_file` ya limita la lectura a 10 MB en backend.
 - `getTextStats` recibe el contenido en cada cambio. La búsqueda también depende
   del contenido, aunque puede terminar pronto si no hay consulta.
 - El índice solo se calcula cuando el TOC está montado y el preview solo en los
@@ -211,11 +214,12 @@ ventana son hipótesis razonables, no resultados de esta auditoría.
    relevantes. Probar al menos macOS, Windows y Linux en CI o hardware de
    referencia.
 
-2. **Límite backend independiente de la medición.** Definir
-   `MAX_MARKDOWN_BYTES`, consultar metadata antes de reservar memoria y verificar
-   también el tamaño realmente leído. Devolver `file_too_large` con traducción.
-   Elegir el valor inicial como decisión de producto y dejarlo cubierto por tests
-   justo por debajo y por encima del límite.
+2. **Completado: límite backend independiente de la medición.**
+   `MAX_MARKDOWN_BYTES` queda inicialmente en 10 MB. El backend consulta metadata
+   antes de reservar, limita la lectura a un byte más que el máximo y comprueba
+   de nuevo el tamaño realmente leído. Devuelve `file_too_large`, traducido en
+   ambos idiomas, sin eliminar por error la entrada de archivos recientes. Las
+   pruebas cubren exactamente el límite y un byte por encima.
 
 3. **Optimizar solo los consumidores medidos.**
 

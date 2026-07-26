@@ -14,6 +14,11 @@ export type SavedFile = {
   savedAt: number;
 };
 
+export function isFileTooLargeError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message === 'file_too_large' || message.startsWith('file_too_large:');
+}
+
 export async function openFileDialog(): Promise<OpenedFile | null> {
   if (!isTauriRuntime()) {
     throw new Error('fileDialogUnavailable');
