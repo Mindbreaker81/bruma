@@ -11,7 +11,7 @@ corrección, la verificación local de cierre pasa completa:
 
 | Comprobación        | Resultado                         |
 | ------------------- | --------------------------------- |
-| `pnpm test`         | 161 tests, 32 archivos, en verde |
+| `pnpm test`         | 162 tests, 32 archivos, en verde |
 | `pnpm lint`         | Sin avisos (`--max-warnings 0`)  |
 | `pnpm format:check` | Limpio                            |
 | `pnpm build`        | Correcto                          |

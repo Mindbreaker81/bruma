@@ -201,8 +201,9 @@ hermano continúa bloqueado.
   superior.
 
 La prueba reproducible de 2, 5 y 10 MiB fija un máximo explícito de 500 ms por
-operación. En una ejecución de cierre representativa, 10 MiB tardaron 259,3 ms
-en estadísticas y 0,3 ms en una búsqueda sin coincidencias.
+operación. Tras sustituir las asignaciones masivas por un recorrido único, una
+ejecución de cierre representativa procesó las estadísticas de 10 MiB en
+51,3 ms y una búsqueda sin coincidencias en 0,3 ms.
 
 ### Trabajo
 
