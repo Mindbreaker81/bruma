@@ -44,6 +44,16 @@ describe('markdown rendering', () => {
     expect(html).not.toContain('data-evil');
   });
 
+  it('adds slug ids to headings so in-document anchors resolve', () => {
+    const html = renderSafeMarkdown(
+      ['# Introducción', '', '## Notas', '', '## Notas'].join('\n')
+    );
+
+    expect(html).toContain('id="introduccion"');
+    expect(html).toContain('id="notas"');
+    expect(html).toContain('id="notas-1"');
+  });
+
   it('removes script tags, event handlers and javascript URLs', () => {
     const html = sanitizeMarkdownHtml(
       '<p onclick="alert(1)">x</p><script>alert(1)</script><a href="javascript:alert(1)">bad</a>'

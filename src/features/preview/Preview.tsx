@@ -81,9 +81,25 @@ export function Preview({
     if (!anchor) return;
     const href = anchor.getAttribute('href') ?? '';
     if (!href) return;
-    if (/^https?:/i.test(href) && onExternalLinkClick) {
-      event.preventDefault();
-      onExternalLinkClick(href);
+
+    // Every link is handled here. Anything left to the browser would navigate
+    // the webview away from the app shell (a relative `./notes.md` resolves
+    // against the app origin and leaves an unrecoverable blank window), so the
+    // default is always prevented.
+    event.preventDefault();
+
+    if (/^https?:/i.test(href)) {
+      onExternalLinkClick?.(href);
+      return;
+    }
+
+    if (href.startsWith('#')) {
+      const id = decodeURIComponent(href.slice(1));
+      if (!id) return;
+      const target = containerRef.current?.querySelector(
+        `[id="${CSS.escape(id)}"]`
+      );
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
