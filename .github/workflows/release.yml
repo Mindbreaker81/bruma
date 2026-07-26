@@ -77,6 +77,14 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
+      - name: Check Rust format
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: Check Rust clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
       - name: Import Apple Developer ID certificate (macOS)
         if: startsWith(matrix.platform, 'macos-')
         env:
@@ -128,7 +136,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm exec tauri build
       - name: Prefetch NSIS tools (retry)
-        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
+        if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -181,9 +189,9 @@ jobs:
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
         run: pnpm exec tauri build
 
-      - name: Build unsigned app (Windows arm64, no bundle)
+      - name: Build unsigned bundle (Windows arm64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
-        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --no-bundle
+        run: pnpm exec tauri build --target aarch64-pc-windows-msvc --bundles nsis
 
       - name: Build unsigned bundles deb + rpm (Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -254,12 +262,16 @@ jobs:
           cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
           app_tars=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
-          if [[ ${#app_tars[@]} -ge 1 ]]; then
-            cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
-            cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
-          else
-            echo "No updater .app.tar.gz found (updater artifacts disabled)"
+          if [[ ${#app_tars[@]} -lt 1 ]]; then
+            echo "No updater .app.tar.gz found in src-tauri/target/release/bundle/macos/"
+            exit 1
           fi
+          if [[ ! -s "${app_tars[0]}.sig" ]]; then
+            echo "No non-empty updater signature found for ${app_tars[0]}"
+            exit 1
+          fi
+          cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
+          cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
 
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
@@ -270,11 +282,21 @@ jobs:
 
           $msi = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\msi\\*.msi" | Select-Object -First 1
           if (-not $msi) { throw "No .msi found under src-tauri\\target\\release\\bundle\\msi\\" }
+          $msiSig = "$($msi.FullName).sig"
+          if (-not (Test-Path $msiSig) -or (Get-Item $msiSig).Length -eq 0) {
+            throw "No non-empty updater signature found for $($msi.FullName)"
+          }
           Copy-Item $msi.FullName "release-assets\\bruma-v$version-windows-x64.msi" -Force
+          Copy-Item $msiSig "release-assets\\bruma-v$version-windows-x64.msi.sig" -Force
 
           $nsisExe = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\nsis\\*.exe" | Select-Object -First 1
           if (-not $nsisExe) { throw "No NSIS .exe found under src-tauri\\target\\release\\bundle\\nsis\\" }
+          $nsisSig = "$($nsisExe.FullName).sig"
+          if (-not (Test-Path $nsisSig) -or (Get-Item $nsisSig).Length -eq 0) {
+            throw "No non-empty updater signature found for $($nsisExe.FullName)"
+          }
           Copy-Item $nsisExe.FullName "release-assets\\bruma-v$version-windows-x64-setup.exe" -Force
+          Copy-Item $nsisSig "release-assets\\bruma-v$version-windows-x64-setup.exe.sig" -Force
 
       - name: Build portable-full (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
@@ -324,6 +346,20 @@ jobs:
 
           Compress-Archive -Path "$portableDir\\*" -DestinationPath "release-assets\\bruma-v$version-windows-arm64-portable-full.zip" -Force
 
+      - name: Collect release assets (Windows arm64 updater)
+        if: matrix.platform == 'windows-latest' && matrix.win_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.app_version.outputs.value }}"
+          $nsis = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe" | Select-Object -First 1
+          if (-not $nsis) { throw "Expected Windows ARM64 NSIS installer not found" }
+          $signature = "$($nsis.FullName).sig"
+          if (-not (Test-Path $signature) -or (Get-Item $signature).Length -eq 0) {
+            throw "Expected non-empty updater signature not found: $signature"
+          }
+          Copy-Item $nsis.FullName "release-assets/bruma-v$version-windows-arm64-setup.exe"
+          Copy-Item $signature "release-assets/bruma-v$version-windows-arm64-setup.exe.sig"
+
       - name: Collect release assets (Linux)
         if: matrix.platform == 'ubuntu-latest'
         shell: bash
@@ -339,11 +375,15 @@ jobs:
             exit 1
           fi
           cp "${appimages[0]}" "release-assets/bruma-v${version}-linux-x86_64.AppImage"
-          if [[ -f "${appimages[0]}.sig" ]]; then
-            cp "${appimages[0]}.sig" "release-assets/bruma-v${version}-linux-x86_64.AppImage.sig"
-          else
-            echo "No .sig file found (updater artifacts disabled)"
+          if [[ ! -s "${appimages[0]}.sig" ]]; then
+            echo "Tauri did not create an AppImage signature; signing the fallback artifact..."
+            pnpm exec tauri signer sign "${appimages[0]}"
           fi
+          if [[ ! -s "${appimages[0]}.sig" ]]; then
+            echo "No non-empty updater signature found for ${appimages[0]}"
+            exit 1
+          fi
+          cp "${appimages[0]}.sig" "release-assets/bruma-v${version}-linux-x86_64.AppImage.sig"
 
           debs=(src-tauri/target/release/bundle/deb/*.deb)
           if [[ ${#debs[@]} -lt 1 ]]; then

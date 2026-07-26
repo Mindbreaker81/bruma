@@ -20,7 +20,7 @@
     "dirtyMark": "(sin guardar)",
     "saved": "Guardado",
     "unsaved": "Sin guardar",
-    "untitled": "Sin titulo"
+    "untitled": "Sin título"
   },
   "confirmDirty": {
     "body": "Hay cambios sin guardar. Guarda antes de continuar o descarta los cambios.",
@@ -83,13 +83,16 @@
   },
   "errors": {
     "exportFailed": "No se pudo exportar el documento.",
+    "fileTooLarge": "El archivo supera el límite de 10 MB.",
     "openFailed": "No se pudo abrir el archivo.",
+    "pathNotAllowed": "Vuelve a elegir este archivo desde Abrir para conceder acceso a su carpeta.",
     "recentMissing": "El archivo reciente no está disponible y se eliminó de la lista.",
     "saveFailed": "No se pudo guardar el archivo.",
     "unsupportedFile": "Solo se admiten archivos .md y .markdown.",
     "templateLoadFailed": "No se pudo cargar la plantilla."
   },
   "export": {
+    "embedImages": "Incrustar imágenes locales",
     "open": "Exportar",
     "htmlStyled": "HTML con estilos",
     "htmlPlain": "HTML simple"
@@ -107,10 +110,36 @@
   "language": {
     "toggle": "Cambiar idioma: {{language}}",
     "preference": {
-      "en": "Ingles",
-      "es": "Espanol",
+      "en": "Inglés",
+      "es": "Español",
       "system": "Idioma del sistema"
     }
+  },
+  "menu": {
+    "file": "Archivo",
+    "newDocument": "Nuevo",
+    "open": "Abrir…",
+    "openRecent": "Abrir recientes",
+    "noRecent": "Sin recientes",
+    "save": "Guardar",
+    "saveAs": "Guardar como…",
+    "print": "Imprimir…",
+    "edit": "Editar",
+    "find": "Buscar",
+    "view": "Ver",
+    "toggleView": "Cambiar vista",
+    "editor": "Editor",
+    "preview": "Vista previa",
+    "split": "Dividido",
+    "toggleTheme": "Cambiar tema",
+    "language": "Idioma",
+    "spanish": "Español",
+    "english": "Inglés",
+    "help": "Ayuda",
+    "preferences": "Preferencias",
+    "shortcuts": "Atajos de teclado",
+    "checkUpdates": "Buscar actualizaciones",
+    "about": "Acerca de Bruma"
   },
   "search": {
     "caseSensitive": "Distinguir mayúsculas",

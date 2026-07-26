@@ -2,6 +2,8 @@ mod commands;
 pub mod linux;
 mod menu;
 
+use tauri::Manager;
+
 #[cfg(target_os = "windows")]
 fn configure_fixed_webview2_runtime_if_present() {
     use std::path::PathBuf;
@@ -33,6 +35,8 @@ pub fn run() {
     tauri::Builder::default()
         .manage(menu::RecentFilesMenuState::default())
         .manage(menu::UpdateMenuState::default())
+        .manage(menu::MenuLabelsState::default())
+        .manage(commands::fs::AllowedPaths::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
@@ -44,8 +48,10 @@ pub fn run() {
             commands::fs::save_file,
             commands::fs::save_file_dialog,
             commands::app_menu::set_update_available_menu_state,
+            commands::app_menu::set_menu_labels,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
+            #[cfg(debug_assertions)]
             commands::e2e::e2e_emit_recent_open,
             commands::print::print_current_window,
             commands::recent::sync_recent_files_menu
@@ -60,6 +66,16 @@ pub fn run() {
         })
         .on_menu_event(|app, event| {
             menu::handle_event(app, event.id());
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
+                let allowed_paths = window.state::<commands::fs::AllowedPaths>();
+                for path in paths {
+                    if let Err(error) = allowed_paths.grant_parent(path) {
+                        eprintln!("Could not grant dropped path: {error}");
+                    }
+                }
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running Bruma");

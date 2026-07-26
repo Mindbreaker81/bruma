@@ -83,13 +83,16 @@
   },
   "errors": {
     "exportFailed": "The document could not be exported.",
+    "fileTooLarge": "The file exceeds the 10 MB limit.",
     "openFailed": "The file could not be opened.",
+    "pathNotAllowed": "Choose this file again from Open to grant access to its folder.",
     "recentMissing": "The recent file is unavailable and was removed from the list.",
     "saveFailed": "The file could not be saved.",
     "unsupportedFile": "Only .md and .markdown files are supported.",
     "templateLoadFailed": "The template could not be loaded."
   },
   "export": {
+    "embedImages": "Embed local images",
     "open": "Export",
     "htmlStyled": "Styled HTML",
     "htmlPlain": "Plain HTML"
@@ -111,6 +114,32 @@
       "es": "Spanish",
       "system": "System language"
     }
+  },
+  "menu": {
+    "file": "File",
+    "newDocument": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "noRecent": "No Recent Files",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "print": "Print…",
+    "edit": "Edit",
+    "find": "Find",
+    "view": "View",
+    "toggleView": "Change View",
+    "editor": "Editor",
+    "preview": "Preview",
+    "split": "Split",
+    "toggleTheme": "Change Theme",
+    "language": "Language",
+    "spanish": "Spanish",
+    "english": "English",
+    "help": "Help",
+    "preferences": "Preferences",
+    "shortcuts": "Keyboard Shortcuts",
+    "checkUpdates": "Check for Updates",
+    "about": "About Bruma"
   },
   "search": {
     "caseSensitive": "Match case",

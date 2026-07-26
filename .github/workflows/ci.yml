@@ -88,6 +88,14 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
+      - name: Rust format
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: Rust clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
       - name: Tauri build (macOS)
         if: matrix.platform == 'macos-latest'
         run: pnpm exec tauri build --bundles app

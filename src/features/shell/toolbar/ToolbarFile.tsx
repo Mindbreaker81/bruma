@@ -25,7 +25,7 @@ type ToolbarFileProps = {
   customTemplates: Template[];
   requestDirtyConfirmation: (onConfirm: () => void) => void;
   clearSession: () => void;
-  resetUntitled: () => void;
+  openUntitledTab: () => void;
   updateContent: (content: string) => void;
   setWelcomeDismissed: (dismissed: boolean) => void;
   handleOpenWithConfirmation: () => void;
@@ -47,7 +47,7 @@ export function ToolbarFile({
   customTemplates,
   requestDirtyConfirmation,
   clearSession,
-  resetUntitled,
+  openUntitledTab,
   updateContent,
   setWelcomeDismissed,
   handleOpenWithConfirmation,
@@ -101,7 +101,7 @@ export function ToolbarFile({
                 setIsTemplateMenuOpen(false);
                 requestDirtyConfirmation(() => {
                   clearSession();
-                  resetUntitled();
+                  openUntitledTab();
                   updateContent(applyTemplate(template));
                   setWelcomeDismissed(true);
                 });
@@ -122,7 +122,7 @@ export function ToolbarFile({
                       try {
                         const content = await loadCustomTemplate(template.id);
                         clearSession();
-                        resetUntitled();
+                        openUntitledTab();
                         updateContent(applyTemplate({ ...template, content }));
                         setWelcomeDismissed(true);
                       } catch {

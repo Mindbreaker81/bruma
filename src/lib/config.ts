@@ -55,6 +55,20 @@ type PartialConfig = Partial<AppConfig> & {
   version?: number;
 };
 
+function isTemplate(value: unknown): value is Template {
+  if (!value || typeof value !== 'object') return false;
+  const template = value as Record<string, unknown>;
+  return (
+    typeof template.id === 'string' &&
+    typeof template.name === 'string' &&
+    typeof template.content === 'string' &&
+    (template.locale === undefined ||
+      template.locale === 'es' ||
+      template.locale === 'en') &&
+    (template.isCustom === undefined || typeof template.isCustom === 'boolean')
+  );
+}
+
 export function migrateConfig(input: unknown): AppConfig {
   if (!input || typeof input !== 'object') {
     return DEFAULT_CONFIG;
@@ -143,11 +157,9 @@ export function migrateConfig(input: unknown): AppConfig {
       ? config.splitScrollSync
       : DEFAULT_CONFIG.splitScrollSync;
 
-  const customTemplates =
-    Array.isArray((config as Record<string, unknown>).customTemplates) &&
-    typeof (config as Record<string, unknown>).customTemplates === 'object'
-      ? ((config as Record<string, unknown>).customTemplates as Template[])
-      : DEFAULT_CONFIG.customTemplates;
+  const customTemplates = Array.isArray(config.customTemplates)
+    ? config.customTemplates.filter(isTemplate)
+    : DEFAULT_CONFIG.customTemplates;
 
   return {
     version: CONFIG_VERSION,

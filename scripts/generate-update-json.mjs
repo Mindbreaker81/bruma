@@ -1,13 +1,8 @@
-import {
-  existsSync,
-  readFileSync,
-  readdirSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(
   readFileSync(path.join(root, 'package.json'), 'utf8')
 );
@@ -27,8 +22,14 @@ function assetUrl(name) {
 
 function readSignature(assetName) {
   const sigPath = path.join(assetsDir, `${assetName}.sig`);
-  if (!existsSync(sigPath)) return null;
-  return readFileSync(sigPath, 'utf8').trim();
+  if (!existsSync(sigPath)) {
+    throw new Error(`Missing updater signature: ${sigPath}`);
+  }
+  const signature = readFileSync(sigPath, 'utf8').trim();
+  if (!signature) {
+    throw new Error(`Empty updater signature: ${sigPath}`);
+  }
+  return signature;
 }
 
 function firstExisting(candidates) {
@@ -42,7 +43,7 @@ function notesFromChangelog() {
   if (!existsSync(changelogPath)) return '';
   const changelog = readFileSync(changelogPath, 'utf8');
   const heading = new RegExp(
-    `^## \[?v?${version.replaceAll('.', '\\.')}[^\n]*`,
+    `^## \\[?v?${version.replaceAll('.', '\\.')}\\]?(?:\\s+-[^\\n]*)?$`,
     'm'
   );
   const match = heading.exec(changelog);
@@ -59,40 +60,33 @@ function fileSize(assetName) {
 }
 
 const platformCandidates = {
-  'darwin-aarch64': [
-    `bruma-v${version}-macos-aarch64.app.tar.gz`,
-    `bruma-v${version}-macos-aarch64.dmg`,
-  ],
+  'darwin-aarch64': [`bruma-v${version}-macos-aarch64.app.tar.gz`],
   'linux-x86_64': [`bruma-v${version}-linux-x86_64.AppImage`],
   'windows-x86_64': [
     `bruma-v${version}-windows-x64-setup.exe`,
     `bruma-v${version}-windows-x64-setup.msi`,
   ],
+  'windows-aarch64': [`bruma-v${version}-windows-arm64-setup.exe`],
 };
 
 const platforms = {};
 for (const [platform, candidates] of Object.entries(platformCandidates)) {
   const assetName = firstExisting(candidates);
-  if (!assetName) continue;
+  if (!assetName) {
+    throw new Error(
+      `Missing updater asset for ${platform}; expected one of: ${candidates.join(', ')}`
+    );
+  }
   const signature = readSignature(assetName);
   const platformData = {
     url: assetUrl(assetName),
+    signature,
   };
-  if (signature) {
-    platformData.signature = signature;
-  }
   const size = fileSize(assetName);
   if (size !== undefined) {
     platformData.size = size;
   }
   platforms[platform] = platformData;
-}
-
-if (Object.keys(platforms).length === 0) {
-  const found = existsSync(assetsDir)
-    ? readdirSync(assetsDir).join(', ')
-    : 'directory missing';
-  throw new Error(`No updater assets found in ${assetsDir}: ${found}`);
 }
 
 const manifest = {

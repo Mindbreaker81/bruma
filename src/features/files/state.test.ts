@@ -11,7 +11,7 @@ describe('file store', () => {
       activeTabId: 'test-tab',
       document: doc,
       isDirty: false,
-      displayName: 'Sin titulo',
+      displayName: null,
       recentFiles: [],
     });
   });
@@ -58,6 +58,24 @@ describe('file store', () => {
     expect(useFileStore.getState().tabs.length).toBe(2);
     expect(useFileStore.getState().activeTabId).toBe(firstTabId);
     expect(useFileStore.getState().document.content).toBe('# Updated');
+  });
+
+  it('does not overwrite dirty content when reopening an existing tab', () => {
+    useFileStore.getState().openTab({
+      path: '/tmp/bruma.md',
+      content: '# Original',
+      eol: 'lf',
+    });
+    useFileStore.getState().updateContent('# Unsaved');
+
+    useFileStore.getState().openTab({
+      path: '/tmp/bruma.md',
+      content: '# Disk',
+      eol: 'lf',
+    });
+
+    expect(useFileStore.getState().document.content).toBe('# Unsaved');
+    expect(useFileStore.getState().isDirty).toBe(true);
   });
 
   it('closes tab and selects next when closing active', () => {

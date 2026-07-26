@@ -1,11 +1,48 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashSet,
     env, fs,
+    io::Read,
     path::{Path, PathBuf},
+    sync::Mutex,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+
+const MAX_MARKDOWN_BYTES: usize = 10 * 1024 * 1024;
+
+#[derive(Default)]
+pub struct AllowedPaths {
+    directories: Mutex<HashSet<PathBuf>>,
+}
+
+impl AllowedPaths {
+    pub fn grant_parent(&self, path: &Path) -> Result<(), String> {
+        let parent = path
+            .parent()
+            .ok_or_else(|| "parent_directory_not_found".to_string())?;
+        let canonical_parent = parent
+            .canonicalize()
+            .map_err(|_| "parent_directory_not_found".to_string())?;
+        self.directories
+            .lock()
+            .map_err(|_| "allowed_paths_unavailable".to_string())?
+            .insert(canonical_parent);
+        Ok(())
+    }
+
+    fn contains(&self, path: &Path) -> bool {
+        self.directories
+            .lock()
+            .map(|directories| {
+                directories
+                    .iter()
+                    .any(|directory| path.starts_with(directory))
+            })
+            .unwrap_or(false)
+    }
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +67,9 @@ pub enum DocumentEol {
 }
 
 #[tauri::command]
-pub fn open_file_dialog() -> Result<Option<OpenedFile>, String> {
+pub fn open_file_dialog(
+    allowed_paths: State<'_, AllowedPaths>,
+) -> Result<Option<OpenedFile>, String> {
     let Some(path) = rfd::FileDialog::new()
         .add_filter("Markdown", &["md", "markdown"])
         .pick_file()
@@ -38,21 +77,45 @@ pub fn open_file_dialog() -> Result<Option<OpenedFile>, String> {
         return Ok(None);
     };
 
-    let path = resolve_allowed_read_path(&path)?;
+    let path = path
+        .canonicalize()
+        .map_err(|_| "invalid_path".to_string())?;
+    allowed_paths.grant_parent(&path)?;
 
     read_markdown_file(&path).map(Some)
 }
 
 #[tauri::command]
-pub fn read_file(path: String) -> Result<OpenedFile, String> {
-    let path = resolve_allowed_read_path(Path::new(&path))?;
+pub fn read_file(
+    path: String,
+    allowed_paths: State<'_, AllowedPaths>,
+) -> Result<OpenedFile, String> {
+    read_file_in_scope(path, &allowed_paths)
+}
+
+fn read_file_in_scope(path: String, allowed_paths: &AllowedPaths) -> Result<OpenedFile, String> {
+    let path = resolve_allowed_read_path(Path::new(&path), allowed_paths)?;
 
     read_markdown_file(&path)
 }
 
 #[tauri::command]
-pub fn save_file(path: String, content: String, eol: DocumentEol) -> Result<SavedFile, String> {
-    let path = resolve_allowed_write_path(Path::new(&path))?;
+pub fn save_file(
+    path: String,
+    content: String,
+    eol: DocumentEol,
+    allowed_paths: State<'_, AllowedPaths>,
+) -> Result<SavedFile, String> {
+    save_file_in_scope(path, content, eol, &allowed_paths)
+}
+
+fn save_file_in_scope(
+    path: String,
+    content: String,
+    eol: DocumentEol,
+    allowed_paths: &AllowedPaths,
+) -> Result<SavedFile, String> {
+    let path = resolve_allowed_write_path(Path::new(&path), allowed_paths)?;
 
     write_markdown_file(&path, &content, eol)
 }
@@ -62,6 +125,7 @@ pub fn save_file_dialog(
     content: String,
     eol: DocumentEol,
     suggested: Option<String>,
+    allowed_paths: State<'_, AllowedPaths>,
 ) -> Result<Option<SavedFile>, String> {
     let mut dialog = rfd::FileDialog::new().add_filter("Markdown", &["md", "markdown"]);
 
@@ -73,13 +137,25 @@ pub fn save_file_dialog(
         return Ok(None);
     };
 
-    let path = resolve_allowed_write_path(&ensure_markdown_extension(path))?;
+    let path = resolve_dialog_write_path(ensure_markdown_extension(path), &allowed_paths)?;
 
     write_markdown_file(&path, &content, eol).map(Some)
 }
 
 #[tauri::command]
-pub fn read_image_as_data_url(base: String, relative: String) -> Result<String, String> {
+pub fn read_image_as_data_url(
+    base: String,
+    relative: String,
+    allowed_paths: State<'_, AllowedPaths>,
+) -> Result<String, String> {
+    read_image_in_scope(base, relative, &allowed_paths)
+}
+
+fn read_image_in_scope(
+    base: String,
+    relative: String,
+    allowed_paths: &AllowedPaths,
+) -> Result<String, String> {
     let base_path = Path::new(&base);
     let base_dir = if base_path.is_dir() {
         base_path.to_path_buf()
@@ -91,14 +167,14 @@ pub fn read_image_as_data_url(base: String, relative: String) -> Result<String, 
     };
 
     let candidate = base_dir.join(&relative);
-    let canonical = resolve_allowed_read_path(&candidate)?;
+    let canonical = resolve_allowed_read_path(&candidate, allowed_paths)?;
 
     if !is_allowed_image_path(&canonical) {
         return Err("unsupported_file_type".to_string());
     }
 
-    let mime = image_mime_for_path(&canonical)
-        .ok_or_else(|| "unsupported_file_type".to_string())?;
+    let mime =
+        image_mime_for_path(&canonical).ok_or_else(|| "unsupported_file_type".to_string())?;
     let bytes = fs::read(&canonical).map_err(|error| format!("read_failed: {error}"))?;
     let encoded = BASE64.encode(&bytes);
 
@@ -111,6 +187,7 @@ pub fn save_binary_export_dialog(
     suggested: Option<String>,
     extension: String,
     label: Option<String>,
+    allowed_paths: State<'_, AllowedPaths>,
 ) -> Result<Option<SavedFile>, String> {
     let extension = extension.trim().trim_start_matches('.').to_string();
     if extension.is_empty() {
@@ -132,8 +209,7 @@ pub fn save_binary_export_dialog(
         return Ok(None);
     };
 
-    let path = ensure_extension(path, &extension);
-    let path = resolve_allowed_write_path(&path)?;
+    let path = resolve_dialog_write_path(ensure_extension(path, &extension), &allowed_paths)?;
 
     fs::write(&path, &bytes).map_err(|error| format!("write_failed: {error}"))?;
 
@@ -149,6 +225,7 @@ pub fn save_export_dialog(
     suggested: Option<String>,
     extension: String,
     label: Option<String>,
+    allowed_paths: State<'_, AllowedPaths>,
 ) -> Result<Option<SavedFile>, String> {
     let extension = extension.trim().trim_start_matches('.').to_string();
     if extension.is_empty() {
@@ -166,8 +243,7 @@ pub fn save_export_dialog(
         return Ok(None);
     };
 
-    let path = ensure_extension(path, &extension);
-    let path = resolve_allowed_write_path(&path)?;
+    let path = resolve_dialog_write_path(ensure_extension(path, &extension), &allowed_paths)?;
 
     fs::write(&path, content.as_bytes()).map_err(|error| format!("write_failed: {error}"))?;
 
@@ -207,12 +283,32 @@ fn ensure_extension(path: PathBuf, extension: &str) -> PathBuf {
     }
 }
 
-fn resolve_allowed_read_path(path: &Path) -> Result<PathBuf, String> {
+fn resolve_dialog_write_path(
+    path: PathBuf,
+    allowed_paths: &AllowedPaths,
+) -> Result<PathBuf, String> {
+    let resolved = if path.exists() {
+        path.canonicalize()
+            .map_err(|_| "invalid_path".to_string())?
+    } else {
+        let canonical_parent = path
+            .parent()
+            .ok_or_else(|| "parent_directory_not_found".to_string())?
+            .canonicalize()
+            .map_err(|_| "parent_directory_not_found".to_string())?;
+        canonical_parent.join(path.file_name().ok_or_else(|| "invalid_path".to_string())?)
+    };
+
+    allowed_paths.grant_parent(&resolved)?;
+    Ok(resolved)
+}
+
+fn resolve_allowed_read_path(path: &Path, allowed_paths: &AllowedPaths) -> Result<PathBuf, String> {
     let canonical_path = path
         .canonicalize()
         .map_err(|_| "invalid_path".to_string())?;
 
-    if !is_allowed_path(&canonical_path) {
+    if !is_allowed_path(&canonical_path, allowed_paths) {
         eprintln!("Denied read outside allowed scope: {}", path.display());
         return Err("path_not_allowed".to_string());
     }
@@ -220,13 +316,16 @@ fn resolve_allowed_read_path(path: &Path) -> Result<PathBuf, String> {
     Ok(canonical_path)
 }
 
-fn resolve_allowed_write_path(path: &Path) -> Result<PathBuf, String> {
+fn resolve_allowed_write_path(
+    path: &Path,
+    allowed_paths: &AllowedPaths,
+) -> Result<PathBuf, String> {
     if path.exists() {
         let canonical_path = path
             .canonicalize()
             .map_err(|_| "invalid_path".to_string())?;
 
-        if !is_allowed_path(&canonical_path) {
+        if !is_allowed_path(&canonical_path, allowed_paths) {
             eprintln!("Denied write outside allowed scope: {}", path.display());
             return Err("path_not_allowed".to_string());
         }
@@ -241,7 +340,7 @@ fn resolve_allowed_write_path(path: &Path) -> Result<PathBuf, String> {
         .canonicalize()
         .map_err(|_| "parent_directory_not_found".to_string())?;
 
-    if !is_allowed_path(&canonical_parent) {
+    if !is_allowed_path(&canonical_parent, allowed_paths) {
         eprintln!("Denied write outside allowed scope: {}", path.display());
         return Err("path_not_allowed".to_string());
     }
@@ -251,16 +350,13 @@ fn resolve_allowed_write_path(path: &Path) -> Result<PathBuf, String> {
     Ok(canonical_parent.join(file_name))
 }
 
-fn is_allowed_path(path: &Path) -> bool {
-    let Some(home_path) = user_home_dir() else {
-        return false;
-    };
+fn is_allowed_path(path: &Path, allowed_paths: &AllowedPaths) -> bool {
+    let is_in_home = user_home_dir()
+        .and_then(|home_path| home_path.canonicalize().ok())
+        .map(|canonical_home| path.starts_with(canonical_home))
+        .unwrap_or(false);
 
-    let Ok(canonical_home) = home_path.canonicalize() else {
-        return false;
-    };
-
-    path.starts_with(&canonical_home)
+    is_in_home || allowed_paths.contains(path)
 }
 
 fn user_home_dir() -> Option<PathBuf> {
@@ -274,7 +370,21 @@ fn read_markdown_file(path: &Path) -> Result<OpenedFile, String> {
         return Err("unsupported_file_type".to_string());
     }
 
-    let bytes = fs::read(path).map_err(|error| format!("read_failed: {error}"))?;
+    let metadata = fs::metadata(path).map_err(|error| format!("read_failed: {error}"))?;
+    if metadata.len() > MAX_MARKDOWN_BYTES as u64 {
+        return Err("file_too_large".to_string());
+    }
+
+    let file = fs::File::open(path).map_err(|error| format!("read_failed: {error}"))?;
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    file.take(MAX_MARKDOWN_BYTES as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|error| format!("read_failed: {error}"))?;
+
+    if bytes.len() > MAX_MARKDOWN_BYTES {
+        return Err("file_too_large".to_string());
+    }
+
     let content_bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes);
     let content = String::from_utf8(content_bytes.to_vec())
         .map_err(|error| format!("utf8_failed: {error}"))?;
@@ -347,8 +457,9 @@ fn now_millis() -> u128 {
 #[cfg(test)]
 mod tests {
     use super::{
-        ensure_extension, image_mime_for_path, is_markdown_path, normalize_eol, read_file,
-        read_image_as_data_url, save_file, user_home_dir, DocumentEol,
+        ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
+        normalize_eol, read_file_in_scope, read_image_in_scope, read_markdown_file,
+        save_file_in_scope, user_home_dir, AllowedPaths, DocumentEol, MAX_MARKDOWN_BYTES,
     };
     use std::{
         fs,
@@ -373,7 +484,10 @@ mod tests {
     fn rejects_absolute_system_paths_for_reads() {
         let system_path = forbidden_system_path();
 
-        let result = read_file(system_path.to_string_lossy().into_owned());
+        let result = read_file_in_scope(
+            system_path.to_string_lossy().into_owned(),
+            &AllowedPaths::default(),
+        );
 
         assert!(result.is_err());
     }
@@ -386,7 +500,11 @@ mod tests {
         let file_path = dir.join("note.md");
         fs::write(&file_path, "# Bruma").unwrap();
 
-        let result = read_file(file_path.to_string_lossy().into_owned()).unwrap();
+        let result = read_file_in_scope(
+            file_path.to_string_lossy().into_owned(),
+            &AllowedPaths::default(),
+        )
+        .unwrap();
 
         assert_eq!(
             result.path,
@@ -400,15 +518,72 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
+    #[cfg(target_family = "unix")]
+    #[test]
+    fn grants_only_the_selected_external_directory() {
+        let root = create_test_path(std::env::temp_dir().join("bruma-external-grant"));
+        let granted_dir = root.join("selected");
+        let sibling_dir = root.join("sibling");
+        fs::create_dir_all(&granted_dir).unwrap();
+        fs::create_dir_all(&sibling_dir).unwrap();
+        let selected = granted_dir.join("selected.md");
+        let sibling = sibling_dir.join("sibling.md");
+        fs::write(&selected, "# selected").unwrap();
+        fs::write(&sibling, "# sibling").unwrap();
+        let allowed_paths = AllowedPaths::default();
+
+        assert!(
+            read_file_in_scope(selected.to_string_lossy().into_owned(), &allowed_paths).is_err()
+        );
+
+        allowed_paths
+            .grant_parent(&selected.canonicalize().unwrap())
+            .unwrap();
+
+        assert!(
+            read_file_in_scope(selected.to_string_lossy().into_owned(), &allowed_paths).is_ok()
+        );
+        assert!(
+            read_file_in_scope(sibling.to_string_lossy().into_owned(), &allowed_paths).is_err()
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn reads_markdown_at_the_size_limit() {
+        let path = create_test_path(std::env::temp_dir().join("bruma-size-limit.md"));
+        let file = fs::File::create(&path).unwrap();
+        file.set_len(MAX_MARKDOWN_BYTES as u64).unwrap();
+
+        let result = read_markdown_file(&path).unwrap();
+
+        assert_eq!(result.content.len(), MAX_MARKDOWN_BYTES);
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn rejects_markdown_above_the_size_limit() {
+        let path = create_test_path(std::env::temp_dir().join("bruma-size-over.md"));
+        let file = fs::File::create(&path).unwrap();
+        file.set_len(MAX_MARKDOWN_BYTES as u64 + 1).unwrap();
+
+        let result = read_markdown_file(&path);
+
+        assert_eq!(result.unwrap_err(), "file_too_large");
+        fs::remove_file(path).unwrap();
+    }
+
     #[test]
     fn rejects_paths_that_escape_home_on_write() {
-        let result = save_file(
+        let result = save_file_in_scope(
             forbidden_system_path()
                 .with_extension("md")
                 .to_string_lossy()
                 .into_owned(),
             "# Bruma".to_string(),
             DocumentEol::Lf,
+            &AllowedPaths::default(),
         );
 
         assert!(result.is_err());
@@ -421,10 +596,11 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let target = dir.join("note.md");
 
-        let result = save_file(
+        let result = save_file_in_scope(
             target.to_string_lossy().into_owned(),
             "# Bruma".to_string(),
             DocumentEol::Lf,
+            &AllowedPaths::default(),
         )
         .unwrap();
 
@@ -456,7 +632,10 @@ mod tests {
     fn maps_image_extensions_to_mime() {
         assert_eq!(image_mime_for_path(Path::new("a.png")), Some("image/png"));
         assert_eq!(image_mime_for_path(Path::new("a.JPG")), Some("image/jpeg"));
-        assert_eq!(image_mime_for_path(Path::new("a.svg")), Some("image/svg+xml"));
+        assert_eq!(
+            image_mime_for_path(Path::new("a.svg")),
+            Some("image/svg+xml")
+        );
         assert_eq!(image_mime_for_path(Path::new("a.bmp")), None);
     }
 
@@ -495,9 +674,10 @@ mod tests {
         let base = dir.join("note.md");
         fs::write(&base, "# x").unwrap();
 
-        let result = read_image_as_data_url(
+        let result = read_image_in_scope(
             base.to_string_lossy().into_owned(),
             "logo.png".to_string(),
+            &AllowedPaths::default(),
         )
         .unwrap();
 
@@ -508,11 +688,25 @@ mod tests {
 
     #[test]
     fn rejects_image_outside_home() {
-        let result = read_image_as_data_url(
+        let result = read_image_in_scope(
             forbidden_system_path().to_string_lossy().into_owned(),
             "passwd".to_string(),
+            &AllowedPaths::default(),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn rejects_template_ids_that_escape_the_templates_directory() {
+        assert!(is_safe_template_id("daily-note"));
+        assert!(is_safe_template_id("acta.v2"));
+
+        assert!(!is_safe_template_id(""));
+        assert!(!is_safe_template_id(".."));
+        assert!(!is_safe_template_id("../../.ssh/notes"));
+        assert!(!is_safe_template_id("..\\..\\notes"));
+        assert!(!is_safe_template_id("sub/dir"));
+        assert!(!is_safe_template_id("/etc/passwd"));
     }
 
     #[cfg(target_family = "unix")]
@@ -551,8 +745,8 @@ pub fn list_custom_templates(app: AppHandle) -> Result<Vec<CustomTemplate>, Stri
 
     let mut templates = Vec::new();
 
-    let entries = fs::read_dir(&templates_dir)
-        .map_err(|e| format!("read_templates_dir_error: {e}"))?;
+    let entries =
+        fs::read_dir(&templates_dir).map_err(|e| format!("read_templates_dir_error: {e}"))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("read_entry_error: {e}"))?;
@@ -575,8 +769,27 @@ pub fn list_custom_templates(app: AppHandle) -> Result<Vec<CustomTemplate>, Stri
     Ok(templates)
 }
 
+/// Template ids come from the frontend, so they must not be able to walk out of
+/// the templates directory: `../../.ssh/notes` would otherwise canonicalize to
+/// any `.md` file inside the user's home.
+fn is_safe_template_id(id: &str) -> bool {
+    !id.is_empty()
+        && id != "."
+        && id != ".."
+        && !id.contains("..")
+        && !id.contains('/')
+        && !id.contains('\\')
+        && !id.contains('\0')
+        && !Path::new(id).is_absolute()
+        && Path::new(id).components().count() == 1
+}
+
 #[tauri::command]
 pub fn read_custom_template(app: AppHandle, id: String) -> Result<String, String> {
+    if !is_safe_template_id(&id) {
+        return Err("invalid_template_name".to_string());
+    }
+
     let config_dir = app
         .path()
         .app_config_dir()
@@ -584,14 +797,14 @@ pub fn read_custom_template(app: AppHandle, id: String) -> Result<String, String
 
     let template_path = config_dir.join("templates").join(format!("{}.md", id));
 
-    let canonical_path = resolve_allowed_read_path(&template_path)?;
+    let canonical_path = resolve_allowed_read_path(&template_path, &AllowedPaths::default())?;
 
     if !is_markdown_path(&canonical_path) {
         return Err("unsupported_file_type".to_string());
     }
 
-    let content = fs::read_to_string(&canonical_path)
-        .map_err(|e| format!("read_template_error: {e}"))?;
+    let content =
+        fs::read_to_string(&canonical_path).map_err(|e| format!("read_template_error: {e}"))?;
 
     Ok(content)
 }

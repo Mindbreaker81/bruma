@@ -28,4 +28,13 @@ describe('textStats', () => {
     expect(stats.charactersNoSpaces).toBe(9);
     expect(stats.words).toBe(2);
   });
+
+  it('counts Unicode whitespace and surrogate pairs without changing lengths', () => {
+    const text = 'café\u00a0niño 😀';
+    expect(getTextStats(text)).toEqual({
+      characters: text.length,
+      charactersNoSpaces: text.replace(/\s/g, '').length,
+      words: 2,
+    });
+  });
 });

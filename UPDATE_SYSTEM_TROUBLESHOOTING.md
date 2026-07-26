@@ -1,5 +1,10 @@
 # Update System Troubleshooting Report
 
+> Documento histórico. La clave se rotó y validó el 26 de julio de 2026. El
+> workflow actual exige firmas para macOS ARM64, Linux x64, Windows x64 y
+> Windows ARM64; las recomendaciones posteriores que proponen firmas opcionales
+> ya no describen el sistema vigente.
+
 ## Contexto
 
 Implementación del sistema de actualización híbrido para Bruma con Tauri updater plugin y GitHub Actions workflow.
