@@ -48,11 +48,11 @@
         "desktopTemplate": "linux/bruma.desktop"
       }
     },
-    "createUpdaterArtifacts": false
+    "createUpdaterArtifacts": true
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3RjFENUNGRDg3NzlCN0QKUldSOW0zZll6OVh4bCtaZk0vM3I0NG5vaUhWRFJ4RmRvamRmNU1RWXR0MWlQbllXWWpQb1cvam0=",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFGQzEwNkNGMjA3OUREMTEKUldRUjNYa2d6d2JCcnd5VEZkSE94ZGZzak9Sc0pFVGMzU29TQjVBOTZ4b1hyNmJYbVZqYUh4U0sK",
       "endpoints": [
         "https://github.com/Mindbreaker81/bruma/releases/latest/download/update.json"
       ],

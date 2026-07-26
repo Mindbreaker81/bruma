@@ -7,7 +7,75 @@ on:
   workflow_dispatch:
 
 jobs:
+  verify-updater-key:
+    if: github.event_name == 'workflow_dispatch'
+    name: Verify rotated updater key
+    runs-on: macos-14
+    permissions:
+      contents: read
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Confirm both updater secrets are configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$TAURI_SIGNING_PRIVATE_KEY" ]] || {
+            echo "TAURI_SIGNING_PRIVATE_KEY is not configured"
+            exit 1
+          }
+          [[ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]] || {
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is not configured"
+            exit 1
+          }
+          echo "Both updater secrets are configured"
+
+      - name: Build signed updater artifact without publishing
+        run: pnpm exec tauri build --bundles app
+
+      - name: Verify signature against the rotated public key
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          artifacts=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
+          if [[ ${#artifacts[@]} -ne 1 ]]; then
+            echo "Expected exactly one macOS updater artifact, found ${#artifacts[@]}"
+            exit 1
+          fi
+          signature="${artifacts[0]}.sig"
+          if [[ ! -s "$signature" ]]; then
+            echo "No non-empty updater signature was generated"
+            exit 1
+          fi
+          command -v minisign >/dev/null || brew install minisign
+          node -e "const fs=require('node:fs');const c=require('./src-tauri/tauri.conf.json');fs.writeFileSync(process.argv[1],Buffer.from(c.plugins.updater.pubkey,'base64'))" "$RUNNER_TEMP/bruma.pub"
+          minisign -Vm "${artifacts[0]}" -p "$RUNNER_TEMP/bruma.pub" -x "$signature"
+          echo "Updater signature matches the rotated public key"
+
   build:
+    if: github.event_name != 'workflow_dispatch'
     name: Build ${{ matrix.platform }}${{ matrix.win_arch && format(' ({0})', matrix.win_arch) || '' }}
     runs-on: ${{ matrix.platform }}
     permissions:
@@ -254,12 +322,16 @@ jobs:
           cp "${dmg_files[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.dmg"
 
           app_tars=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
-          if [[ ${#app_tars[@]} -ge 1 ]]; then
-            cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
-            cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
-          else
-            echo "No updater .app.tar.gz found (updater artifacts disabled)"
+          if [[ ${#app_tars[@]} -lt 1 ]]; then
+            echo "No updater .app.tar.gz found in src-tauri/target/release/bundle/macos/"
+            exit 1
           fi
+          if [[ ! -s "${app_tars[0]}.sig" ]]; then
+            echo "No non-empty updater signature found for ${app_tars[0]}"
+            exit 1
+          fi
+          cp "${app_tars[0]}" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz"
+          cp "${app_tars[0]}.sig" "release-assets/bruma-v${{ steps.app_version.outputs.value }}-macos-aarch64.app.tar.gz.sig"
 
       - name: Collect release assets (Windows x64 installers)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
@@ -270,11 +342,21 @@ jobs:
 
           $msi = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\msi\\*.msi" | Select-Object -First 1
           if (-not $msi) { throw "No .msi found under src-tauri\\target\\release\\bundle\\msi\\" }
+          $msiSig = "$($msi.FullName).sig"
+          if (-not (Test-Path $msiSig) -or (Get-Item $msiSig).Length -eq 0) {
+            throw "No non-empty updater signature found for $($msi.FullName)"
+          }
           Copy-Item $msi.FullName "release-assets\\bruma-v$version-windows-x64.msi" -Force
+          Copy-Item $msiSig "release-assets\\bruma-v$version-windows-x64.msi.sig" -Force
 
           $nsisExe = Get-ChildItem -Path "src-tauri\\target\\release\\bundle\\nsis\\*.exe" | Select-Object -First 1
           if (-not $nsisExe) { throw "No NSIS .exe found under src-tauri\\target\\release\\bundle\\nsis\\" }
+          $nsisSig = "$($nsisExe.FullName).sig"
+          if (-not (Test-Path $nsisSig) -or (Get-Item $nsisSig).Length -eq 0) {
+            throw "No non-empty updater signature found for $($nsisExe.FullName)"
+          }
           Copy-Item $nsisExe.FullName "release-assets\\bruma-v$version-windows-x64-setup.exe" -Force
+          Copy-Item $nsisSig "release-assets\\bruma-v$version-windows-x64-setup.exe.sig" -Force
 
       - name: Build portable-full (Windows x64)
         if: matrix.platform == 'windows-latest' && matrix.win_arch == 'x64'
@@ -339,11 +421,15 @@ jobs:
             exit 1
           fi
           cp "${appimages[0]}" "release-assets/bruma-v${version}-linux-x86_64.AppImage"
-          if [[ -f "${appimages[0]}.sig" ]]; then
-            cp "${appimages[0]}.sig" "release-assets/bruma-v${version}-linux-x86_64.AppImage.sig"
-          else
-            echo "No .sig file found (updater artifacts disabled)"
+          if [[ ! -s "${appimages[0]}.sig" ]]; then
+            echo "Tauri did not create an AppImage signature; signing the fallback artifact..."
+            pnpm exec tauri signer sign "${appimages[0]}"
           fi
+          if [[ ! -s "${appimages[0]}.sig" ]]; then
+            echo "No non-empty updater signature found for ${appimages[0]}"
+            exit 1
+          fi
+          cp "${appimages[0]}.sig" "release-assets/bruma-v${version}-linux-x86_64.AppImage.sig"
 
           debs=(src-tauri/target/release/bundle/deb/*.deb)
           if [[ ${#debs[@]} -lt 1 ]]; then
