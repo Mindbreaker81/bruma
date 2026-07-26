@@ -7,78 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  verify-updater-key:
-    if: github.event_name == 'workflow_dispatch'
-    name: Verify rotated updater key
-    runs-on: macos-14
-    permissions:
-      contents: read
-    env:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Confirm both updater secrets are configured
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ -n "$TAURI_SIGNING_PRIVATE_KEY" ]] || {
-            echo "TAURI_SIGNING_PRIVATE_KEY is not configured"
-            exit 1
-          }
-          [[ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]] || {
-            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is not configured"
-            exit 1
-          }
-          echo "Both updater secrets are configured"
-
-      - name: Build signed updater artifact without publishing
-        run: pnpm exec tauri build --bundles app
-
-      - name: Verify signature against the rotated public key
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          artifacts=(src-tauri/target/release/bundle/macos/*.app.tar.gz)
-          if [[ ${#artifacts[@]} -ne 1 ]]; then
-            echo "Expected exactly one macOS updater artifact, found ${#artifacts[@]}"
-            exit 1
-          fi
-          signature="${artifacts[0]}.sig"
-          if [[ ! -s "$signature" ]]; then
-            echo "No non-empty updater signature was generated"
-            exit 1
-          fi
-          if ! command -v minisign >/dev/null; then
-            brew untap aws/tap || true
-            brew install minisign
-          fi
-          node -e "const fs=require('node:fs');const c=require('./src-tauri/tauri.conf.json');fs.writeFileSync(process.argv[1],Buffer.from(c.plugins.updater.pubkey,'base64'));fs.writeFileSync(process.argv[2],Buffer.from(fs.readFileSync(process.argv[3],'utf8').trim(),'base64'))" "$RUNNER_TEMP/bruma.pub" "$RUNNER_TEMP/bruma.minisig" "$signature"
-          minisign -Vm "${artifacts[0]}" -p "$RUNNER_TEMP/bruma.pub" -x "$RUNNER_TEMP/bruma.minisig"
-          echo "Updater signature matches the rotated public key"
-
   build:
-    if: github.event_name != 'workflow_dispatch'
     name: Build ${{ matrix.platform }}${{ matrix.win_arch && format(' ({0})', matrix.win_arch) || '' }}
     runs-on: ${{ matrix.platform }}
     permissions:

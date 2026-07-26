@@ -33,53 +33,36 @@ la respuesta dinámica sin `platforms` y no debe citarse como el error exacto de
 este manifiesto. La interfaz sí muestra crudo el `message` recibido cuando la
 comprobación manual falla.
 
-### Decisión previa: ¿se conserva la clave privada original?
+### Estado de la clave: rotada el 26 de julio de 2026
 
-La pública embebida en `tauri.conf.json` corresponde al key id `97F1D5CFD8779B7D`.
-El diagnóstico aislado ejecutado en GitHub Actions el 26 de julio de 2026
-confirmó que `TAURI_SIGNING_PRIVATE_KEY` existe y no está vacío, pero no existe
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Tauri 2.10.1 llega a compilar el bundle y
-falla al firmarlo con `incorrect updater private key password: failed to fill
-whole buffer`. Por tanto, la clave almacenada no es utilizable con contraseña
-vacía. Este resultado no distingue entre una clave cifrada cuya contraseña falta
-y una clave defectuosa o truncada.
+La privada original no se encontró y la copia guardada en GitHub no era
+utilizable sin una contraseña que tampoco se conservaba. Se generó con Tauri CLI
+2.10.1 un par nuevo protegido por contraseña. La pública embebida ahora
+corresponde al key id `AFC106CF2079DD11`, y GitHub contiene tanto
+`TAURI_SIGNING_PRIVATE_KEY` como `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
 
-Hay que recuperar la contraseña original o confirmar que se conserva otra copia
-de la privada correspondiente, porque **rotar la clave deja sin
-auto-actualización a todos los instalados de 1.7.x**: sus binarios llevan la
-pública antigua y rechazarán cualquier bundle firmado con otra. En ese caso hay
-que asumir una reinstalación manual y anunciarla en las notas de la release y en
-la landing.
+La ejecución aislada
+[`Release #37`](https://github.com/Mindbreaker81/bruma/actions/runs/30211787915)
+confirmó los tres puntos necesarios: la privada se descifra, Tauri produce el
+`.sig` y `minisign` verifica que esa firma corresponde a la pública incorporada
+en la aplicación. No se publicó ninguna release durante la prueba.
 
-- **Si se conserva** → validar la clave y el pipeline completo. El repositorio no
-  permite concluir que el único problema sea el formato del secret.
-- **Si se perdió** → generar par nuevo, aceptar la ruptura y comunicarla.
+La rotación implica que **todos los instalados de 1.7.x necesitan reinstalar
+manualmente la primera versión que lleve la clave nueva**. Sus binarios conservan
+la pública antigua y no pueden validar bundles firmados por el par nuevo. Debe
+anunciarse en las notas de la release y en la landing.
 
 ### Pasos
 
-1. **Reproducir en local antes de tocar CI.** El error histórico
-   (`failed to decode secret key: ... failed to fill whole buffer`) es compatible
-   con una clave malformada o truncada, pero el log por sí solo no demuestra la
-   causa. Tauri CLI 2.10.1 corrigió además un defecto de las claves generadas sin
-   contraseña por las versiones 2.9.3–2.10.0, que la propia release indica que
-   deben regenerarse. Averiguar con qué versión se creó la clave original antes
-   de atribuir el fallo al secret de GitHub. Verificar después que la privada
-   corresponde a la pública embebida y que el formato y la contraseña funcionan:
+1. **Completado: rotar y validar el par.** El nuevo par está protegido por
+   contraseña, respaldado fuera del repositorio y verificado criptográficamente
+   en GitHub Actions con Tauri CLI 2.10.1.
 
-   ```bash
-   # con createUpdaterArtifacts: true
-   TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/bruma.key)" \
-   TAURI_SIGNING_PRIVATE_KEY_PASSWORD="" \
-   pnpm tauri build
-   ```
+2. **Completado:** `createUpdaterArtifacts: true` en
+   `src-tauri/tauri.conf.json`.
 
-   En cada sistema anfitrión, éxito significa que el bundle actualizable
-   generado tiene su `.sig`. Solo entonces se vuelve a cargar el secret en CI
-   conservando el valor byte a byte.
-
-2. `createUpdaterArtifacts: true` en `src-tauri/tauri.conf.json`.
-
-3. **Recoger y exigir las firmas de cada plataforma.**
+3. **Implementado; pendiente de confirmar con la matriz completa:** recoger y
+   exigir las firmas de cada plataforma.
 
    - macOS: exigir el `.app.tar.gz` y su `.sig`; el `.dmg` es un instalador para
      descarga manual, no el artefacto preferido por el updater.
@@ -91,9 +74,9 @@ la landing.
    convertirse en fallos, y Windows debe ganar una comprobación equivalente. Un
    release sin todas las firmas esperadas debe romper el pipeline.
 
-4. **Que el generador falle igual.** En `scripts/generate-update-json.mjs`, el
-   `if (signature)` de la línea 81 es lo que permite emitir un manifiesto
-   inválido. Cambiar a: si un asset existe pero no tiene `.sig`, lanzar.
+4. **Completado: el generador falla igual.**
+   `scripts/generate-update-json.mjs` exige las tres plataformas soportadas y
+   rechaza assets sin `.sig` o firmas vacías.
 
 5. **Decidir y completar Windows ARM64.** El workflow compila ARM64 con
    `--no-bundle` y publica un ZIP portable. Ese ZIP no es, por sí solo, un bundle
@@ -109,7 +92,9 @@ la landing.
    problema. macOS Intel tampoco se compila; si se quiere soportar, necesita otra
    entrada de matriz y su propio bundle firmado.
 
-6. **Test de humo del manifiesto.** Cargar el `update.json` generado y comprobar:
+6. **Test de humo del manifiesto.** La prueba local con fixtures ya confirma que
+   un manifiesto completo se genera y que una firma ausente se rechaza. Falta
+   repetirlo con los artefactos reales de una matriz completa:
 
    - conjunto exacto de plataformas que la release declara soportar;
    - `url` y `signature` no vacíos en todas ellas;

@@ -67,25 +67,23 @@ rama dinámica sin `platforms`, no a este manifiesto; la interfaz sí muestra cr
 el `message` recibido cuando una comprobación manual falla. La versión 1.7.2 no
 puede llegar a los usuarios de 1.7.x por esa vía.
 
-La comprobación aislada de GitHub Actions del 26 de julio de 2026 confirmó que
-`TAURI_SIGNING_PRIVATE_KEY` existe y no está vacío, pero no hay un secreto
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Tauri 2.10.1 compiló el bundle y falló al
-firmarlo con `incorrect updater private key password: failed to fill whole
-buffer`. Esto demuestra que la clave guardada no funciona con contraseña vacía;
-no permite distinguir por sí solo entre una clave cifrada cuya contraseña se
-perdió y una clave defectuosa o truncada.
+La clave original se consideró perdida y se rotó el 26 de julio de 2026 con
+Tauri CLI 2.10.1. El par nuevo está protegido por contraseña y la pública
+embebida corresponde al key id `AFC106CF2079DD11`. La ejecución aislada
+[`Release #37`](https://github.com/Mindbreaker81/bruma/actions/runs/30211787915)
+confirmó que GitHub descifra la privada, Tauri genera el `.sig` y `minisign`
+verifica la firma contra la pública incorporada. No se publicó una release.
 
-Corrección: recuperar la contraseña original o la privada correspondiente a la
-pública embebida. Después hay que validar la clave y averiguar con qué CLI se
-creó: Tauri CLI 2.10.1 corrigió las claves sin contraseña defectuosas generadas
-por 2.9.3–2.10.0. Después hay que
-volver a `createUpdaterArtifacts: true`, recoger y exigir los `.sig` de macOS,
-Linux y Windows x64, y hacer que tanto el workflow como el generador fallen ante
-cualquier firma ausente. Windows ARM64 necesita además un bundle instalable por
-el updater: hoy solo se compila con `--no-bundle` y se publica un ZIP portable,
-por lo que añadir `windows-aarch64` al manifiesto no basta. Mientras tanto, lo
-honesto es ocultar la UI de actualización o sustituirla por un enlace a la página
-de releases.
+La corrección de esta rama activa `createUpdaterArtifacts`, exige y recoge los
+`.sig` de macOS, Linux y Windows x64, y hace que tanto el workflow como el
+generador fallen ante cualquier asset o firma ausente. Queda por ejecutar la
+matriz completa con artefactos reales. Windows ARM64 necesita además un bundle
+instalable por el updater: hoy solo se compila con `--no-bundle` y se publica un
+ZIP portable, por lo que añadir `windows-aarch64` al manifiesto no basta.
+
+La rotación rompe necesariamente la cadena con 1.7.x: la primera versión que
+lleve la clave nueva debe distribuirse como reinstalación manual y explicarlo en
+las notas de release y en la landing.
 
 ### 2. Un enlace relativo en el preview deja la ventana en blanco **[corregido]**
 
