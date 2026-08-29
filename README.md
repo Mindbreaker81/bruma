@@ -326,7 +326,7 @@ La configuracion vive en [`vercel.json`](vercel.json) en la **raiz del repo** (c
 
 Enlace al codigo y releases: [github.com/Mindbreaker81/bruma](https://github.com/Mindbreaker81/bruma).
 
-Sitio desplegado (produccion): [bruma-sigma.vercel.app](https://bruma-sigma.vercel.app).
+Sitio desplegado (produccion): [bruma-mdeditor.vercel.app](https://bruma-mdeditor.vercel.app).
 
 ## Documentacion
 
