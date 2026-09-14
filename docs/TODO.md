@@ -362,7 +362,7 @@ Seguimiento en YouTrack: proyecto **BRU**.
 
 - [ ] `D1` — protocolo de reproducción en Windows (confirmar si el teclado falla además de la UI).
 - [~] `F1+F2` — menú Editar nativo completo (Rust) + puente de acciones de edición (**mismo commit**): implementado y en verde en CI local; pendiente verificación manual `V1`–`V9`.
-- [~] `F3` — helpers de portapapeles: `src/lib/clipboard.ts` creado (read/write/text+HTML con degradación); pendiente `pasteText` en `format.ts` y `clipboard.test.ts`.
+- [x] `F3` — helpers de portapapeles: `src/lib/clipboard.ts` (read/write texto+HTML con degradación), `pasteText` en `format.ts` con `userEvent: 'input.paste'` y `clipboard.test.ts` (11 tests).
 - [ ] `F4` — botones Cortar/Copiar/Pegar en la barra de formato.
 - [ ] `F5` — menú contextual propio en editor y vista previa.
 - [ ] `F6` — catálogo de atajos, diálogo de ayuda e i18n.
