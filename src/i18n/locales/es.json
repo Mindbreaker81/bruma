@@ -36,6 +36,8 @@
     "selectAll": "Seleccionar todo",
     "copyDocument": "Copiar documento",
     "copyAsHtml": "Copiar como HTML",
+    "copySelection": "Copiar selección",
+    "copyHtml": "Copiar HTML renderizado",
     "copyCode": "Copiar código",
     "copied": "Copiado al portapapeles",
     "unavailable": "El portapapeles no está disponible; usa el menú Editar",

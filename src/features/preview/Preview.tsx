@@ -6,7 +6,11 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
+import { ContextMenuArea } from '../../components/ui/context-menu';
+import { DropdownMenuItem } from '../../components/ui/dropdown-menu';
+import { writeClipboardHtml, writeClipboardText } from '../../lib/clipboard';
 import { stripFrontmatter } from '../../lib/frontmatter';
 import { renderSafeMarkdown } from '../../lib/markdown';
 import { resolveLocalImages } from '../../lib/images';
@@ -94,14 +98,51 @@ export function Preview({
     }
   };
 
+  const notifyCopied = (copied: Promise<boolean>) => {
+    void copied.then((ok) => {
+      if (ok) {
+        toast.success(t('clipboard.copied'));
+      } else {
+        toast.error(t('clipboard.unavailable'));
+      }
+    });
+  };
+
+  const menu = (
+    <>
+      <DropdownMenuItem
+        onSelect={() => {
+          const selection = window.getSelection()?.toString() ?? '';
+          if (selection.length > 0) {
+            notifyCopied(writeClipboardText(selection));
+          }
+        }}
+      >
+        {t('clipboard.copySelection')}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() => notifyCopied(writeClipboardText(content))}
+      >
+        {t('clipboard.copyDocument')}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onSelect={() => notifyCopied(writeClipboardHtml(html, content))}
+      >
+        {t('clipboard.copyHtml')}
+      </DropdownMenuItem>
+    </>
+  );
+
   return (
-    <article
-      ref={assignRefs}
-      aria-label={t('preview.label')}
-      className="bruma-preview min-h-0 flex-1 overflow-auto bg-background px-6 py-5"
-      style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
-      dangerouslySetInnerHTML={{ __html: html }}
-      onClick={handleClick}
-    />
+    <ContextMenuArea menu={menu}>
+      <article
+        ref={assignRefs}
+        aria-label={t('preview.label')}
+        className="bruma-preview min-h-0 flex-1 overflow-auto bg-background px-6 py-5"
+        style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
+        dangerouslySetInnerHTML={{ __html: html }}
+        onClick={handleClick}
+      />
+    </ContextMenuArea>
   );
 }

@@ -36,6 +36,8 @@
     "selectAll": "Select all",
     "copyDocument": "Copy document",
     "copyAsHtml": "Copy as HTML",
+    "copySelection": "Copy selection",
+    "copyHtml": "Copy rendered HTML",
     "copyCode": "Copy code",
     "copied": "Copied to clipboard",
     "unavailable": "Clipboard unavailable; use the Edit menu",

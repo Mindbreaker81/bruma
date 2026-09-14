@@ -149,6 +149,12 @@ const MarkdownEditor = lazy(() =>
   }))
 );
 
+const EditorContextMenu = lazy(() =>
+  import('./features/editor/EditorContextMenu').then((module) => ({
+    default: module.EditorContextMenu,
+  }))
+);
+
 const PRINT_DELAY_MS = 100;
 
 type MenuHandlers = {
@@ -1265,26 +1271,31 @@ export default function App() {
                           />
                         }
                       >
-                        <MarkdownEditor
-                          ref={editorRef}
-                          activeSearchIndex={
-                            isSearchOpen ? searchActiveIndex : 0
-                          }
-                          ariaLabel={t('editor.label')}
-                          placeholder={t('editor.placeholder')}
-                          searchMatches={isSearchOpen ? searchMatches : []}
-                          value={document.content}
-                          onChange={(nextValue) => {
-                            setWelcomeDismissed(true);
-                            updateContent(nextValue);
-                          }}
-                          tabSize={editorTabSize}
-                          lineWrapping={editorWrap}
-                          fontFamily={editorFontFamily}
-                          showGutter={editorShowGutter}
-                          onActiveFormatsChange={setActiveFormats}
-                          onSelectionChange={setCursorPosition}
-                        />
+                        <EditorContextMenu
+                          editorRef={editorRef}
+                          onCopyAsHtml={handleCopyAsHtml}
+                        >
+                          <MarkdownEditor
+                            ref={editorRef}
+                            activeSearchIndex={
+                              isSearchOpen ? searchActiveIndex : 0
+                            }
+                            ariaLabel={t('editor.label')}
+                            placeholder={t('editor.placeholder')}
+                            searchMatches={isSearchOpen ? searchMatches : []}
+                            value={document.content}
+                            onChange={(nextValue) => {
+                              setWelcomeDismissed(true);
+                              updateContent(nextValue);
+                            }}
+                            tabSize={editorTabSize}
+                            lineWrapping={editorWrap}
+                            fontFamily={editorFontFamily}
+                            showGutter={editorShowGutter}
+                            onActiveFormatsChange={setActiveFormats}
+                            onSelectionChange={setCursorPosition}
+                          />
+                        </EditorContextMenu>
                       </Suspense>
                     </div>
                   </div>
