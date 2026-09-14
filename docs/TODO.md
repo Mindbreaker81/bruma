@@ -334,7 +334,7 @@
 
 - [x] CI con job Linux: `ubuntu-latest` añadido a la matriz `tauri` de `ci.yml` — instala las dependencias nativas (WebKitGTK 4.1, GTK 3, appindicator, patchelf, rpm), corre `cargo test`/`fmt`/`clippy` y genera `.deb`/`.rpm`/`.AppImage` publicados en el draft release.
 - [x] Empaquetado AppImage, `.deb` (Debian/Ubuntu), `.rpm` (Fedora): publicados firmados desde v1.7.x.
-- [ ] Investigación Flatpak.
+- [x] Investigación Flatpak: documento `docs/FLATPAK.md` (manifest esperado, portales, conflicto con el updater y riesgos de sandbox). Queda el prototipo local y las pruebas por distro.
 - [ ] Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente.
 - [x] Documentación específica de instalación por distro: sección Linux en `README.md` (AppImage + `libfuse2`, `.deb`, `.rpm`).
 - [ ] Auditar fuentes / assets con fallbacks (Inter, monospace).
@@ -376,8 +376,8 @@ Seguimiento en YouTrack: proyecto **BRU**.
 Pendientes:
 - Validación manual en macOS y Windows (matriz `V1`–`V9` del plan de portapapeles, `D1` en Windows)
 - QA de artifacts publicados por tag `vX.Y.Z` y gate operativo del updater (`PLAN-MEJORAS.md` F1.7)
-- Investigación Flatpak y pruebas manuales por distro
-- Auditoría de lector de pantalla (BRU-15) y de apertura nativa de archivos/fuentes (BRU-16)
+- Prototipo Flatpak local y pruebas manuales por distro (`docs/FLATPAK.md`, BRU-14)
+- Auditoría de lector de pantalla (BRU-15): auditoría estática hecha (grupo `role="group"` en la barra, `aria-label` en inputs de búsqueda, foco devuelto al contenido al cerrar el menú contextual); la prueba real con lector de pantalla sigue pendiente. Apertura nativa de archivos/fuentes (BRU-16)
 - Seguimiento de tamaño de bundle en cada release
 
 ---

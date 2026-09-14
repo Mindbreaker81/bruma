@@ -163,9 +163,10 @@ export function Preview({
   );
 
   return (
-    <ContextMenuArea menu={menu}>
+    <ContextMenuArea menu={menu} onClose={() => containerRef.current?.focus()}>
       <article
         ref={assignRefs}
+        tabIndex={-1}
         aria-label={t('preview.label')}
         className="bruma-preview min-h-0 flex-1 overflow-auto bg-background px-6 py-5"
         style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}

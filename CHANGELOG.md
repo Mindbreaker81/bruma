@@ -22,6 +22,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 - Deshacer/Rehacer desde el menú nativo se enrutan al historial de CodeMirror cuando el editor tiene el foco, y a `execCommand` en campos nativos (p. ej. el campo de búsqueda).
 - El handle del editor expone `undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, `getSelectedText` y `hasSelection`.
+- Accesibilidad: el grupo de portapapeles de la barra expone `role="group"`, los campos de búsqueda/reemplazo tienen `aria-label`, y el menú contextual devuelve el foco al editor o a la preview al cerrarse.
 
 ### CI
 
@@ -32,6 +33,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Plan de implementación de portapapeles y menú Editar (`PLAN-PORTAPAPELES-Y-EDICION.md`, fases F1–F9).
 - `docs/TODO.md` actualizado al estado real de v1.8.0: bloqueo de dependencias nativas en Linux resuelto, bundles `.deb`/`.rpm`/AppImage publicados y decisión de Radix UI cerrada.
 - Seguimiento del proyecto en YouTrack (proyecto `BRU`): fases del plan de portapapeles y tareas pendientes registradas.
+- Investigación Flatpak (`docs/FLATPAK.md`): manifest esperado, portales de documentos, conflicto con el updater y riesgos de sandbox de WebKit.
 
 ## [1.8.0] - 2026-07-26
 

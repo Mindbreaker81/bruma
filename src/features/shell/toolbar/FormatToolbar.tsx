@@ -64,6 +64,7 @@ export function FormatToolbar({
       className="flex w-full items-center gap-1 overflow-x-auto border-b border-border/60 bg-background/60 px-3 py-1.5 [scrollbar-width:thin]"
     >
       <div
+        role="group"
         className="flex items-center gap-1"
         aria-label={t('toolbar.clipboard')}
       >

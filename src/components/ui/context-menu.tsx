@@ -9,6 +9,8 @@ import {
 type ContextMenuAreaProps = {
   /** Items rendered inside the dropdown once the menu opens. */
   menu: ReactNode;
+  /** Called when the menu closes; should return focus to the content. */
+  onClose?: () => void;
   children: ReactNode;
 };
 
@@ -17,7 +19,11 @@ type ContextMenuAreaProps = {
  * The `contextmenu` handler only covers this subtree, so native menus
  * elsewhere (dialog inputs, etc.) keep working.
  */
-export function ContextMenuArea({ menu, children }: ContextMenuAreaProps) {
+export function ContextMenuArea({
+  menu,
+  onClose,
+  children,
+}: ContextMenuAreaProps) {
   const [position, setPosition] = useState<{ x: number; y: number } | null>(
     null
   );
@@ -27,7 +33,12 @@ export function ContextMenuArea({ menu, children }: ContextMenuAreaProps) {
       modal={false}
       open={position !== null}
       onOpenChange={(open) => {
-        if (!open) setPosition(null);
+        if (!open) {
+          setPosition(null);
+          // Radix returns focus to the (invisible) anchor; hand it back to
+          // the content so keyboard users are not stranded.
+          onClose?.();
+        }
       }}
     >
       <DropdownMenuTrigger asChild>

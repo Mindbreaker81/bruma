@@ -92,5 +92,9 @@ export function EditorContextMenu({
     </>
   );
 
-  return <ContextMenuArea menu={menu}>{children}</ContextMenuArea>;
+  return (
+    <ContextMenuArea menu={menu} onClose={() => editorRef.current?.focus()}>
+      {children}
+    </ContextMenuArea>
+  );
 }
