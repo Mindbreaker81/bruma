@@ -23,6 +23,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Deshacer/Rehacer desde el menú nativo se enrutan al historial de CodeMirror cuando el editor tiene el foco, y a `execCommand` en campos nativos (p. ej. el campo de búsqueda).
 - El handle del editor expone `undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, `getSelectedText` y `hasSelection`.
 
+### CI
+
+- La matriz `tauri` incluye `ubuntu-latest`: instala las dependencias nativas, corre los checks de Rust y publica los bundles `.deb`, `.rpm` y `.AppImage` (con firmas del updater) en el draft release.
+
 ### Docs
 
 - Plan de implementación de portapapeles y menú Editar (`PLAN-PORTAPAPELES-Y-EDICION.md`, fases F1–F9).

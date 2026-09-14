@@ -332,7 +332,7 @@
 
 ## Backlog — V2.0 (Linux)
 
-- [~] CI con job Linux: el job `frontend` corre en `ubuntu-latest` (lint, tests, e2e, build); falta añadir Linux a la matriz `tauri` de `ci.yml` para `cargo test`/`clippy`.
+- [x] CI con job Linux: `ubuntu-latest` añadido a la matriz `tauri` de `ci.yml` — instala las dependencias nativas (WebKitGTK 4.1, GTK 3, appindicator, patchelf, rpm), corre `cargo test`/`fmt`/`clippy` y genera `.deb`/`.rpm`/`.AppImage` publicados en el draft release.
 - [x] Empaquetado AppImage, `.deb` (Debian/Ubuntu), `.rpm` (Fedora): publicados firmados desde v1.7.x.
 - [ ] Investigación Flatpak.
 - [ ] Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente.
@@ -374,11 +374,10 @@ Seguimiento en YouTrack: proyecto **BRU**.
 ## Siguiente orden sugerido
 
 Pendientes:
-- Implementación del plan de portapapeles y menú Editar (F1–F8, ver sección anterior)
-- Validación manual en macOS y Windows
+- Validación manual en macOS y Windows (matriz `V1`–`V9` del plan de portapapeles, `D1` en Windows)
 - QA de artifacts publicados por tag `vX.Y.Z` y gate operativo del updater (`PLAN-MEJORAS.md` F1.7)
-- Añadir Linux a la matriz `tauri` de CI
 - Investigación Flatpak y pruebas manuales por distro
+- Auditoría de lector de pantalla (BRU-15) y de apertura nativa de archivos/fuentes (BRU-16)
 - Seguimiento de tamaño de bundle en cada release
 
 ---

@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, windows-latest]
+        platform: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,6 +81,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -104,6 +110,10 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: pnpm exec tauri build --bundles nsis
 
+      - name: Tauri build (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: pnpm exec tauri build --bundles deb,rpm,appimage
+
       - name: Archive macOS .app
         if: matrix.platform == 'macos-latest'
         shell: bash
@@ -118,6 +128,10 @@ jobs:
             src-tauri/target/release/bundle/**/*.app.tar.gz
             src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.rpm
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.sig
           name: 'bruma-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}'
           tag_name: 'draft-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}-${{ matrix.platform }}'
           body: 'Draft release from CI run [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
