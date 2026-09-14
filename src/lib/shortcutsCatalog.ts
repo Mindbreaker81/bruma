@@ -1,9 +1,12 @@
 import { FORMAT_COMMANDS } from '../features/editor/formatCommands';
+import { isApplePlatform } from './formatShortcut';
 
 export type ShortcutItem = {
   id: string;
   labelKey: string;
   shortcut: string;
+  /** Binding on Windows/Linux when it differs from the Apple one. */
+  shortcutWindows?: string;
 };
 
 export type ShortcutGroup = {
@@ -67,6 +70,42 @@ export const SHORTCUT_GROUPS: readonly ShortcutGroup[] = [
     id: 'edit',
     labelKey: 'shortcuts.group.edit',
     items: [
+      {
+        id: 'edit.undo',
+        labelKey: 'shortcuts.action.editUndo',
+        shortcut: 'Mod-Z',
+      },
+      {
+        id: 'edit.redo',
+        labelKey: 'shortcuts.action.editRedo',
+        shortcut: 'Mod-Shift-Z',
+        shortcutWindows: 'Mod-Y',
+      },
+      {
+        id: 'edit.cut',
+        labelKey: 'shortcuts.action.editCut',
+        shortcut: 'Mod-X',
+      },
+      {
+        id: 'edit.copy',
+        labelKey: 'shortcuts.action.editCopy',
+        shortcut: 'Mod-C',
+      },
+      {
+        id: 'edit.paste',
+        labelKey: 'shortcuts.action.editPaste',
+        shortcut: 'Mod-V',
+      },
+      {
+        id: 'edit.selectAll',
+        labelKey: 'shortcuts.action.editSelectAll',
+        shortcut: 'Mod-A',
+      },
+      {
+        id: 'edit.replace',
+        labelKey: 'shortcuts.action.editReplace',
+        shortcut: 'Mod-Shift-F',
+      },
       {
         id: 'edit.find',
         labelKey: 'shortcuts.action.editFind',
@@ -146,4 +185,11 @@ const SHORTCUT_LOOKUP = new Map<string, ShortcutItem>(
 
 export function getShortcutById(id: string): ShortcutItem | undefined {
   return SHORTCUT_LOOKUP.get(id);
+}
+
+/** Binding to display on the current platform (`shortcutWindows` wins off Apple). */
+export function resolveShortcut(item: ShortcutItem): string {
+  return !isApplePlatform() && item.shortcutWindows
+    ? item.shortcutWindows
+    : item.shortcut;
 }

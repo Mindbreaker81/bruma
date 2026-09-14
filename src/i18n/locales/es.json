@@ -30,8 +30,16 @@
     "title": "Cambios sin guardar"
   },
   "clipboard": {
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "selectAll": "Seleccionar todo",
+    "copyDocument": "Copiar documento",
+    "copyAsHtml": "Copiar como HTML",
+    "copyCode": "Copiar código",
     "copied": "Copiado al portapapeles",
-    "unavailable": "El portapapeles no está disponible; usa el menú Editar"
+    "unavailable": "El portapapeles no está disponible; usa el menú Editar",
+    "pasteFailed": "No se pudo leer el portapapeles"
   },
   "editor": {
     "label": "Editor Markdown",
@@ -267,6 +275,7 @@
     }
   },
   "toolbar": {
+    "clipboard": "Portapapeles",
     "file": "Archivo",
     "write": "Escritura",
     "view": "Vista",
@@ -289,6 +298,13 @@
       "fileSave": "Guardar",
       "fileSaveAs": "Guardar como",
       "filePrint": "Imprimir",
+      "editUndo": "Deshacer",
+      "editRedo": "Rehacer",
+      "editCut": "Cortar",
+      "editCopy": "Copiar",
+      "editPaste": "Pegar",
+      "editSelectAll": "Seleccionar todo",
+      "editReplace": "Reemplazar",
       "editFind": "Buscar",
       "helpPreferences": "Abrir preferencias",
       "helpShortcuts": "Abrir ayuda de atajos",

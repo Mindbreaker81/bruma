@@ -38,6 +38,7 @@ import {
   applyFormat as applyFormatToView,
   type FormatAction,
   insertSnippet as insertSnippetToView,
+  pasteText,
 } from './format';
 import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
 import { getCursorPosition, type CursorPosition } from './cursorPosition';
@@ -86,6 +87,10 @@ export type MarkdownEditorHandle = {
   undo: () => boolean;
   redo: () => boolean;
   selectAll: () => void;
+  /** Copy/cut go through `execCommand` so CodeMirror keeps line-level copy. */
+  cut: () => void;
+  copy: () => void;
+  paste: (text: string) => void;
   getSelectedText: () => string;
   hasSelection: () => boolean;
 };
@@ -201,6 +206,23 @@ export const MarkdownEditor = forwardRef<
       const editor = editorRef.current;
       if (!editor) return;
       selectAllCommand(editor);
+    },
+    cut: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      window.document.execCommand('cut');
+    },
+    copy: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      window.document.execCommand('copy');
+    },
+    paste: (text: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      pasteText(editor, text);
     },
     getSelectedText: () => {
       const editor = editorRef.current;

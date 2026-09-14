@@ -9,6 +9,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Added
 
 - Menú nativo «Editar» completo: Deshacer, Rehacer, Cortar, Copiar, Pegar, Seleccionar todo, Copiar documento, Copiar como HTML, Buscar y Reemplazar, con aceleradores y traducción dinámica es/en. En macOS restaura los atajos de portapapeles (⌘C/⌘V/⌘X/⌘A), que dependían de los ítems predefinidos del menú.
+- Botones Cortar/Copiar/Pegar al inicio de la barra de formato, con atajo visible en el tooltip, estado deshabilitado cuando el editor está vacío o el portapapeles no es legible, y foco devuelto al editor tras cada acción.
+- El catálogo de atajos documenta las acciones de edición (deshacer, rehacer, cortar, copiar, pegar, seleccionar todo, reemplazar) y muestra `Ctrl+Y` como alternativa de rehacer en Windows/Linux.
 - Acciones «Copiar documento» y «Copiar como HTML» con confirmación por toast; el HTML saneado llega con formato a editores enriquecidos y como Markdown a editores de texto.
 - Helpers de portapapeles (`src/lib/clipboard.ts`) con degradación a texto plano.
 - «Editar ▸ Reemplazar» abre el panel de búsqueda con el modo reemplazar activo.
@@ -16,7 +18,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Changed
 
 - Deshacer/Rehacer desde el menú nativo se enrutan al historial de CodeMirror cuando el editor tiene el foco, y a `execCommand` en campos nativos (p. ej. el campo de búsqueda).
-- El handle del editor expone `undo`, `redo`, `selectAll`, `getSelectedText` y `hasSelection`.
+- El handle del editor expone `undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, `getSelectedText` y `hasSelection`.
 
 ### Docs
 

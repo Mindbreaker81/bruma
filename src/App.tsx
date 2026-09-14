@@ -1201,6 +1201,7 @@ export default function App() {
               {viewMode !== 'preview' && !focusMode && !showWelcomeState ? (
                 <FormatToolbar
                   editorRef={editorRef}
+                  hasContent={document.content.length > 0}
                   activeFormats={activeFormats}
                   onOpenGuide={() => setIsMarkdownGuideOpen(true)}
                   onOpenShortcuts={() => setIsShortcutsOpen(true)}

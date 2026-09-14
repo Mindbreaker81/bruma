@@ -363,9 +363,9 @@ Seguimiento en YouTrack: proyecto **BRU**.
 - [ ] `D1` — protocolo de reproducción en Windows (confirmar si el teclado falla además de la UI).
 - [~] `F1+F2` — menú Editar nativo completo (Rust) + puente de acciones de edición (**mismo commit**): implementado y en verde en CI local; pendiente verificación manual `V1`–`V9`.
 - [x] `F3` — helpers de portapapeles: `src/lib/clipboard.ts` (read/write texto+HTML con degradación), `pasteText` en `format.ts` con `userEvent: 'input.paste'` y `clipboard.test.ts` (11 tests).
-- [ ] `F4` — botones Cortar/Copiar/Pegar en la barra de formato.
+- [x] `F4` — botones Cortar/Copiar/Pegar al inicio de la barra de formato (`Scissors`/`Copy`/`ClipboardPaste`), con atajo en el tooltip, foco devuelto al editor y estado deshabilitado según contenido/`canReadClipboard()`.
 - [ ] `F5` — menú contextual propio en editor y vista previa.
-- [ ] `F6` — catálogo de atajos, diálogo de ayuda e i18n.
+- [x] `F6` — catálogo de atajos: acciones de edición (undo/redo/cut/copy/paste/select all/replace) con `shortcutWindows` (`Mod-Y` para rehacer fuera de Apple), diálogo de ayuda resolviendo la variante por plataforma e i18n es/en.
 - [~] `F7` — acciones de copia de alto nivel: «Copiar documento» y «Copiar como HTML» implementadas; pendiente el botón de copiar en bloques de código de la preview.
 - [ ] `F8` — tests (unitarios, Rust y E2E `tests/clipboard.spec.ts`).
 - [ ] Matriz de verificación manual `V1`–`V9` en macOS y Windows (Linux si hay entorno).
