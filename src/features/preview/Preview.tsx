@@ -56,6 +56,23 @@ export function Preview({
     return () => window.clearTimeout(timeout);
   }, [sourceForRender]);
 
+  // Copy buttons on code blocks are injected into the rendered DOM (not into
+  // the sanitized HTML string) and handled by delegation in `handleClick`.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.querySelectorAll('pre').forEach((pre) => {
+      if (pre.querySelector('.bruma-copy-code')) return;
+      const button = window.document.createElement('button');
+      button.type = 'button';
+      button.className = 'bruma-copy-code';
+      button.textContent = t('clipboard.copyCode');
+      button.setAttribute('aria-label', t('clipboard.copyCode'));
+      pre.appendChild(button);
+    });
+  }, [html, t]);
+
   useEffect(() => {
     if (!onLocalImageRequest) return;
     let cancelled = false;
@@ -71,8 +88,30 @@ export function Preview({
     };
   }, [documentPath, html, onLocalImageRequest]);
 
+  const notifyCopied = (copied: Promise<boolean>) => {
+    void copied.then((ok) => {
+      if (ok) {
+        toast.success(t('clipboard.copied'));
+      } else {
+        toast.error(t('clipboard.unavailable'));
+      }
+    });
+  };
+
   const handleClick = (event: MouseEvent<HTMLElement>) => {
-    const anchor = (event.target as HTMLElement | null)?.closest('a');
+    const target = event.target as HTMLElement | null;
+    const copyButton = target?.closest('.bruma-copy-code');
+    if (copyButton) {
+      const pre = copyButton.closest('pre');
+      if (!pre) return;
+      // Clone so the button label itself is not part of the copied text.
+      const clone = pre.cloneNode(true) as HTMLElement;
+      clone.querySelector('.bruma-copy-code')?.remove();
+      notifyCopied(writeClipboardText(clone.textContent ?? ''));
+      return;
+    }
+
+    const anchor = target?.closest('a');
     if (!anchor) return;
     const href = anchor.getAttribute('href') ?? '';
     if (!href) return;
@@ -96,16 +135,6 @@ export function Preview({
       );
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
-
-  const notifyCopied = (copied: Promise<boolean>) => {
-    void copied.then((ok) => {
-      if (ok) {
-        toast.success(t('clipboard.copied'));
-      } else {
-        toast.error(t('clipboard.unavailable'));
-      }
-    });
   };
 
   const menu = (

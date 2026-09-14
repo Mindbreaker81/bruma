@@ -13,6 +13,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - El catálogo de atajos documenta las acciones de edición (deshacer, rehacer, cortar, copiar, pegar, seleccionar todo, reemplazar) y muestra `Ctrl+Y` como alternativa de rehacer en Windows/Linux.
 - Menú contextual propio en el editor (cortar, copiar, pegar, seleccionar todo, negrita, cursiva, enlace y copiar como HTML) y en la vista previa (copiar selección, documento completo o HTML renderizado), traducido y con el tema activo; los campos de texto de los diálogos conservan el menú nativo.
 - Acciones «Copiar documento» y «Copiar como HTML» con confirmación por toast; el HTML saneado llega con formato a editores enriquecidos y como Markdown a editores de texto.
+- Botón «Copiar código» en cada bloque de código de la vista previa, visible al pasar el cursor o al enfocarlo con el teclado.
 - Helpers de portapapeles (`src/lib/clipboard.ts`) con degradación a texto plano.
 - «Editar ▸ Reemplazar» abre el panel de búsqueda con el modo reemplazar activo.
 

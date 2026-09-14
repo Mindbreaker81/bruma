@@ -366,7 +366,7 @@ Seguimiento en YouTrack: proyecto **BRU**.
 - [x] `F4` — botones Cortar/Copiar/Pegar al inicio de la barra de formato (`Scissors`/`Copy`/`ClipboardPaste`), con atajo en el tooltip, foco devuelto al editor y estado deshabilitado según contenido/`canReadClipboard()`.
 - [x] `F5` — menú contextual propio (Radix, anclado al puntero): editor con cortar/copiar/pegar/seleccionar todo + negrita/cursiva/enlace + copiar como HTML; preview con copiar selección/documento/HTML renderizado. `onContextMenu` acotado al subárbol, los inputs de diálogos conservan el menú nativo.
 - [x] `F6` — catálogo de atajos: acciones de edición (undo/redo/cut/copy/paste/select all/replace) con `shortcutWindows` (`Mod-Y` para rehacer fuera de Apple), diálogo de ayuda resolviendo la variante por plataforma e i18n es/en.
-- [~] `F7` — acciones de copia de alto nivel: «Copiar documento» y «Copiar como HTML» implementadas; pendiente el botón de copiar en bloques de código de la preview.
+- [x] `F7` — acciones de copia de alto nivel: «Copiar documento», «Copiar como HTML» y botón «Copiar código» sobre cada `<pre>` de la preview (inyectado en el DOM tras el render, con delegación en el `onClick` del contenedor y toast de confirmación).
 - [ ] `F8` — tests (unitarios, Rust y E2E `tests/clipboard.spec.ts`).
 - [ ] Matriz de verificación manual `V1`–`V9` en macOS y Windows (Linux si hay entorno).
 - [ ] `F9` — (backlog, decisión pendiente) pegar imagen del portapapeles.
