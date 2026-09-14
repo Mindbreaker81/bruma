@@ -367,7 +367,7 @@ Seguimiento en YouTrack: proyecto **BRU**.
 - [x] `F5` — menú contextual propio (Radix, anclado al puntero): editor con cortar/copiar/pegar/seleccionar todo + negrita/cursiva/enlace + copiar como HTML; preview con copiar selección/documento/HTML renderizado. `onContextMenu` acotado al subárbol, los inputs de diálogos conservan el menú nativo.
 - [x] `F6` — catálogo de atajos: acciones de edición (undo/redo/cut/copy/paste/select all/replace) con `shortcutWindows` (`Mod-Y` para rehacer fuera de Apple), diálogo de ayuda resolviendo la variante por plataforma e i18n es/en.
 - [x] `F7` — acciones de copia de alto nivel: «Copiar documento», «Copiar como HTML» y botón «Copiar código» sobre cada `<pre>` de la preview (inyectado en el DOM tras el render, con delegación en el `onClick` del contenedor y toast de confirmación).
-- [ ] `F8` — tests (unitarios, Rust y E2E `tests/clipboard.spec.ts`).
+- [x] `F8` — tests: `MarkdownEditor.test.tsx` cubre `selectAll`/`hasSelection`/`getSelectedText`/`paste`/`undo`/`redo`/`cut`/`copy`; `tests/clipboard.spec.ts` (4 E2E: botones accesibles, copiar con permisos, pegar reemplaza selección, menú contextual). Limitación documentada: los E2E corren en Chromium y no validan el menú nativo — la verificación manual `V1`–`V9` sigue siendo obligatoria.
 - [ ] Matriz de verificación manual `V1`–`V9` en macOS y Windows (Linux si hay entorno).
 - [ ] `F9` — (backlog, decisión pendiente) pegar imagen del portapapeles.
 

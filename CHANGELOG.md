@@ -16,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Botón «Copiar código» en cada bloque de código de la vista previa, visible al pasar el cursor o al enfocarlo con el teclado.
 - Helpers de portapapeles (`src/lib/clipboard.ts`) con degradación a texto plano.
 - «Editar ▸ Reemplazar» abre el panel de búsqueda con el modo reemplazar activo.
+- Cobertura del flujo de portapapeles: tests del handle del editor (`undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, selección) y E2E `tests/clipboard.spec.ts` (botones, copiar/pegar con permisos, menú contextual). Los E2E corren en Chromium y no validan los menús nativos.
 
 ### Changed
 
