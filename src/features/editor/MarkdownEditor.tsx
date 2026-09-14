@@ -1,4 +1,11 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  redo,
+  selectAll as selectAllCommand,
+  undo,
+} from '@codemirror/commands';
 import {
   markdown,
   markdownLanguage,
@@ -76,6 +83,11 @@ export type MarkdownEditorHandle = {
   getScrollDOM: () => HTMLElement | null;
   applyFormat: (action: FormatAction) => void;
   insertSnippet: (text: string) => void;
+  undo: () => boolean;
+  redo: () => boolean;
+  selectAll: () => void;
+  getSelectedText: () => string;
+  hasSelection: () => boolean;
 };
 
 function buildSearchDecorations(
@@ -176,6 +188,29 @@ export const MarkdownEditor = forwardRef<
       const editor = editorRef.current;
       if (!editor) return;
       insertSnippetToView(editor, text);
+    },
+    undo: () => {
+      const editor = editorRef.current;
+      return editor ? undo(editor) : false;
+    },
+    redo: () => {
+      const editor = editorRef.current;
+      return editor ? redo(editor) : false;
+    },
+    selectAll: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      selectAllCommand(editor);
+    },
+    getSelectedText: () => {
+      const editor = editorRef.current;
+      if (!editor) return '';
+      const { from, to } = editor.state.selection.main;
+      return editor.state.sliceDoc(from, to);
+    },
+    hasSelection: () => {
+      const editor = editorRef.current;
+      return editor ? !editor.state.selection.main.empty : false;
     },
     scrollToLineTop: (line: number) => {
       const editor = editorRef.current;

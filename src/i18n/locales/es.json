@@ -29,6 +29,10 @@
     "save": "Guardar",
     "title": "Cambios sin guardar"
   },
+  "clipboard": {
+    "copied": "Copiado al portapapeles",
+    "unavailable": "El portapapeles no está disponible; usa el menú Editar"
+  },
   "editor": {
     "label": "Editor Markdown",
     "placeholder": "Empieza a escribir Markdown...",
@@ -125,6 +129,15 @@
     "saveAs": "Guardar como…",
     "print": "Imprimir…",
     "edit": "Editar",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "selectAll": "Seleccionar todo",
+    "replace": "Reemplazar",
+    "copyDocument": "Copiar documento",
+    "copyAsHtml": "Copiar como HTML",
     "find": "Buscar",
     "view": "Ver",
     "toggleView": "Cambiar vista",

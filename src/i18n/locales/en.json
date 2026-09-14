@@ -29,6 +29,10 @@
     "save": "Save",
     "title": "Unsaved changes"
   },
+  "clipboard": {
+    "copied": "Copied to clipboard",
+    "unavailable": "Clipboard unavailable; use the Edit menu"
+  },
   "editor": {
     "label": "Markdown editor",
     "placeholder": "Start writing Markdown...",
@@ -125,6 +129,15 @@
     "saveAs": "Save As…",
     "print": "Print…",
     "edit": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all",
+    "replace": "Replace",
+    "copyDocument": "Copy document",
+    "copyAsHtml": "Copy as HTML",
     "find": "Find",
     "view": "View",
     "toggleView": "Change View",

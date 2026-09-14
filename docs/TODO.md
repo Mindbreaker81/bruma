@@ -1,7 +1,7 @@
 # TODO — Bruma
 
-- **Estado:** `v1.3.0` (bundle optimization + versionado sincronizado).
-- **Último release:** `v1.3.0` (2026-05-01).
+- **Estado:** `v1.8.0` (plan de mejoras de la auditoría 2026-07 completado; updater firmado y clave rotada).
+- **Último release:** `v1.8.0` (2026-07-26).
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
@@ -25,7 +25,7 @@
 
 ### Pendientes (no bloqueantes para arrancar)
 
-- [ ] Decidir librería de primitivas accesibles (Radix UI / Headless UI / propios) cuando aparezca el primer componente que lo requiera.
+- [x] Decidir librería de primitivas accesibles: **Radix UI** (adoptada en v1.4.0 para diálogos, menús y controles de preferencias).
 
 ### Andamiaje
 
@@ -57,7 +57,7 @@
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
 - [x] Ejecutar `cargo test` en `src-tauri` (validado posteriormente en Ubuntu 24.04 con dependencias nativas instaladas).
-- [~] Ejecutar `pnpm tauri build`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
+- [x] Ejecutar `pnpm tauri build`: verificado en Linux local 2026-09-14 — genera `Bruma_1.8.0_amd64.deb`; el paso de firma del updater requiere `TAURI_SIGNING_PRIVATE_KEY` (solo en CI).
 
 ---
 
@@ -80,7 +80,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14 con las dependencias nativas ya instaladas).
 
 **Cierre del sprint:** la app abre, muestra layout, tema funciona, hay un documento vacío editable (sin persistencia aún).
 
@@ -97,7 +97,7 @@
 - [x] Drag & drop de archivos `.md` / `.markdown` sobre la ventana.
 - [x] Mostrar nombre de archivo en barra inferior.
 - [x] Manejo de errores I/O con toast no bloqueante.
-- [ ] Tests unit del wrapper de markdown-it (placeholder).
+- [x] Tests unit del wrapper de markdown-it (`src/lib/markdown.test.ts`, incluye sanitización).
 - [~] Test E2E: abrir archivo de fixture y verificar contenido en editor. Smoke actual cubre edición CodeMirror en Chromium; apertura nativa queda pendiente para harness Tauri.
 
 ### Validación Sprint 2
@@ -107,7 +107,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencia nativa ausente `glib-2.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14 con las dependencias nativas ya instaladas).
 
 **Cierre del sprint:** se puede abrir, editar y guardar un `.md` end-to-end en macOS y Windows.
 
@@ -132,7 +132,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14 con las dependencias nativas ya instaladas).
 
 **Cierre del sprint:** preview en tiempo real funcional y seguro, con tres modos de vista.
 
@@ -156,7 +156,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14 con las dependencias nativas ya instaladas).
 
 **Cierre del sprint:** búsqueda P0 completa.
 
@@ -180,7 +180,7 @@
 - [x] Ejecutar `pnpm test`.
 - [x] Ejecutar `pnpm build`.
 - [x] Ejecutar `pnpm test:e2e`.
-- [~] Ejecutar `cargo check` en `src-tauri`: bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc`, `gobject-2.0.pc`, `gio-2.0.pc` y `gdk-3.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14 con las dependencias nativas ya instaladas).
 
 **Cierre del sprint:** la app no pierde datos en escenarios normales y recuerda preferencias.
 
@@ -217,7 +217,7 @@
 - [x] Metadata de la app (nombre, identificador, versión, descripción) en `tauri.conf.json`.
 - [x] Version inicial sincronizada en `package.json`, `src-tauri/Cargo.toml`, `Cargo.lock` y `tauri.conf.json`.
 - [x] CSP estricta verificada en configuracion Tauri.
-- [~] Builds de release sin firmar para QA interno (macOS + Windows): workflow listo; artefactos pendientes al crear/pushear tag `v1.0.0`.
+- [x] Builds de release para QA interno (macOS + Windows + Linux): superado — desde v1.8.0 los artifacts del updater se publican firmados.
 - [x] Plan de firma macOS: cuenta Apple Developer, Developer ID, notarización.
 - [x] Plan de firma Windows: certificado Authenticode (deseable).
 - [x] Workflow `release.yml` con tag `v1.0.0`.
@@ -236,8 +236,8 @@
 - [x] Ejecutar `pnpm test:e2e`.
 - [x] Ejecutar `cargo fmt --check` en `src-tauri`.
 - [x] Ejecutar `cargo test` en `src-tauri` (validado en Ubuntu 24.04 con `libglib2.0-dev`, `libgtk-3-dev`, `libsoup-3.0-dev` y `libwebkit2gtk-4.1-dev`).
-- [~] Ejecutar `cargo check` en `src-tauri`: sigue dependiendo de un entorno Linux con librerias nativas GTK/WebKit disponibles.
-- [~] Ejecutar `pnpm tauri build`: frontend compila; bundle Tauri bloqueado en Linux local por dependencias nativas ausentes `glib-2.0.pc` y `gobject-2.0.pc`.
+- [x] Ejecutar `cargo check` en `src-tauri` (verificado en Linux local 2026-09-14).
+- [x] Ejecutar `pnpm tauri build`: las dependencias nativas GTK/WebKit ya están instaladas en el entorno Linux local (verificado 2026-09-14).
 
 **Cierre del sprint:** release v1.0.0 disponible.
 
@@ -332,14 +332,14 @@
 
 ## Backlog — V2.0 (Linux)
 
-- [ ] CI con job Linux desde V1.x para detectar regresiones (preventivo, sin entregar binarios).
-- [ ] Empaquetado AppImage, `.deb` (Debian/Ubuntu), `.rpm` (Fedora).
+- [~] CI con job Linux: el job `frontend` corre en `ubuntu-latest` (lint, tests, e2e, build); falta añadir Linux a la matriz `tauri` de `ci.yml` para `cargo test`/`clippy`.
+- [x] Empaquetado AppImage, `.deb` (Debian/Ubuntu), `.rpm` (Fedora): publicados firmados desde v1.7.x.
 - [ ] Investigación Flatpak.
 - [ ] Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente.
-- [ ] Documentación específica de instalación por distro.
+- [x] Documentación específica de instalación por distro: sección Linux en `README.md` (AppImage + `libfuse2`, `.deb`, `.rpm`).
 - [ ] Auditar fuentes / assets con fallbacks (Inter, monospace).
 
-**Nota:** el bloqueo local actual (`glib-2.0.pc`, `gtk-3`, `webkit2gtk-4.1`) es ambiental, no de código.
+**Nota:** el antiguo bloqueo local (`glib-2.0.pc`, `gtk-3`, `webkit2gtk-4.1`) está resuelto: las dependencias nativas están instaladas y `cargo check` compila (2026-09-14).
 
 ---
 
@@ -351,15 +351,34 @@
 - [ ] Auditoría de seguridad de dependencias (`npm audit`, `cargo audit`).
 - [x] Revisión de bundle size en release v1.3.0.
 - [ ] Revisión de bundle size en cada release futura.
-- [ ] Verificar `cargo test` en CI macOS/Windows (tests de `image_mime_for_path`, `ensure_extension`, `read_image_as_data_url`, `accepts_new_markdown_paths_inside_home_on_write`).
+- [x] Verificar `cargo test` en CI macOS/Windows (la matriz `tauri` de `ci.yml` ejecuta `cargo test`, `fmt --check` y `clippy -D warnings`).
 
 ---
+
+## En curso — Portapapeles y menú Editar
+
+Plan detallado: `PLAN-PORTAPAPELES-Y-EDICION.md` (rama `claude/markdown-editor-clipboard-w9ddrq`).
+Seguimiento en YouTrack: proyecto **BRU**.
+
+- [ ] `D1` — protocolo de reproducción en Windows (confirmar si el teclado falla además de la UI).
+- [~] `F1+F2` — menú Editar nativo completo (Rust) + puente de acciones de edición (**mismo commit**): implementado y en verde en CI local; pendiente verificación manual `V1`–`V9`.
+- [~] `F3` — helpers de portapapeles: `src/lib/clipboard.ts` creado (read/write/text+HTML con degradación); pendiente `pasteText` en `format.ts` y `clipboard.test.ts`.
+- [ ] `F4` — botones Cortar/Copiar/Pegar en la barra de formato.
+- [ ] `F5` — menú contextual propio en editor y vista previa.
+- [ ] `F6` — catálogo de atajos, diálogo de ayuda e i18n.
+- [~] `F7` — acciones de copia de alto nivel: «Copiar documento» y «Copiar como HTML» implementadas; pendiente el botón de copiar en bloques de código de la preview.
+- [ ] `F8` — tests (unitarios, Rust y E2E `tests/clipboard.spec.ts`).
+- [ ] Matriz de verificación manual `V1`–`V9` en macOS y Windows (Linux si hay entorno).
+- [ ] `F9` — (backlog, decisión pendiente) pegar imagen del portapapeles.
 
 ## Siguiente orden sugerido
 
 Pendientes:
+- Implementación del plan de portapapeles y menú Editar (F1–F8, ver sección anterior)
 - Validación manual en macOS y Windows
-- QA de artifacts publicados por tag `vX.Y.Z`
+- QA de artifacts publicados por tag `vX.Y.Z` y gate operativo del updater (`PLAN-MEJORAS.md` F1.7)
+- Añadir Linux a la matriz `tauri` de CI
+- Investigación Flatpak y pruebas manuales por distro
 - Seguimiento de tamaño de bundle en cada release
 
 ---

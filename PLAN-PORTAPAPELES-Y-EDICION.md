@@ -465,7 +465,7 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 | ID   | Comprobación                                               | macOS | Windows | Linux X11 | Linux Wayland |
 | ---- | ---------------------------------------------------------- | ----- | ------- | --------- | ------------- |
 | `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ☐     | ☐       | ☐         | ☐             |
-| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ☐     | ☐       | ☐         | ⚠ ver 1.3    |
+| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ☐     | ☐       | ☐         | ⚠ ver 1.3     |
 | `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ☐     | ☐       | ☐         | ☐             |
 | `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ☐     | ☐       | ☐         | ☐             |
 | `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ☐     | ☐       | ☐         | ☐             |

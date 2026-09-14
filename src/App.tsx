@@ -13,6 +13,10 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import type { MarkdownEditorHandle } from './features/editor/MarkdownEditor';
+import {
+  isEditorFocused,
+  isNativeInputFocused,
+} from './features/editor/editActions';
 import type { FormatCommandId } from './features/editor/formatCommands';
 import {
   AlertDialog,
@@ -58,6 +62,7 @@ import { useUpdateFlow } from './hooks/useUpdateFlow';
 import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession } from './lib/session';
+import { writeClipboardHtml, writeClipboardText } from './lib/clipboard';
 import { stripFrontmatter } from './lib/frontmatter';
 import {
   findSearchMatches,
@@ -151,11 +156,16 @@ type MenuHandlers = {
   cycleViewMode: () => void;
   handleNewDocument: () => void;
   handleOpenSearch: () => void;
+  handleOpenReplace: () => void;
   handleOpenWithConfirmation: () => void;
   handlePrint: () => void;
   handleCheckUpdates: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
+  handleUndo: () => void;
+  handleRedo: () => void;
+  handleCopyDocument: () => void;
+  handleCopyAsHtml: () => void;
   openAbout: () => void;
   setLanguage: (language: 'es' | 'en') => void;
   setViewMode: (nextViewMode: ViewMode) => void;
@@ -305,6 +315,7 @@ export default function App() {
     setQuery: setSearchQuery,
     replaceQuery,
     replaceMode,
+    setReplaceMode,
     setReplaceQuery,
     toggleReplaceMode,
   } = useSearchStore(
@@ -315,6 +326,7 @@ export default function App() {
       setQuery: state.setQuery,
       replaceQuery: state.replaceQuery,
       replaceMode: state.replaceMode,
+      setReplaceMode: state.setReplaceMode,
       setReplaceQuery: state.setReplaceQuery,
       toggleReplaceMode: state.toggleReplaceMode,
     }))
@@ -394,11 +406,16 @@ export default function App() {
     cycleViewMode: () => {},
     handleNewDocument: () => {},
     handleOpenSearch: () => {},
+    handleOpenReplace: () => {},
     handleOpenWithConfirmation: () => {},
     handlePrint: () => {},
     handleCheckUpdates: () => {},
     handleSave: () => Promise.resolve(false),
     handleSaveAs: () => Promise.resolve(false),
+    handleUndo: () => {},
+    handleRedo: () => {},
+    handleCopyDocument: () => {},
+    handleCopyAsHtml: () => {},
     openAbout: () => {},
     setLanguage: () => {},
     setViewMode: () => {},
@@ -603,6 +620,66 @@ export default function App() {
 
     openSearch();
   }, [openSearch, setViewMode, viewMode]);
+
+  const handleOpenReplace = useCallback(() => {
+    if (viewMode === 'preview') {
+      setViewMode('split');
+    }
+
+    openSearch();
+    setReplaceMode(true);
+  }, [openSearch, setReplaceMode, setViewMode, viewMode]);
+
+  const handleUndo = useCallback(() => {
+    if (isEditorFocused()) {
+      editorRef.current?.undo();
+      return;
+    }
+
+    if (isNativeInputFocused()) {
+      window.document.execCommand('undo');
+    }
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    if (isEditorFocused()) {
+      editorRef.current?.redo();
+      return;
+    }
+
+    if (isNativeInputFocused()) {
+      window.document.execCommand('redo');
+    }
+  }, []);
+
+  const handleCopyDocument = useCallback(() => {
+    void writeClipboardText(document.content).then((copied) => {
+      if (copied) {
+        toast.success(t('clipboard.copied'));
+      } else {
+        showError(t('clipboard.unavailable'));
+      }
+    });
+  }, [document.content, showError, t]);
+
+  const handleCopyAsHtml = useCallback(() => {
+    const source = showFrontmatter
+      ? document.content
+      : stripFrontmatter(document.content);
+
+    void import('./lib/markdown').then(async ({ renderSafeMarkdown }) => {
+      const copied = await writeClipboardHtml(
+        renderSafeMarkdown(source),
+        source
+      );
+
+      if (copied) {
+        toast.success(t('clipboard.copied'));
+      } else {
+        showError(t('clipboard.unavailable'));
+      }
+    });
+  }, [document.content, showError, showFrontmatter, t]);
 
   const handleCloseSearch = useCallback(() => {
     closeSearch();
@@ -849,6 +926,15 @@ export default function App() {
       saveAs: menuT('menu.saveAs'),
       print: menuT('menu.print'),
       edit: menuT('menu.edit'),
+      undo: menuT('menu.undo'),
+      redo: menuT('menu.redo'),
+      cut: menuT('menu.cut'),
+      copy: menuT('menu.copy'),
+      paste: menuT('menu.paste'),
+      selectAll: menuT('menu.selectAll'),
+      replace: menuT('menu.replace'),
+      copyAsHtml: menuT('menu.copyAsHtml'),
+      copyDocument: menuT('menu.copyDocument'),
       find: menuT('menu.find'),
       view: menuT('menu.view'),
       toggleView: menuT('menu.toggleView'),
@@ -888,11 +974,16 @@ export default function App() {
       cycleViewMode,
       handleNewDocument,
       handleOpenSearch,
+      handleOpenReplace,
       handleOpenWithConfirmation,
       handlePrint,
       handleCheckUpdates: () => handleCheckUpdates(true),
       handleSave,
       handleSaveAs,
+      handleUndo,
+      handleRedo,
+      handleCopyDocument,
+      handleCopyAsHtml,
       openAbout: () => setIsAboutOpen(true),
       setLanguage: (language) => setLanguage(language),
       setViewMode: (nextViewMode) => setViewMode(nextViewMode),
@@ -902,11 +993,16 @@ export default function App() {
     cycleViewMode,
     handleNewDocument,
     handleOpenSearch,
+    handleOpenReplace,
     handleOpenWithConfirmation,
     handlePrint,
     handleCheckUpdates,
     handleSave,
     handleSaveAs,
+    handleUndo,
+    handleRedo,
+    handleCopyDocument,
+    handleCopyAsHtml,
     setLanguage,
     setViewMode,
   ]);

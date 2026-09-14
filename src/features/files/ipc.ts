@@ -24,6 +24,15 @@ export type MenuLabels = {
   saveAs: string;
   print: string;
   edit: string;
+  undo: string;
+  redo: string;
+  cut: string;
+  copy: string;
+  paste: string;
+  selectAll: string;
+  replace: string;
+  copyAsHtml: string;
+  copyDocument: string;
   find: string;
   view: string;
   toggleView: string;

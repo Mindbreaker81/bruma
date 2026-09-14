@@ -6,6 +6,24 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+
+- Menú nativo «Editar» completo: Deshacer, Rehacer, Cortar, Copiar, Pegar, Seleccionar todo, Copiar documento, Copiar como HTML, Buscar y Reemplazar, con aceleradores y traducción dinámica es/en. En macOS restaura los atajos de portapapeles (⌘C/⌘V/⌘X/⌘A), que dependían de los ítems predefinidos del menú.
+- Acciones «Copiar documento» y «Copiar como HTML» con confirmación por toast; el HTML saneado llega con formato a editores enriquecidos y como Markdown a editores de texto.
+- Helpers de portapapeles (`src/lib/clipboard.ts`) con degradación a texto plano.
+- «Editar ▸ Reemplazar» abre el panel de búsqueda con el modo reemplazar activo.
+
+### Changed
+
+- Deshacer/Rehacer desde el menú nativo se enrutan al historial de CodeMirror cuando el editor tiene el foco, y a `execCommand` en campos nativos (p. ej. el campo de búsqueda).
+- El handle del editor expone `undo`, `redo`, `selectAll`, `getSelectedText` y `hasSelection`.
+
+### Docs
+
+- Plan de implementación de portapapeles y menú Editar (`PLAN-PORTAPAPELES-Y-EDICION.md`, fases F1–F9).
+- `docs/TODO.md` actualizado al estado real de v1.8.0: bloqueo de dependencias nativas en Linux resuelto, bundles `.deb`/`.rpm`/AppImage publicados y decisión de Radix UI cerrada.
+- Seguimiento del proyecto en YouTrack (proyecto `BRU`): fases del plan de portapapeles y tareas pendientes registradas.
+
 ## [1.8.0] - 2026-07-26
 
 ### Added
