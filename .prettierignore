@@ -3,4 +3,6 @@ coverage
 docs
 node_modules
 src-tauri/target
+build-dir
+.flatpak-builder
 pnpm-lock.yaml

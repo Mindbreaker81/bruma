@@ -24,7 +24,13 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'prettier',
   ],
-  ignorePatterns: ['dist', 'coverage', 'src-tauri/target'],
+  ignorePatterns: [
+    'dist',
+    'coverage',
+    'src-tauri/target',
+    'build-dir',
+    '.flatpak-builder',
+  ],
   rules: {
     'react-refresh/only-export-components': [
       'warn',

@@ -221,7 +221,8 @@
   "autosave": {
     "toggle": "Autoguardado",
     "savingNow": "Guardando...",
-    "lastSavedAt": "Guardado a las {{time}}"
+    "lastSavedAt": "Guardado a las {{time}}",
+    "seconds": "s"
   },
   "session": {
     "restoreTitle": "Recuperar sesión",

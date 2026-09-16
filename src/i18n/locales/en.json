@@ -221,7 +221,8 @@
   "autosave": {
     "toggle": "Autosave",
     "savingNow": "Saving...",
-    "lastSavedAt": "Saved at {{time}}"
+    "lastSavedAt": "Saved at {{time}}",
+    "seconds": "s"
   },
   "session": {
     "restoreTitle": "Restore session",

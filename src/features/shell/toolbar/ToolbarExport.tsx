@@ -34,7 +34,7 @@ export function ToolbarExport({
             variant="ghost"
             size="icon"
             className="size-9 rounded-full"
-            aria-label={t('export.title')}
+            aria-label={t('export.open')}
           >
             <Download className="size-4" aria-hidden />
           </Button>

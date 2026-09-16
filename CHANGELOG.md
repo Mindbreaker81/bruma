@@ -29,6 +29,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Fixed
 
 - La preferencia Tipografía (Sans/Mono) del editor no tenía efecto: `.bruma-editor .cm-editor` fijaba la familia monoespaciada y pisaba el estilo del contenedor. Ahora la opción Sans aplica Inter de verdad, el default pasa a `mono` (el aspecto que ya se veía) y las configuraciones anteriores a `CONFIG_VERSION` 10 con `sans` migran a `mono` para no cambiar lo que ven los usuarios existentes.
+- Claves i18n inexistentes que se renderizaban como texto crudo: `export.title` (aria-label del botón Exportar, detectado vía el árbol AT-SPI) y las etiquetas del diálogo Preferencias (`autosave.delay`, `autosave.seconds`, `preferences.fontFamilySans/Mono`, `preferences.wordWrap`), ahora mapeadas a las claves reales (`export.open`, `preferences.autosaveDelay`, `preferences.fontSans/fontMono`, `preferences.wrapLines`, nueva `autosave.seconds`).
 
 ### CI
 
