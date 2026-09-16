@@ -462,17 +462,32 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 
 ### 4.2 Matriz de verificación manual (tras implementar)
 
-| ID   | Comprobación                                               | macOS | Windows | Linux X11 | Linux Wayland |
-| ---- | ---------------------------------------------------------- | ----- | ------- | --------- | ------------- |
-| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ☐     | ☐       | ☐         | ☐             |
-| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ☐     | ☐       | ☐         | ⚠ ver 1.3     |
-| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ☐     | ☐       | ☐         | ☐             |
-| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ☐     | ☐       | ☐         | ☐             |
-| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ☐     | ☐       | ☐         | ☐             |
-| `V6` | Copiar desde la vista previa (selección de texto)          | ☐     | ☐       | ☐         | ☐             |
-| `V7` | Menú contextual propio en editor y preview                 | ☐     | ☐       | ☐         | ☐             |
-| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ☐     | ☐       | ☐         | ☐             |
-| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ☐     | ☐       | ☐         | ☐             |
+| ID   | Comprobación                                               | macOS | Windows | Linux X11  | Linux Wayland |
+| ---- | ---------------------------------------------------------- | ----- | ------- | ---------- | ------------- |
+| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ☐     | ☐       | ✅         | ☐             |
+| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ☐     | ☐       | ⚠ ver nota | ⚠ ver 1.3     |
+| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ☐     | ☐       | ⚠ ver nota | ☐             |
+| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ☐     | ☐       | ✅         | ☐             |
+| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ☐     | ☐       | ✅         | ☐             |
+| `V6` | Copiar desde la vista previa (selección de texto)          | ☐     | ☐       | ⚠ ver nota | ☐             |
+| `V7` | Menú contextual propio en editor y preview                 | ☐     | ☐       | ✅         | ☐             |
+| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ☐     | ☐       | ✅         | ☐             |
+| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ☐     | ☐       | ✅         | ☐             |
+
+Resultados de la columna **Linux X11** obtenidos con el harness
+`tests-tauri/v-matrix-linux.sh` (Xvfb + AT-SPI + `xdotool`/`xclip`, portapapeles
+X11 real, sin window manager):
+
+- `V2`: los ítems Copiar/Pegar del menú nativo no llegaron al portapapeles al
+  dispararlos tras abrir el menú (posible pérdida de foco del webview al
+  mostrarse el popup GTK; `V9`, que no depende de selección ni foco, sí
+  funcionó). Verificar en sesión de escritorio real.
+- `V3`: el botón Pegar no apareció en el árbol de accesibilidad — coherente con
+  `R4` (`canReadClipboard()` devuelve false en este entorno headless y el botón
+  se autodeshabilita). Verificar en sesión real antes de decidir el escape
+  hatch.
+- `V6`: el contenido de la vista previa no se localizó en el árbol AT-SPI;
+  verificar selección manual en sesión real.
 
 `V3` es el punto de decisión del escape hatch de la sección 2.1: si falla en alguna plataforma, documentarlo y proponer el plugin aparte.
 
