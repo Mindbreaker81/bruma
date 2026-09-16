@@ -108,3 +108,35 @@ describe('MarkdownEditor handle', () => {
     );
   });
 });
+
+describe('MarkdownEditor fontFamily', () => {
+  function renderWithFamily(fontFamily: string) {
+    return render(
+      <MarkdownEditor
+        value="# Hola"
+        onChange={() => {}}
+        ariaLabel="editor"
+        placeholder="escribe..."
+        fontFamily={fontFamily}
+      />
+    );
+  }
+
+  it('applies the sans stack on the wrapper when fontFamily is sans', () => {
+    const { container } = renderWithFamily('sans');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toContain('Inter');
+  });
+
+  it('applies the serif stack when fontFamily is serif', () => {
+    const { container } = renderWithFamily('serif');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toContain('ui-serif');
+  });
+
+  it('leaves the wrapper font unset for mono (CSS default)', () => {
+    const { container } = renderWithFamily('mono');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toBe('');
+  });
+});

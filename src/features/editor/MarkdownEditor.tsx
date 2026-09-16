@@ -139,7 +139,7 @@ export const MarkdownEditor = forwardRef<
     searchMatches = [],
     tabSize = 4,
     lineWrapping = true,
-    fontFamily = 'sans',
+    fontFamily = 'mono',
     showGutter = false,
     onActiveFormatsChange,
     onSelectionChange,
@@ -480,10 +480,10 @@ export const MarkdownEditor = forwardRef<
   const fontStyle =
     fontFamily === 'serif'
       ? { fontFamily: 'ui-serif, Georgia, Cambria, serif' }
-      : fontFamily === 'mono'
+      : fontFamily === 'sans'
         ? {
             fontFamily:
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              "'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
           }
         : undefined;
 

@@ -267,7 +267,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set(() => ({ showFrontmatter: applyShowFrontmatter(show) })),
   autosaveEnabled: initialConfig.autosaveEnabled ?? true,
   autosaveDelayMs: initialConfig.autosaveDelayMs ?? 2000,
-  editorFontFamily: initialConfig.editorFontFamily ?? 'sans',
+  editorFontFamily: initialConfig.editorFontFamily ?? 'mono',
   editorTabSize: initialConfig.editorTabSize ?? 4,
   editorShowGutter: initialConfig.editorShowGutter ?? false,
   editorWrap: initialConfig.editorWrap ?? true,

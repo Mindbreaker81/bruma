@@ -25,6 +25,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - El handle del editor expone `undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, `getSelectedText` y `hasSelection`.
 - Accesibilidad: el grupo de portapapeles de la barra expone `role="group"`, los campos de búsqueda/reemplazo tienen `aria-label`, y el menú contextual devuelve el foco al editor o a la preview al cerrarse.
 
+### Fixed
+
+- La preferencia Tipografía (Sans/Mono) del editor no tenía efecto: `.bruma-editor .cm-editor` fijaba la familia monoespaciada y pisaba el estilo del contenedor. Ahora la opción Sans aplica Inter de verdad, el default pasa a `mono` (el aspecto que ya se veía) y las configuraciones anteriores a `CONFIG_VERSION` 10 con `sans` migran a `mono` para no cambiar lo que ven los usuarios existentes.
+
 ### CI
 
 - La matriz `tauri` incluye `ubuntu-latest`: instala las dependencias nativas, corre los checks de Rust y publica los bundles `.deb`, `.rpm` y `.AppImage` (con firmas del updater) en el draft release.
