@@ -1,7 +1,8 @@
 # Investigación Flatpak (BRU-14)
 
-Estado: **manifest de prototipo listo** (2026-09-16). Objetivo: valorar publicar
-Bruma en Flathub además de los formatos actuales (`.deb`, `.rpm`, AppImage).
+Estado: **prototipo compilado e instalado** (2026-09-16). Objetivo: valorar
+publicar Bruma en Flathub además de los formatos actuales (`.deb`, `.rpm`,
+AppImage).
 
 El manifest de prototipo vive en `flatpak/`:
 
@@ -14,12 +15,23 @@ El manifest de prototipo vive en `flatpak/`:
 - `com.mindbreaker81.bruma.metainfo.xml` — metainfo AppStream mínimo; faltan
   capturas (`<screenshots>`) antes de enviar a Flathub.
 
-Pendiente de ejecutar (no hay `flatpak-builder` en el entorno actual):
+Verificado en el entorno local (Ubuntu 24.04):
 
 ```bash
 flatpak-builder --force-clean --user --install-deps-from=flathub \
   --install build-dir flatpak/com.mindbreaker81.bruma.yml
 ```
+
+- El módulo compila dentro del sandbox: `pnpm install`, `vite build` y
+  `cargo build --release` contra el WebKitGTK del runtime GNOME (7 min de Rust).
+- `appstreamcli compose` genera los metadatos. Requisito del host:
+  `librsvg2-common` (sin el cargador SVG de gdk-pixbuf el compose falla con
+  `file-read-error` al procesar `icon.svg`).
+- La app se instala (`flatpak list --user`) y arranca con
+  `flatpak run com.mindbreaker81.bruma` bajo `xvfb-run` (headless): solo
+  warnings benignos de AT-SPI/DRI3.
+- Pendiente de verificar: flujo de abrir/guardar vía portal de documentos,
+  menú nativo dentro del sandbox y comportamiento del updater.
 
 ## Contexto
 
@@ -88,9 +100,9 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
 
 ## Siguientes pasos propuestos
 
-1. [~] Prototipo local: manifest creado en `flatpak/` (2026-09-16); falta
-   ejecutar `flatpak-builder` y comprobar que la app arranca y que
-   abrir/guardar funciona vía portal.
+1. [~] Prototipo local: manifest en `flatpak/` compilado e instalado con
+   `flatpak-builder` (2026-09-16); la app arranca en el sandbox. Falta
+   comprobar abrir/guardar vía portal y el menú nativo.
 2. Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente (instalando
    el `.flatpak` resultante).
 3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de

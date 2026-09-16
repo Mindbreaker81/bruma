@@ -43,18 +43,22 @@ modules:
   - name: bruma
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/node20/bin:/usr/lib/sdk/rust-stable/bin
+      append-path: /usr/lib/sdk/node20/bin:/usr/lib/sdk/rust-stable/bin:/run/build/bruma/pnpm-home/node_modules/.bin
       env:
         CARGO_HOME: /run/build/bruma/cargo-home
         XDG_CACHE_HOME: /run/build/bruma/cache
-        # En el sandbox de Flatpak no hay D-Bus de sesión ni updater: compila
-        # igual que el build de escritorio; la integración la ajustan los
-        # finish-args y el .desktop.
+        # scripts/tauri.mjs redirige CARGO_TARGET_DIR a os.tmpdir(); se fija al
+        # target del módulo para que el install encuentre el binario.
+        CARGO_TARGET_DIR: /run/build/bruma/src-tauri/target
+        # El script prepare de husky no tiene sentido en el build.
+        HUSKY: '0'
       build-args:
         # Prototipo local: red disponible durante el build para pnpm/cargo.
         - --share=network
     build-commands:
-      - corepack enable && corepack prepare pnpm@9 --activate
+      # /usr es read-only en el sandbox: pnpm se instala en el builddir
+      # (npm --prefix) en lugar de usar `corepack enable`.
+      - npm install --prefix /run/build/bruma/pnpm-home pnpm@9
       - pnpm install --frozen-lockfile
       - pnpm tauri build --no-bundle
       - install -Dm755 src-tauri/target/release/bruma /app/bin/bruma
