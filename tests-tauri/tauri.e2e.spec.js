@@ -35,13 +35,26 @@ let exit = false;
 before(async function () {
   this.timeout(180000);
 
-  // Build debug binary (no bundling) for tauri-driver.
-  spawnSync('pnpm', ['tauri', 'build', '--debug', '--no-bundle'], {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-    env: { ...process.env, VITE_E2E: '1' },
-  });
+  // Build debug binary (no bundling) for tauri-driver. The `pnpm tauri` wrapper
+  // redirects CARGO_TARGET_DIR to the temp dir; force it back to src-tauri/target
+  // so getApplicationPath() finds the binary.
+  const build = spawnSync(
+    'pnpm',
+    ['tauri', 'build', '--debug', '--no-bundle'],
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+      env: {
+        ...process.env,
+        VITE_E2E: '1',
+        CARGO_TARGET_DIR: path.join(repoRoot, 'src-tauri', 'target'),
+      },
+    }
+  );
+  if (build.status !== 0) {
+    throw new Error(`tauri build failed with status ${build.status}`);
+  }
 
   const tauriDriverPath = getTauriDriverPath();
   tauriDriver = spawn(tauriDriverPath, [], {

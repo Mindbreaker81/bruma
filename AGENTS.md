@@ -11,7 +11,7 @@ Idioma del proyecto y de los commits: **español**.
 > YouTrack (proyecto **BRU**, vía MCP `youtrack`; base de conocimiento en los
 > artículos `BRU-A-1` a `BRU-A-6`). Lo pendiente: validación manual V1–V9/D1
 > en Windows/macOS (BRU-1, BRU-9), decisión de producto para F9 (BRU-10) y las
-> tareas BRU-11/12/14/15/16. Las fases F1–F8 del plan de portapapeles ya están
+> tareas BRU-11/12/14/15. Las fases F1–F8 del plan de portapapeles ya están
 > implementadas y en `Done`.
 
 ## Comandos de validación
@@ -23,6 +23,8 @@ pnpm lint
 pnpm format:check
 pnpm test
 pnpm test:e2e            # requiere: pnpm exec playwright install chromium
+pnpm test:e2e:tauri      # harness nativo (mocha + tauri-driver); requiere
+                         # WebKitWebDriver y tauri-driver en PATH (~/.cargo/bin)
 pnpm build
 cargo test --manifest-path src-tauri/Cargo.toml
 cargo fmt --check --manifest-path src-tauri/Cargo.toml
