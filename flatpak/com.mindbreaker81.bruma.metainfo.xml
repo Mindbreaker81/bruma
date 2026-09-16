@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.mindbreaker81.bruma</id>
+  <name>Bruma</name>
+  <summary>Editor Markdown de escritorio: ligero, local y simple</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer>
+    <name>Mindbreaker81</name>
+  </developer>
+  <description>
+    <p>
+      Bruma es un editor Markdown de escritorio construido con Tauri 2:
+      ligero, local y simple. Edición con vista previa en tiempo real,
+      búsqueda, pestañas, exportación a HTML/PDF e interfaz bilingüe
+      (español e inglés).
+    </p>
+  </description>
+  <launchable type="desktop-id">com.mindbreaker81.bruma.desktop</launchable>
+  <url type="homepage">https://github.com/Mindbreaker81/bruma</url>
+  <url type="bugtracker">https://github.com/Mindbreaker81/bruma/issues</url>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <!-- TODO(BRU-14): añadir <screenshots> antes de enviar a Flathub. -->
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.8.0" date="2026-07-26" />
+  </releases>
+</component>

@@ -1,7 +1,25 @@
 # Investigación Flatpak (BRU-14)
 
-Estado: **investigación inicial**. Objetivo: valorar publicar Bruma en Flathub
-además de los formatos actuales (`.deb`, `.rpm`, AppImage).
+Estado: **manifest de prototipo listo** (2026-09-16). Objetivo: valorar publicar
+Bruma en Flathub además de los formatos actuales (`.deb`, `.rpm`, AppImage).
+
+El manifest de prototipo vive en `flatpak/`:
+
+- `com.mindbreaker81.bruma.yml` — manifest `simple` con runtime GNOME 49,
+  extensiones SDK de Rust y Node 20, y red durante el build (solo prototipo;
+  para Flathub hay que generar fuentes offline con `flatpak-node-generator` y
+  `flatpak-cargo-generator`).
+- `com.mindbreaker81.bruma.desktop` — `.desktop` real (el de
+  `src-tauri/linux/` es una plantilla con placeholders del bundler).
+- `com.mindbreaker81.bruma.metainfo.xml` — metainfo AppStream mínimo; faltan
+  capturas (`<screenshots>`) antes de enviar a Flathub.
+
+Pendiente de ejecutar (no hay `flatpak-builder` en el entorno actual):
+
+```bash
+flatpak-builder --force-clean --user --install-deps-from=flathub \
+  --install build-dir flatpak/com.mindbreaker81.bruma.yml
+```
 
 ## Contexto
 
@@ -70,11 +88,13 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
 
 ## Siguientes pasos propuestos
 
-1. Prototipo local: manifest mínimo + `flatpak-builder`, comprobar que la app
-   arranca y que abrir/guardar funciona vía portal.
+1. [~] Prototipo local: manifest creado en `flatpak/` (2026-09-16); falta
+   ejecutar `flatpak-builder` y comprobar que la app arranca y que
+   abrir/guardar funciona vía portal.
 2. Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente (instalando
    el `.flatpak` resultante).
-3. Si el prototipo pasa: PR de publicación a `flathub/flathub` con metainfo.
+3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de
+   publicación a `flathub/flathub` con metainfo completo.
 4. Documentar en `README.md` la vía Flatpak junto a AppImage/.deb/.rpm.
 
 ## Referencias

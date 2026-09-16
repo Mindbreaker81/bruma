@@ -98,7 +98,7 @@
 - [x] Mostrar nombre de archivo en barra inferior.
 - [x] Manejo de errores I/O con toast no bloqueante.
 - [x] Tests unit del wrapper de markdown-it (`src/lib/markdown.test.ts`, incluye sanitización).
-- [~] Test E2E: abrir archivo de fixture y verificar contenido en editor. Smoke actual cubre edición CodeMirror en Chromium; apertura nativa queda pendiente para harness Tauri.
+- [x] Test E2E: abrir archivo de fixture y verificar contenido en editor. El smoke de Playwright cubre edición en Chromium; la apertura nativa la cubre el harness Tauri (`tests-tauri/`, `pnpm test:e2e:tauri` — mocha + tauri-driver + WebKitWebDriver, verificado en Linux 2026-09-16).
 
 ### Validación Sprint 2
 
@@ -334,10 +334,10 @@
 
 - [x] CI con job Linux: `ubuntu-latest` añadido a la matriz `tauri` de `ci.yml` — instala las dependencias nativas (WebKitGTK 4.1, GTK 3, appindicator, patchelf, rpm), corre `cargo test`/`fmt`/`clippy` y genera `.deb`/`.rpm`/`.AppImage` publicados en el draft release.
 - [x] Empaquetado AppImage, `.deb` (Debian/Ubuntu), `.rpm` (Fedora): publicados firmados desde v1.7.x.
-- [x] Investigación Flatpak: documento `docs/FLATPAK.md` (manifest esperado, portales, conflicto con el updater y riesgos de sandbox). Queda el prototipo local y las pruebas por distro.
+- [x] Investigación Flatpak: documento `docs/FLATPAK.md` (manifest esperado, portales, conflicto con el updater y riesgos de sandbox). Manifest de prototipo creado en `flatpak/` (2026-09-16); queda ejecutar `flatpak-builder` y las pruebas por distro.
 - [ ] Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente.
 - [x] Documentación específica de instalación por distro: sección Linux en `README.md` (AppImage + `libfuse2`, `.deb`, `.rpm`).
-- [ ] Auditar fuentes / assets con fallbacks (Inter, monospace).
+- [x] Auditar fuentes / assets con fallbacks (Inter, monospace): stacks con fallbacks correctos en `:root`, Tailwind, editor, preview, export e impresión; Inter Variable va self-hosted vía `@fontsource-variable/inter`. Hallazgo corregido: la preferencia Tipografía (sans/mono) no tenía efecto porque `.bruma-editor .cm-editor` fijaba el stack mono — ahora el stack vive en `.bruma-editor`, la opción `sans` aplica Inter de verdad y el default pasa a `mono` (lo que ya se veía); las configs `<v10` con `sans` migran a `mono` (CONFIG_VERSION 10).
 
 **Nota:** el antiguo bloqueo local (`glib-2.0.pc`, `gtk-3`, `webkit2gtk-4.1`) está resuelto: las dependencias nativas están instaladas y `cargo check` compila (2026-09-14).
 
@@ -376,8 +376,8 @@ Seguimiento en YouTrack: proyecto **BRU**.
 Pendientes:
 - Validación manual en macOS y Windows (matriz `V1`–`V9` del plan de portapapeles, `D1` en Windows)
 - QA de artifacts publicados por tag `vX.Y.Z` y gate operativo del updater (`PLAN-MEJORAS.md` F1.7)
-- Prototipo Flatpak local y pruebas manuales por distro (`docs/FLATPAK.md`, BRU-14)
-- Auditoría de lector de pantalla (BRU-15): auditoría estática hecha (grupo `role="group"` en la barra, `aria-label` en inputs de búsqueda, foco devuelto al contenido al cerrar el menú contextual); la prueba real con lector de pantalla sigue pendiente. Apertura nativa de archivos/fuentes (BRU-16)
+- Build del prototipo Flatpak con `flatpak-builder` y pruebas manuales por distro (`docs/FLATPAK.md`, `flatpak/`, BRU-14)
+- Auditoría de lector de pantalla (BRU-15): auditoría estática hecha (grupo `role="group"` en la barra, `aria-label` en inputs de búsqueda, foco devuelto al contenido al cerrar el menú contextual); la prueba real con lector de pantalla sigue pendiente.
 - Seguimiento de tamaño de bundle en cada release
 
 ---
