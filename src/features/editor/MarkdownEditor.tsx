@@ -344,6 +344,9 @@ export const MarkdownEditor = forwardRef<
     return () => {
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);
+        // Flush the pending change: unmounting (e.g. switching to Preview or
+        // Split right after typing) must not drop the last edits.
+        onChangeRef.current(latestValueRef.current);
       }
 
       editor.destroy();
