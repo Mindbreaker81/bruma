@@ -40,6 +40,10 @@ export function Preview({
   const sourceForRender = hideFrontmatter ? stripFrontmatter(content) : content;
   const [html, setHtml] = useState(() => renderSafeMarkdown(sourceForRender));
   const containerRef = useRef<HTMLElement | null>(null);
+  // Selection captured at contextmenu time: when the menu opens it takes focus
+  // and WKWebView collapses the DOM selection, so reading it later in the menu
+  // item's onSelect would return "".
+  const selectionAtMenuOpen = useRef('');
 
   function assignRefs(node: HTMLElement | null) {
     containerRef.current = node;
@@ -141,7 +145,10 @@ export function Preview({
     <>
       <DropdownMenuItem
         onSelect={() => {
-          const selection = window.getSelection()?.toString() ?? '';
+          const selection =
+            selectionAtMenuOpen.current ||
+            window.getSelection()?.toString() ||
+            '';
           if (selection.length > 0) {
             notifyCopied(writeClipboardText(selection));
           }
@@ -172,6 +179,9 @@ export function Preview({
         style={{ maxWidth: `${maxWidth}ch`, margin: '0 auto' }}
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={handleClick}
+        onContextMenu={() => {
+          selectionAtMenuOpen.current = window.getSelection()?.toString() ?? '';
+        }}
       />
     </ContextMenuArea>
   );

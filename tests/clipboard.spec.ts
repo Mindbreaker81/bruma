@@ -78,3 +78,47 @@ test('right click on the editor shows the app context menu', async ({
   await page.keyboard.press('Escape');
   await expect(menu).toBeHidden();
 });
+
+test('preview context menu copies the selection even if it collapses', async ({
+  page,
+}) => {
+  const editor = editorLocator(page);
+  await editor.click();
+  await page.keyboard.type('texto de prueba preview');
+  await expect(editor).toContainText('texto de prueba preview');
+
+  await page.getByRole('tab', { name: /^Preview$|^Vista previa$/i }).click();
+
+  const preview = page.getByRole('article', {
+    name: /Markdown preview|Vista previa/i,
+  });
+  await expect(preview).toContainText('texto de prueba preview');
+
+  await page.evaluate(() => {
+    const el = document.querySelector('.bruma-preview');
+    const range = document.createRange();
+    range.selectNodeContents(el!);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+
+  // Raw mouse events: locator.click({button:'right'}) can race the menu.
+  const box = (await preview.boundingBox())!;
+  await page.mouse.move(box.x + 100, box.y + 30);
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.up({ button: 'right' });
+  await expect(page.getByRole('menu')).toBeVisible();
+
+  // WKWebView collapses the DOM selection when the menu takes focus.
+  await page.evaluate(() => window.getSelection()?.removeAllRanges());
+
+  await page
+    .getByRole('menuitem', { name: /Copiar selección|Copy selection/i })
+    .click({ force: true });
+
+  const clipboardText = await page.evaluate(() =>
+    navigator.clipboard.readText()
+  );
+  expect(clipboardText).toContain('texto de prueba preview');
+});
