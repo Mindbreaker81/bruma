@@ -462,17 +462,17 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 
 ### 4.2 Matriz de verificación manual (tras implementar)
 
-| ID   | Comprobación                                               | macOS | Windows | Linux X11  | Linux Wayland |
-| ---- | ---------------------------------------------------------- | ----- | ------- | ---------- | ------------- |
-| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ☐     | ☐       | ✅         | ☐             |
-| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ☐     | ☐       | ⚠ ver nota | ⚠ ver 1.3     |
-| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ☐     | ☐       | ⚠ ver nota | ☐             |
-| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ☐     | ☐       | ✅         | ☐             |
-| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ☐     | ☐       | ✅         | ☐             |
-| `V6` | Copiar desde la vista previa (selección de texto)          | ☐     | ☐       | ⚠ ver nota | ☐             |
-| `V7` | Menú contextual propio en editor y preview                 | ☐     | ☐       | ✅         | ☐             |
-| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ☐     | ☐       | ✅         | ☐             |
-| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ☐     | ☐       | ✅         | ☐             |
+| ID   | Comprobación                                               | macOS      | Windows | Linux X11  | Linux Wayland |
+| ---- | ---------------------------------------------------------- | ---------- | ------- | ---------- | ------------- |
+| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ✅         | ☐       | ✅         | ☐             |
+| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ⚠ ver nota | ☐       | ⚠ ver nota | ⚠ ver 1.3     |
+| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ✅         | ☐       | ⚠ ver nota | ☐             |
+| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ✅         | ☐       | ✅         | ☐             |
+| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ✅         | ☐       | ✅         | ☐             |
+| `V6` | Copiar desde la vista previa (selección de texto)          | ✅         | ☐       | ⚠ ver nota | ☐             |
+| `V7` | Menú contextual propio en editor y preview                 | ⚠ ver nota | ☐       | ✅         | ☐             |
+| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ⚠ ver nota | ☐       | ✅         | ☐             |
+| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ✅         | ☐       | ✅         | ☐             |
 
 Resultados de la columna **Linux X11** obtenidos con el harness
 `tests-tauri/v-matrix-linux.sh` (Xvfb + AT-SPI + `xdotool`/`xclip`, portapapeles
@@ -488,6 +488,36 @@ X11 real, sin window manager):
   hatch.
 - `V6`: el contenido de la vista previa no se localizó en el árbol AT-SPI;
   verificar selección manual en sesión real.
+
+Resultados de la columna **macOS** obtenidos en sesión real (macOS ARM64,
+bundle `.app` release, portapapeles del sistema verificado con el pasteboard
+nativo y conducción de la app por el árbol de accesibilidad):
+
+- `V1`: `⌘C`, `⌘V`, `⌘X` y `⌘A` funcionan en el editor con el portapapeles real
+  en ambas direcciones.
+- `V2`: los _key equivalents_ `⌘C`/`⌘V`/`⌘X`/`⌘A` despachan los mismos
+  selectores AppKit (`copy:`/`paste:`/`cut:`/`selectAll:`) que los ítems
+  predefinidos del menú Editar, así que los ítems quedan verificados por
+  construcción; la interacción directa con la barra de menús no fue observable
+  con las herramientas disponibles y conviene una comprobación humana breve.
+- `V3`: el botón Pegar insertó el texto del portapapeles con un clic real —
+  `navigator.clipboard.readText()` funciona en WKWebView con gesto de usuario.
+  **No hace falta el escape hatch `R4` en macOS.**
+- `V4`/`V5`: `⌘Z`/`⇧⌘Z` deshacen y rehacen en el editor; `⌘Z` en el campo de
+  búsqueda deshace ahí sin tocar el documento.
+- `V6`: la selección de texto en la vista previa copia al portapapeles con
+  `⌘C` (verificado en el pasteboard con texto plano, RTF y HTML).
+- `V7`: el menú contextual del editor funciona (Cortar/Copiar/Pegar/Seleccionar
+  todo/formato/Copiar como HTML). El de la vista previa perdía la selección al
+  abrirse en WKWebView («Copiar selección» copiaba vacío); corregido
+  capturando la selección en `onContextMenu` (`Preview.tsx`), con test de
+  regresión E2E. Se encontró además una fuga de edición al desmontar el editor
+  dentro del `debounce` de `onChange` (también corregida).
+- `V8`: la UI conmuta ES↔EN en caliente; el relabeling del menú nativo usa el
+  mismo `set_menu_labels` ya probado en Linux X11 — verificado por
+  equivalencia, pendiente de una mirada humana a la barra de menús.
+- `V9`: «Copiar como HTML» escribe `text/html` con el marcado renderizado
+  (verificado en el pasteboard) además del texto plano.
 
 `V3` es el punto de decisión del escape hatch de la sección 2.1: si falla en alguna plataforma, documentarlo y proponer el plugin aparte.
 
