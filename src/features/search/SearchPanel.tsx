@@ -83,6 +83,7 @@ export function SearchPanel({
           ref={inputRef}
           type="text"
           className="h-10 min-w-[14rem] flex-1 rounded-full border border-transparent bg-background/90 px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground transition focus-visible:border-emerald-800/10 focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={t('search.placeholder')}
           placeholder={t('search.placeholder')}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
@@ -137,6 +138,7 @@ export function SearchPanel({
           <input
             type="text"
             className="h-10 min-w-[14rem] flex-1 rounded-full border border-transparent bg-background/90 px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground transition focus-visible:border-emerald-800/10 focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label={t('search.replacePlaceholder')}
             placeholder={t('search.replacePlaceholder')}
             value={replaceQuery}
             onChange={(e) => onReplaceQueryChange(e.target.value)}

@@ -6,11 +6,13 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from './components/ui/sonner';
+import { installE2EBridge } from './lib/e2eBridge';
 import { bootstrapLinuxWebviewCompat } from './lib/tauri';
 import './i18n';
 import './styles/main.css';
 
 bootstrapLinuxWebviewCompat();
+installE2EBridge();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

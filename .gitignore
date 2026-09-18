@@ -61,6 +61,11 @@ src-tauri/WixTools/
 *.deb
 *.rpm
 
+# Flatpak (flatpak-builder local)
+.flatpak-builder/
+build-dir/
+*.flatpak
+
 # Local release artifacts (manual builds for testing)
 release-assets-local/
 

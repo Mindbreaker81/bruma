@@ -18,7 +18,7 @@ describe('app config', () => {
       viewMode: 'editor',
       autosaveEnabled: true,
       autosaveDelayMs: 2000,
-      editorFontFamily: 'sans',
+      editorFontFamily: 'mono',
       editorTabSize: 4,
       editorShowGutter: false,
       editorWrap: true,
@@ -101,13 +101,31 @@ describe('app config', () => {
       autosaveEnabled: true,
       autosaveDelayMs: 2000,
     });
-    expect(config.editorFontFamily).toBe('sans');
+    expect(config.editorFontFamily).toBe('mono');
     expect(config.editorTabSize).toBe(4);
     expect(config.editorShowGutter).toBe(false);
     expect(config.editorWrap).toBe(true);
     expect(config.previewMaxWidth).toBe(65);
     expect(config.previewShowToc).toBe(false);
     expect(config.version).toBe(CONFIG_VERSION);
+  });
+
+  it('coerces pre-v10 stored sans editorFontFamily to mono', () => {
+    expect(
+      migrateConfig({ version: 9, editorFontFamily: 'sans' }).editorFontFamily
+    ).toBe('mono');
+    expect(migrateConfig({ editorFontFamily: 'sans' }).editorFontFamily).toBe(
+      'mono'
+    );
+  });
+
+  it('preserves sans editorFontFamily stored by v10+', () => {
+    expect(
+      migrateConfig({
+        version: CONFIG_VERSION,
+        editorFontFamily: 'sans',
+      }).editorFontFamily
+    ).toBe('sans');
   });
 
   it('preserves valid editor and preview settings', () => {

@@ -94,7 +94,7 @@ export function PreferencesDialog({
                 htmlFor="pref-autosave-delay"
                 className="text-sm font-medium"
               >
-                {t('autosave.delay')}
+                {t('preferences.autosaveDelay')}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -134,10 +134,10 @@ export function PreferencesDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sans">
-                    {t('preferences.fontFamilySans')}
+                    {t('preferences.fontSans')}
                   </SelectItem>
                   <SelectItem value="mono">
-                    {t('preferences.fontFamilyMono')}
+                    {t('preferences.fontMono')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -172,7 +172,7 @@ export function PreferencesDialog({
 
             <div className="flex items-center justify-between">
               <label htmlFor="pref-wrap" className="text-sm font-medium">
-                {t('preferences.wordWrap')}
+                {t('preferences.wrapLines')}
               </label>
               <Checkbox
                 id="pref-wrap"

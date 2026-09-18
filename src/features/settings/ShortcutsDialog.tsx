@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { formatShortcut } from '../../lib/formatShortcut';
-import { SHORTCUT_GROUPS } from '../../lib/shortcutsCatalog';
+import { resolveShortcut, SHORTCUT_GROUPS } from '../../lib/shortcutsCatalog';
 
 type ShortcutsDialogProps = {
   open: boolean;
@@ -41,7 +41,7 @@ export function ShortcutsDialog({ open, onOpenChange }: ShortcutsDialogProps) {
                   >
                     <span className="text-foreground">{t(item.labelKey)}</span>
                     <kbd className="rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
-                      {formatShortcut(item.shortcut)}
+                      {formatShortcut(resolveShortcut(item))}
                     </kbd>
                   </li>
                 ))}

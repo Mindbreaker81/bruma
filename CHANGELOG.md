@@ -6,6 +6,45 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+
+- Menú nativo «Editar» completo: Deshacer, Rehacer, Cortar, Copiar, Pegar, Seleccionar todo, Copiar documento, Copiar como HTML, Buscar y Reemplazar, con aceleradores y traducción dinámica es/en. En macOS restaura los atajos de portapapeles (⌘C/⌘V/⌘X/⌘A), que dependían de los ítems predefinidos del menú.
+- Botones Cortar/Copiar/Pegar al inicio de la barra de formato, con atajo visible en el tooltip, estado deshabilitado cuando el editor está vacío o el portapapeles no es legible, y foco devuelto al editor tras cada acción.
+- El catálogo de atajos documenta las acciones de edición (deshacer, rehacer, cortar, copiar, pegar, seleccionar todo, reemplazar) y muestra `Ctrl+Y` como alternativa de rehacer en Windows/Linux.
+- Menú contextual propio en el editor (cortar, copiar, pegar, seleccionar todo, negrita, cursiva, enlace y copiar como HTML) y en la vista previa (copiar selección, documento completo o HTML renderizado), traducido y con el tema activo; los campos de texto de los diálogos conservan el menú nativo.
+- Acciones «Copiar documento» y «Copiar como HTML» con confirmación por toast; el HTML saneado llega con formato a editores enriquecidos y como Markdown a editores de texto.
+- Botón «Copiar código» en cada bloque de código de la vista previa, visible al pasar el cursor o al enfocarlo con el teclado.
+- Helpers de portapapeles (`src/lib/clipboard.ts`) con degradación a texto plano.
+- «Editar ▸ Reemplazar» abre el panel de búsqueda con el modo reemplazar activo.
+- Cobertura del flujo de portapapeles: tests del handle del editor (`undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, selección) y E2E `tests/clipboard.spec.ts` (botones, copiar/pegar con permisos, menú contextual). Los E2E corren en Chromium y no validan los menús nativos.
+- Harness E2E nativo operativo (`pnpm test:e2e:tauri`): mocha + `tauri-driver` + WebKitWebDriver cubren apertura de archivo vía `read_file`, guardado vía `save_file` y apertura de recientes por el evento del menú nativo. El puente `window.brumaE2E` se instala solo en builds dev o con `VITE_E2E=1`.
+- Manifest Flatpak de prototipo en `flatpak/` (manifest, `.desktop` real y metainfo AppStream mínimo), compilado e instalado con `flatpak-builder` sobre el runtime GNOME 49; la app arranca en el sandbox.
+
+### Changed
+
+- Deshacer/Rehacer desde el menú nativo se enrutan al historial de CodeMirror cuando el editor tiene el foco, y a `execCommand` en campos nativos (p. ej. el campo de búsqueda).
+- El handle del editor expone `undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, `getSelectedText` y `hasSelection`.
+- Accesibilidad: el grupo de portapapeles de la barra expone `role="group"`, los campos de búsqueda/reemplazo tienen `aria-label`, y el menú contextual devuelve el foco al editor o a la preview al cerrarse.
+
+### Fixed
+
+- La preferencia Tipografía (Sans/Mono) del editor no tenía efecto: `.bruma-editor .cm-editor` fijaba la familia monoespaciada y pisaba el estilo del contenedor. Ahora la opción Sans aplica Inter de verdad, el default pasa a `mono` (el aspecto que ya se veía) y las configuraciones anteriores a `CONFIG_VERSION` 10 con `sans` migran a `mono` para no cambiar lo que ven los usuarios existentes.
+- Claves i18n inexistentes que se renderizaban como texto crudo: `export.title` (aria-label del botón Exportar, detectado vía el árbol AT-SPI) y las etiquetas del diálogo Preferencias (`autosave.delay`, `autosave.seconds`, `preferences.fontFamilySans/Mono`, `preferences.wordWrap`), ahora mapeadas a las claves reales (`export.open`, `preferences.autosaveDelay`, `preferences.fontSans/fontMono`, `preferences.wrapLines`, nueva `autosave.seconds`).
+- «Copiar selección» del menú contextual de la vista previa copiaba una cadena vacía en WKWebView (macOS): la selección del DOM colapsa cuando el menú toma el foco. Ahora se captura al dispararse `contextmenu`, antes de abrir el menú.
+- Al cambiar de vista o cerrar el editor dentro del debounce de `onChange` (120 ms) se perdía lo último tecleado; el desmontaje ahora entrega el cambio pendiente.
+- `baseUrl` deprecado eliminado de `tsconfig.app.json` (deja de funcionar en TypeScript 7.0); el alias `@/*` sigue resolviendo vía `paths` relativo al tsconfig.
+
+### CI
+
+- La matriz `tauri` incluye `ubuntu-latest`: instala las dependencias nativas, corre los checks de Rust y publica los bundles `.deb`, `.rpm` y `.AppImage` (con firmas del updater) en el draft release.
+
+### Docs
+
+- Plan de implementación de portapapeles y menú Editar (`PLAN-PORTAPAPELES-Y-EDICION.md`, fases F1–F9).
+- `docs/TODO.md` actualizado al estado real de v1.8.0: bloqueo de dependencias nativas en Linux resuelto, bundles `.deb`/`.rpm`/AppImage publicados y decisión de Radix UI cerrada.
+- Seguimiento del proyecto en YouTrack (proyecto `BRU`): fases del plan de portapapeles y tareas pendientes registradas.
+- Investigación Flatpak (`docs/FLATPAK.md`): manifest esperado, portales de documentos, conflicto con el updater y riesgos de sandbox de WebKit.
+
 ## [1.8.0] - 2026-07-26
 
 ### Added

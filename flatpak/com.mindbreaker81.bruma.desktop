@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Bruma
+Comment=Editor Markdown de escritorio: ligero, local y simple
+Exec=bruma
+Icon=com.mindbreaker81.bruma
+Terminal=false
+Categories=Utility;TextEditor;
+StartupWMClass=bruma
+MimeType=text/markdown;text/plain;
+Keywords=markdown;editor;notes;

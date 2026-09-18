@@ -4,7 +4,7 @@ import type { ViewMode } from '../features/settings/view';
 import { FONT_SCALE_DEFAULT, clampFontScale } from '../features/settings/zoom';
 import type { Template } from '../features/templates/templates';
 
-export const CONFIG_VERSION = 9;
+export const CONFIG_VERSION = 10;
 const CONFIG_STORAGE_KEY = 'bruma.config';
 
 export type AppConfig = {
@@ -41,7 +41,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   showFrontmatter: true,
   autosaveEnabled: true,
   autosaveDelayMs: 2000,
-  editorFontFamily: 'sans',
+  editorFontFamily: 'mono',
   editorTabSize: 4,
   editorShowGutter: false,
   editorWrap: true,
@@ -124,10 +124,17 @@ export function migrateConfig(input: unknown): AppConfig {
     config.autosaveDelayMs <= 30000
       ? config.autosaveDelayMs
       : DEFAULT_CONFIG.autosaveDelayMs;
-  const editorFontFamily =
+  const storedVersion = typeof config.version === 'number' ? config.version : 0;
+  const rawEditorFontFamily =
     typeof config.editorFontFamily === 'string'
       ? config.editorFontFamily
       : DEFAULT_CONFIG.editorFontFamily;
+  // 'sans' stored before v10 never took effect (the editor always rendered
+  // mono), so coercing it keeps the visual result unchanged for existing users.
+  const editorFontFamily =
+    rawEditorFontFamily === 'sans' && storedVersion < 10
+      ? 'mono'
+      : rawEditorFontFamily;
   const editorTabSize =
     typeof config.editorTabSize === 'number' &&
     config.editorTabSize >= 1 &&

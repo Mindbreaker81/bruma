@@ -7,11 +7,16 @@ type MenuHandlers = {
   cycleViewMode: () => void;
   handleNewDocument: () => void;
   handleOpenSearch: () => void;
+  handleOpenReplace: () => void;
   handleOpenWithConfirmation: () => void;
   handlePrint: () => void;
   handleCheckUpdates: () => void;
   handleSave: () => Promise<boolean>;
   handleSaveAs: () => Promise<boolean>;
+  handleUndo: () => void;
+  handleRedo: () => void;
+  handleCopyDocument: () => void;
+  handleCopyAsHtml: () => void;
   openAbout: () => void;
   setLanguage: (language: 'es' | 'en') => void;
   setViewMode: (nextViewMode: 'editor' | 'split' | 'preview') => void;
@@ -56,6 +61,21 @@ export function useTauriMenuBridge({
       }
       if (action === 'edit_find') {
         h.handleOpenSearch();
+      }
+      if (action === 'edit_undo') {
+        h.handleUndo();
+      }
+      if (action === 'edit_redo') {
+        h.handleRedo();
+      }
+      if (action === 'edit_replace') {
+        h.handleOpenReplace();
+      }
+      if (action === 'edit_copy_document') {
+        h.handleCopyDocument();
+      }
+      if (action === 'edit_copy_as_html') {
+        h.handleCopyAsHtml();
       }
       if (action === 'view_toggle_theme') {
         h.cycleTheme();

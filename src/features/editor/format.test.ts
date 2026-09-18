@@ -1,7 +1,8 @@
 import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { describe, expect, it } from 'vitest';
 
-import { computeFormat, type FormatAction } from './format';
+import { computeFormat, pasteText, type FormatAction } from './format';
 
 function stateWith(doc: string, from: number, to: number = from): EditorState {
   return EditorState.create({ doc, selection: { anchor: from, head: to } });
@@ -100,5 +101,34 @@ describe('computeFormat / block', () => {
       template: '\n---\n',
     });
     expect(result.doc).toBe('x\n---\n');
+  });
+});
+
+describe('pasteText', () => {
+  function viewWith(doc: string, from: number, to: number = from): EditorView {
+    return new EditorView({
+      state: EditorState.create({ doc, selection: { anchor: from, head: to } }),
+      parent: document.createElement('div'),
+    });
+  }
+
+  it('reemplaza la selección y deja el cursor al final del texto pegado', () => {
+    const view = viewWith('hello world', 6, 11);
+
+    pasteText(view, 'mundo');
+
+    expect(view.state.doc.toString()).toBe('hello mundo');
+    expect(view.state.selection.main.anchor).toBe(11);
+    view.destroy();
+  });
+
+  it('inserta en el cursor cuando no hay selección', () => {
+    const view = viewWith('hola', 4);
+
+    pasteText(view, '!');
+
+    expect(view.state.doc.toString()).toBe('hola!');
+    expect(view.state.selection.main.anchor).toBe(5);
+    view.destroy();
   });
 });

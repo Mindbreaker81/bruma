@@ -1,6 +1,6 @@
 const APPLE_PLATFORM_REGEX = /Mac|iPhone|iPad/i;
 
-function isApplePlatform(): boolean {
+export function isApplePlatform(): boolean {
   return (
     typeof navigator !== 'undefined' &&
     APPLE_PLATFORM_REGEX.test(navigator.platform)

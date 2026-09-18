@@ -29,6 +29,20 @@
     "save": "Save",
     "title": "Unsaved changes"
   },
+  "clipboard": {
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all",
+    "copyDocument": "Copy document",
+    "copyAsHtml": "Copy as HTML",
+    "copySelection": "Copy selection",
+    "copyHtml": "Copy rendered HTML",
+    "copyCode": "Copy code",
+    "copied": "Copied to clipboard",
+    "unavailable": "Clipboard unavailable; use the Edit menu",
+    "pasteFailed": "Could not read the clipboard"
+  },
   "editor": {
     "label": "Markdown editor",
     "placeholder": "Start writing Markdown...",
@@ -125,6 +139,15 @@
     "saveAs": "Save As…",
     "print": "Print…",
     "edit": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all",
+    "replace": "Replace",
+    "copyDocument": "Copy document",
+    "copyAsHtml": "Copy as HTML",
     "find": "Find",
     "view": "View",
     "toggleView": "Change View",
@@ -198,7 +221,8 @@
   "autosave": {
     "toggle": "Autosave",
     "savingNow": "Saving...",
-    "lastSavedAt": "Saved at {{time}}"
+    "lastSavedAt": "Saved at {{time}}",
+    "seconds": "s"
   },
   "session": {
     "restoreTitle": "Restore session",
@@ -254,6 +278,7 @@
     }
   },
   "toolbar": {
+    "clipboard": "Clipboard",
     "file": "File",
     "write": "Write",
     "view": "View",
@@ -276,6 +301,13 @@
       "fileSave": "Save",
       "fileSaveAs": "Save as",
       "filePrint": "Print",
+      "editUndo": "Undo",
+      "editRedo": "Redo",
+      "editCut": "Cut",
+      "editCopy": "Copy",
+      "editPaste": "Paste",
+      "editSelectAll": "Select all",
+      "editReplace": "Replace",
       "editFind": "Find",
       "helpPreferences": "Open preferences",
       "helpShortcuts": "Open shortcuts help",

@@ -1,0 +1,72 @@
+# Manifest Flatpak de Bruma (BRU-14) — prototipo local.
+#
+# Uso local:
+#   flatpak-builder --force-clean --user --install-deps-from=flathub \
+#     --install build-dir flatpak/com.mindbreaker81.bruma.yml
+#
+# Notas:
+# - El build descarga dependencias (pnpm/cargo) con red durante la compilación.
+#   Para publicar en Flathub habrá que generar las fuentes offline con
+#   flatpak-node-generator (pnpm-lock.yaml) y flatpak-cargo-generator
+#   (Cargo.lock), ya que los builds de Flathub no tienen red.
+# - El updater firmado de Tauri choca con el modelo Flatpak: antes de publicar
+#   hay que desactivarlo en este build (ver docs/FLATPAK.md, decisión 1).
+
+app-id: com.mindbreaker81.bruma
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node20
+command: bruma
+
+finish-args:
+  # WebKitGTK necesita IPC compartida para su sandbox interno.
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # El updater consulta releases; si se desactiva se puede quitar.
+  - --share=network
+  - --talk-name=org.freedesktop.Notifications
+  # Acceso a documentos vía portal (preferido a --filesystem=home).
+  - --talk-name=org.freedesktop.portal.Documents
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - '*.la'
+  - '*.a'
+
+modules:
+  - name: bruma
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node20/bin:/usr/lib/sdk/rust-stable/bin:/run/build/bruma/pnpm-home/node_modules/.bin
+      env:
+        CARGO_HOME: /run/build/bruma/cargo-home
+        XDG_CACHE_HOME: /run/build/bruma/cache
+        # scripts/tauri.mjs redirige CARGO_TARGET_DIR a os.tmpdir(); se fija al
+        # target del módulo para que el install encuentre el binario.
+        CARGO_TARGET_DIR: /run/build/bruma/src-tauri/target
+        # El script prepare de husky no tiene sentido en el build.
+        HUSKY: '0'
+      build-args:
+        # Prototipo local: red disponible durante el build para pnpm/cargo.
+        - --share=network
+    build-commands:
+      # /usr es read-only en el sandbox: pnpm se instala en el builddir
+      # (npm --prefix) en lugar de usar `corepack enable`.
+      - npm install --prefix /run/build/bruma/pnpm-home pnpm@9
+      - pnpm install --frozen-lockfile
+      - pnpm tauri build --no-bundle
+      - install -Dm755 src-tauri/target/release/bruma /app/bin/bruma
+      - install -Dm644 flatpak/com.mindbreaker81.bruma.desktop /app/share/applications/com.mindbreaker81.bruma.desktop
+      - install -Dm644 flatpak/com.mindbreaker81.bruma.metainfo.xml /app/share/metainfo/com.mindbreaker81.bruma.metainfo.xml
+      - install -Dm644 src-tauri/icons/icon.svg /app/share/icons/hicolor/scalable/apps/com.mindbreaker81.bruma.svg
+      - install -Dm644 src-tauri/icons/128x128.png /app/share/icons/hicolor/128x128/apps/com.mindbreaker81.bruma.png
+      - install -Dm644 src-tauri/icons/icon.png /app/share/icons/hicolor/512x512/apps/com.mindbreaker81.bruma.png
+    sources:
+      - type: dir
+        path: ..
