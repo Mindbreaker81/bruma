@@ -215,6 +215,7 @@ jobs:
       - name: Diagnose WebView2 launch
         shell: pwsh
         run: |
+          $env:CARGO_TARGET_DIR = "$PWD\src-tauri\target"
           pnpm tauri build --debug --no-bundle
           $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
           $exe = 'src-tauri\target\debug\bruma.exe'
