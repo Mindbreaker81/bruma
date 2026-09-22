@@ -199,6 +199,17 @@ jobs:
           Add-Content $env:GITHUB_PATH $dest
           & (Join-Path $dest 'msedgedriver.exe') --version
 
+      # Runner steps run elevated; elevated host apps ignore
+      # WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so enable the DevTools port via
+      # the WebView2 loader registry override instead.
+      - name: Enable WebView2 remote debugging for bruma.exe
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\Policies\Microsoft\EmbeddedBrowserWebView\LoaderOverride\bruma.exe'
+          New-Item -Path $key -Force | Out-Null
+          New-ItemProperty -Path $key -Name 'additionalBrowserArguments' -Value '--remote-debugging-port=0' -PropertyType String -Force | Out-Null
+          Get-ItemProperty $key | Select-Object -ExpandProperty additionalBrowserArguments
+
       - name: Run native E2E (clipboard D1 + V-matrix subset)
         run: pnpm test:e2e:tauri
         env:
