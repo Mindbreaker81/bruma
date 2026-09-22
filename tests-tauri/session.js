@@ -1,5 +1,6 @@
 import os from 'node:os';
 import path from 'node:path';
+import { mkdirSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 
 import { Builder, Capabilities } from 'selenium-webdriver';
@@ -102,7 +103,15 @@ export function ensureSession() {
       await waitForTauriDriver();
 
       const capabilities = new Capabilities();
-      capabilities.set('tauri:options', { application: getApplicationPath() });
+      const tauriOptions = { application: getApplicationPath() };
+      if (process.platform === 'win32') {
+        // On CI the default EBWebView dir next to the exe isn't writable and
+        // WebView2 never writes DevToolsActivePort — point it at a real dir.
+        const userDataFolder = path.join(os.tmpdir(), 'bruma-e2e-webview');
+        mkdirSync(userDataFolder, { recursive: true });
+        tauriOptions.webviewOptions = { userDataFolder };
+      }
+      capabilities.set('tauri:options', tauriOptions);
       capabilities.setBrowserName('wry');
 
       driver = await new Builder()
