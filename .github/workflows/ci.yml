@@ -76,7 +76,7 @@ jobs:
         id: app_version
         shell: bash
         run: |
-          echo "value=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
+          echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

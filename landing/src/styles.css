@@ -310,6 +310,15 @@ body {
   margin: 0.35rem 0;
 }
 
+.notice {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1rem;
+}
+
 .muted {
   color: var(--muted);
   font-size: 0.95rem;
