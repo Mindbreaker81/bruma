@@ -222,7 +222,8 @@ jobs:
           $proc = Start-Process $exe -PassThru
           Start-Sleep -Seconds 20
           Write-Host "bruma exited: $($proc.HasExited) (code $($proc.ExitCode))"
-          Get-Process bruma -ErrorAction SilentlyContinue | Format-Table Id,ProcessName
+          Get-Process bruma -ErrorAction SilentlyContinue | Format-Table Id,ProcessName,MainWindowTitle,MainWindowHandle
+          Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id,ProcessName
           Get-ChildItem "$PWD\src-tauri\target\debug\bruma.exe.WebView2" -ErrorAction SilentlyContinue | Select-Object Name
           Get-Content "$PWD\src-tauri\target\debug\bruma.exe.WebView2\DevToolsActivePort" -ErrorAction SilentlyContinue
           try { (Invoke-WebRequest 'http://localhost:9222/json/version' -UseBasicParsing).Content } catch { Write-Host "port probe failed: $_" }
