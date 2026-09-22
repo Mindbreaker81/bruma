@@ -31,7 +31,10 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - Recientes persistidos (max 10) con submenu nativo real en `Archivo > Abrir recientes`
 - Tema claro/oscuro/sistema
 - Interfaz bilingue `es` / `en` con deteccion de idioma del sistema
-- Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda)
+- Menu nativo de app (Archivo, Editar, Ver, Idioma, Ayuda); el submenu **Editar** incluye Deshacer, Rehacer, Cortar, Copiar, Pegar, Seleccionar todo, Copiar documento, Copiar como HTML, Buscar y Reemplazar, con aceleradores y traduccion dinamica es/en
+- **Botones Cortar/Copiar/Pegar** al inicio de la barra de formato, con el atajo visible en el tooltip
+- **Menu contextual propio** en el editor (cortar, copiar, pegar, seleccionar todo, formato, copiar como HTML) y en la vista previa (copiar seleccion, documento completo o HTML renderizado)
+- Boton **«Copiar codigo»** en cada bloque de codigo de la vista previa; **«Copiar como HTML»** pega con formato en editores enriquecidos y como Markdown en texto plano
 - Soporte restaurado de cierre nativo con `Cmd+Q` en macOS
 - Exportacion HTML con estilos o plano
 - Imprimir documento desde toolbar o menu nativo
