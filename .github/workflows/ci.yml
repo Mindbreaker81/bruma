@@ -139,9 +139,15 @@ jobs:
           prerelease: true
           generate_release_notes: false
 
+  # No bloquea el pipeline: WebView2 Runtime 152 en windows-latest ignora todos
+  # los mecanismos de habilitar el puerto DevTools (env var, msedgedriver
+  # webviewOptions y LoaderOverride de registro), igual que en el ejemplo
+  # oficial tauri-apps/webdriver-example, roto desde ~2026-09-05. El job se
+  # mantiene para auto-recuperarse cuando upstream lo resuelva (BRU-20).
   e2e-windows:
     name: E2E nativo (windows-latest)
     runs-on: windows-latest
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -209,26 +215,6 @@ jobs:
           New-Item -Path $key -Force | Out-Null
           New-ItemProperty -Path $key -Name 'additionalBrowserArguments' -Value '--remote-debugging-port=0' -PropertyType String -Force | Out-Null
           Get-ItemProperty $key | Select-Object -ExpandProperty additionalBrowserArguments
-
-      # Diagnostics: can the app itself bring up WebView2 + DevTools on this
-      # runner, independent of msedgedriver?
-      - name: Diagnose WebView2 launch
-        shell: pwsh
-        run: |
-          $env:CARGO_TARGET_DIR = "$PWD\src-tauri\target"
-          pnpm tauri build --debug --no-bundle
-          $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
-          $exe = 'src-tauri\target\debug\bruma.exe'
-          $proc = Start-Process $exe -PassThru
-          Start-Sleep -Seconds 20
-          Write-Host "bruma exited: $($proc.HasExited) (code $($proc.ExitCode))"
-          Get-Process bruma -ErrorAction SilentlyContinue | Format-Table Id,ProcessName,MainWindowTitle,MainWindowHandle
-          Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id,ProcessName
-          Get-ChildItem "$PWD\src-tauri\target\debug\bruma.exe.WebView2" -ErrorAction SilentlyContinue | Select-Object Name
-          Get-Content "$PWD\src-tauri\target\debug\bruma.exe.WebView2\DevToolsActivePort" -ErrorAction SilentlyContinue
-          try { (Invoke-WebRequest 'http://localhost:9222/json/version' -UseBasicParsing).Content } catch { Write-Host "port probe failed: $_" }
-          Get-WinEvent -LogName Application -MaxEvents 10 -ErrorAction SilentlyContinue | Where-Object { $_.Message -match 'bruma|msedgewebview' } | Format-List TimeCreated,Message
-          if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
 
       - name: Run native E2E (clipboard D1 + V-matrix subset)
         run: pnpm test:e2e:tauri
