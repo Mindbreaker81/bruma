@@ -1,6 +1,6 @@
 import os from 'node:os';
 import path from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 
 import { Builder, Capabilities } from 'selenium-webdriver';
@@ -105,9 +105,17 @@ export function ensureSession() {
       const capabilities = new Capabilities();
       const tauriOptions = { application: getApplicationPath() };
       if (process.platform === 'win32') {
-        // On CI the default EBWebView dir next to the exe isn't writable and
-        // WebView2 never writes DevToolsActivePort — point it at a real dir.
-        const userDataFolder = path.join(os.tmpdir(), 'bruma-e2e-webview');
+        // wry places WebView2's user data folder under the app's local data
+        // dir; msedgedriver looks there for DevToolsActivePort, so the
+        // capability must point at the exact same folder.
+        const tauriConf = JSON.parse(
+          readFileSync(path.join(repoRoot, 'src-tauri', 'tauri.conf.json'))
+        );
+        const userDataFolder = path.join(
+          process.env.LOCALAPPDATA,
+          tauriConf.identifier,
+          'EBWebView'
+        );
         mkdirSync(userDataFolder, { recursive: true });
         tauriOptions.webviewOptions = { userDataFolder };
       }
