@@ -149,7 +149,13 @@ export function ensureSession() {
         // driver at the same place lets it find DevToolsActivePort.
         const userDataFolder = `${getApplicationPath()}.WebView2`;
         mkdirSync(userDataFolder, { recursive: true });
-        tauriOptions.webviewOptions = { userDataFolder };
+        tauriOptions.webviewOptions = {
+          userDataFolder,
+          // WebView2 only writes DevToolsActivePort when the browser process
+          // gets this flag; pass it explicitly instead of relying on the
+          // driver's injection.
+          additionalBrowserArguments: '--remote-debugging-port=0',
+        };
       }
       capabilities.set('tauri:options', tauriOptions);
       capabilities.setBrowserName('wry');
