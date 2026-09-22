@@ -154,7 +154,7 @@ export function ensureSession() {
           // WebView2 only writes DevToolsActivePort when the browser process
           // gets this flag; pass it explicitly instead of relying on the
           // driver's injection.
-          additionalBrowserArguments: '--remote-debugging-port=0',
+          additionalBrowserArguments: ['--remote-debugging-port=0'],
         };
       }
       capabilities.set('tauri:options', tauriOptions);
