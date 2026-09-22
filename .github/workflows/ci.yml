@@ -138,3 +138,68 @@ jobs:
           draft: true
           prerelease: true
           generate_release_notes: false
+
+  e2e-windows:
+    name: E2E nativo (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+
+      - name: Install tauri-driver
+        run: cargo install tauri-driver --version "^2" --locked
+
+      - name: Install Edge WebDriver matching WebView2
+        shell: pwsh
+        run: |
+          $pv = (Get-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv
+          if (-not $pv) {
+            $pv = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv
+          }
+          if (-not $pv) {
+            $dir = Get-ChildItem 'C:\Program Files (x86)\Microsoft\EdgeWebView\Application' -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+            $pv = $dir.Name
+          }
+          if (-not $pv) { throw 'WebView2 Runtime not found on the runner' }
+          Write-Host "WebView2 Runtime version: $pv"
+          $zip = Join-Path $env:RUNNER_TEMP 'edgedriver.zip'
+          $dest = Join-Path $env:RUNNER_TEMP 'edgedriver'
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$pv/edgedriver_win64.zip" -OutFile $zip
+          } catch {
+            $major = $pv.Split('.')[0]
+            $latest = (Invoke-WebRequest "https://msedgedriver.microsoft.com/LATEST_RELEASE_${major}_WINDOWS" -UseBasicParsing).Content.Trim()
+            Write-Host "Exact driver $pv unavailable; falling back to $latest"
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$latest/edgedriver_win64.zip" -OutFile $zip
+          }
+          Expand-Archive $zip -DestinationPath $dest -Force
+          Add-Content $env:GITHUB_PATH $dest
+          & (Join-Path $dest 'msedgedriver.exe') --version
+
+      - name: Run native E2E (clipboard D1 + V-matrix subset)
+        run: pnpm test:e2e:tauri
+        env:
+          TAURI_E2E_REQUIRED: '1'

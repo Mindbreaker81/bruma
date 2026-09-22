@@ -1,101 +1,21 @@
 import os from 'node:os';
 import path from 'node:path';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { spawn, spawnSync } from 'node:child_process';
 
 import { expect } from 'chai';
-import { Builder, Capabilities } from 'selenium-webdriver';
 
-const repoRoot = path.resolve(process.cwd());
-
-function getApplicationPath() {
-  const binary = process.platform === 'win32' ? 'bruma.exe' : 'bruma';
-  return path.resolve(repoRoot, 'src-tauri', 'target', 'debug', binary);
-}
-
-function getTauriDriverPath() {
-  const binary =
-    process.platform === 'win32' ? 'tauri-driver.exe' : 'tauri-driver';
-  return path.resolve(os.homedir(), '.cargo', 'bin', binary);
-}
-
-async function waitForE2EBridge(driver) {
-  await driver.wait(async () => {
-    const ready = await driver.executeScript(
-      'return Boolean(window.brumaE2E);'
-    );
-    return Boolean(ready);
-  }, 60000);
-}
+import { ensureSession, shutdownSession, repoRoot } from './session.js';
 
 let driver;
-let tauriDriver;
-let exit = false;
 
 before(async function () {
   this.timeout(180000);
-
-  // Build debug binary (no bundling) for tauri-driver. The `pnpm tauri` wrapper
-  // redirects CARGO_TARGET_DIR to the temp dir; force it back to src-tauri/target
-  // so getApplicationPath() finds the binary.
-  const build = spawnSync(
-    'pnpm',
-    ['tauri', 'build', '--debug', '--no-bundle'],
-    {
-      cwd: repoRoot,
-      stdio: 'inherit',
-      shell: process.platform === 'win32',
-      env: {
-        ...process.env,
-        VITE_E2E: '1',
-        CARGO_TARGET_DIR: path.join(repoRoot, 'src-tauri', 'target'),
-      },
-    }
-  );
-  if (build.status !== 0) {
-    throw new Error(`tauri build failed with status ${build.status}`);
-  }
-
-  const tauriDriverPath = getTauriDriverPath();
-  tauriDriver = spawn(tauriDriverPath, [], {
-    stdio: [null, process.stdout, process.stderr],
-    shell: false,
-  });
-
-  tauriDriver.on('error', (error) => {
-    // eslint-disable-next-line no-console
-    console.error('tauri-driver error:', error);
-    process.exit(1);
-  });
-
-  tauriDriver.on('exit', (code) => {
-    if (!exit) {
-      // eslint-disable-next-line no-console
-      console.error('tauri-driver exited with code:', code);
-      process.exit(1);
-    }
-  });
-
-  const capabilities = new Capabilities();
-  capabilities.set('tauri:options', { application: getApplicationPath() });
-  capabilities.setBrowserName('wry');
-
-  driver = await new Builder()
-    .withCapabilities(capabilities)
-    .usingServer('http://127.0.0.1:4444/')
-    .build();
-
-  await waitForE2EBridge(driver);
+  driver = await ensureSession();
 });
 
 after(async function () {
   this.timeout(30000);
-  exit = true;
-  try {
-    await driver?.quit();
-  } finally {
-    tauriDriver?.kill();
-  }
+  await shutdownSession();
 });
 
 describe('Bruma (Tauri native E2E)', () => {
