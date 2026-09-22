@@ -33,10 +33,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - «Copiar selección» del menú contextual de la vista previa copiaba una cadena vacía en WKWebView (macOS): la selección del DOM colapsa cuando el menú toma el foco. Ahora se captura al dispararse `contextmenu`, antes de abrir el menú.
 - Al cambiar de vista o cerrar el editor dentro del debounce de `onChange` (120 ms) se perdía lo último tecleado; el desmontaje ahora entrega el cambio pendiente.
 - `baseUrl` deprecado eliminado de `tsconfig.app.json` (deja de funcionar en TypeScript 7.0); el alias `@/*` sigue resolviendo vía `paths` relativo al tsconfig.
+- `pnpm dev` ya no aborta con `ELOOP` cuando existen los artefactos locales de flatpak-builder (`build-dir/`, `.flatpak-builder/`): el watcher de Vite los ignora junto al resto de artefactos de empaquetado.
 
 ### CI
 
 - La matriz `tauri` incluye `ubuntu-latest`: instala las dependencias nativas, corre los checks de Rust y publica los bundles `.deb`, `.rpm` y `.AppImage` (con firmas del updater) en el draft release.
+- Tests E2E endurecidos: esperan el foco real de CodeMirror (`toBeFocused`) antes de teclear, eliminando el flake de `format-toolbar` visto en CI (`**hola mundo**` vs `****`).
 
 ### Docs
 
