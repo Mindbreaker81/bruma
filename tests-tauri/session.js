@@ -1,6 +1,6 @@
 import os from 'node:os';
 import path from 'node:path';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 
 import { Builder, Capabilities } from 'selenium-webdriver';
@@ -48,6 +48,45 @@ async function waitForTauriDriver(timeoutMs = 30000) {
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
+}
+
+// On session failure, dump where WebView2 actually wrote its files and
+// whether the app is still alive — CI diagnosis without a desktop.
+function dumpWindowsDiagnostics() {
+  if (process.platform !== 'win32') return;
+  const ps = (command) => {
+    try {
+      return spawnSync(
+        'powershell',
+        ['-NoProfile', '-NonInteractive', '-Command', command],
+        { encoding: 'utf8', timeout: 30000 }
+      ).stdout;
+    } catch (e) {
+      return `diagnostic failed: ${e}`;
+    }
+  };
+  const appDir = path.dirname(getApplicationPath());
+  // eslint-disable-next-line no-console
+  console.error(
+    'bruma.exe running:',
+    ps(
+      'Get-Process bruma -ErrorAction SilentlyContinue | Format-Table Id,ProcessName -AutoSize | Out-String'
+    )
+  );
+  // eslint-disable-next-line no-console
+  console.error(
+    'DevToolsActivePort files:',
+    ps(
+      `Get-ChildItem -Path "${appDir}","$env:LOCALAPPDATA","$env:TEMP" -Recurse -Filter DevToolsActivePort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName`
+    )
+  );
+  // eslint-disable-next-line no-console
+  console.error(
+    'WebView2 data dirs:',
+    ps(
+      `Get-ChildItem -Path "${appDir}","$env:LOCALAPPDATA" -Recurse -Directory -Filter "*.WebView2" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName`
+    )
+  );
 }
 
 let sessionPromise = null;
@@ -105,27 +144,25 @@ export function ensureSession() {
       const capabilities = new Capabilities();
       const tauriOptions = { application: getApplicationPath() };
       if (process.platform === 'win32') {
-        // wry places WebView2's user data folder under the app's local data
-        // dir; msedgedriver looks there for DevToolsActivePort, so the
-        // capability must point at the exact same folder.
-        const tauriConf = JSON.parse(
-          readFileSync(path.join(repoRoot, 'src-tauri', 'tauri.conf.json'))
-        );
-        const userDataFolder = path.join(
-          process.env.LOCALAPPDATA,
-          tauriConf.identifier,
-          'EBWebView'
-        );
+        // Bruma doesn't set `data_directory`, so wry leaves WebView2's user
+        // data folder at the default `<exedir>\<exe>.WebView2`. Pointing the
+        // driver at the same place lets it find DevToolsActivePort.
+        const userDataFolder = `${getApplicationPath()}.WebView2`;
         mkdirSync(userDataFolder, { recursive: true });
         tauriOptions.webviewOptions = { userDataFolder };
       }
       capabilities.set('tauri:options', tauriOptions);
       capabilities.setBrowserName('wry');
 
-      driver = await new Builder()
-        .withCapabilities(capabilities)
-        .usingServer('http://127.0.0.1:4444/')
-        .build();
+      try {
+        driver = await new Builder()
+          .withCapabilities(capabilities)
+          .usingServer('http://127.0.0.1:4444/')
+          .build();
+      } catch (error) {
+        dumpWindowsDiagnostics();
+        throw error;
+      }
 
       await waitForE2EBridge(driver);
       return driver;
