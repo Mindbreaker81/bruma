@@ -15,6 +15,15 @@ test.beforeEach(async ({ page, context }) => {
 const editorLocator = (page: import('@playwright/test').Page) =>
   page.getByRole('textbox', { name: /Editor Markdown|Markdown editor/i });
 
+// Focus the editor and wait until CodeMirror's contenteditable really owns
+// DOM focus — typing before that loses keystrokes (flaky `****` in CI).
+const focusEditor = async (page: import('@playwright/test').Page) => {
+  const editor = editorLocator(page);
+  await editor.click();
+  await expect(editor).toBeFocused();
+  return editor;
+};
+
 test('clipboard buttons are present and accessible', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: /^Cortar|^Cut/ })
@@ -30,8 +39,7 @@ test('clipboard buttons are present and accessible', async ({ page }) => {
 test('copy button writes the selection to the system clipboard', async ({
   page,
 }) => {
-  const editor = editorLocator(page);
-  await editor.click();
+  await focusEditor(page);
   await page.keyboard.type('hola mundo');
   await page.keyboard.press('ControlOrMeta+a');
 
@@ -46,8 +54,7 @@ test('copy button writes the selection to the system clipboard', async ({
 test('paste button replaces the selection with the clipboard text', async ({
   page,
 }) => {
-  const editor = editorLocator(page);
-  await editor.click();
+  const editor = await focusEditor(page);
   await page.keyboard.type('texto inicial');
   await page.keyboard.press('ControlOrMeta+a');
 
@@ -82,8 +89,7 @@ test('right click on the editor shows the app context menu', async ({
 test('preview context menu copies the selection even if it collapses', async ({
   page,
 }) => {
-  const editor = editorLocator(page);
-  await editor.click();
+  const editor = await focusEditor(page);
   await page.keyboard.type('texto de prueba preview');
   await expect(editor).toContainText('texto de prueba preview');
 
