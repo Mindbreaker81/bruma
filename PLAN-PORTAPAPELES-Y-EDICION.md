@@ -84,11 +84,11 @@ Lo confirmado por código:
 
 ### 1.3 Linux (no reportado, pero afecta al diseño)
 
-En GTK, los ítems predefinidos de portapapeles se implementan enviando la secuencia de teclas con **libxdo** (`muda-0.17.2/src/platform_impl/gtk/mod.rs:1163-1180`), con un `// TODO: wayland` explícito. La feature `libxdo` está activada por `tauri` (`tauri-2.10.3/Cargo.toml:103`).
+En GTK, los ítems predefinidos de portapapeles se implementan enviando la secuencia de teclas con **libxdo** (`muda-0.17.2/src/platform_impl/gtk/mod.rs:1163-1180`), con un `// TODO: wayland` explícito. La feature `linux-libxdo` de `tauri` NO está activada en esta build (verificado: `libxdo` no aparece en `Cargo.lock`), así que los ítems son no-ops incluso bajo X11.
 
 Consecuencias que el plan debe respetar:
 
-- Bajo **Wayland**, los ítems Cortar/Copiar/Pegar del menú nativo pueden no hacer nada. El teclado del webview sigue funcionando; el menú no es el camino fiable.
+- Bajo **Wayland**, los `PredefinedMenuItem` de Cortar/Copiar/Pegar no harían nada (su camino es libxdo, solo X11). Resuelto en Linux con ítems propios que ejecutan `execute_editing_command` de WebKit — verificado funcionando bajo Wayland real (ver §4.2).
 - En GTK **no existe** mapeo de `Undo`/`Redo` (cero coincidencias de `Undo`/`Redo` en el `platform_impl/gtk`). Otro motivo para no usar los ítems predefinidos de deshacer/rehacer.
 
 ### 1.4 Descartado con evidencia (no perder tiempo aquí)
@@ -465,7 +465,7 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 | ID   | Comprobación                                               | macOS | Windows | Linux X11  | Linux Wayland |
 | ---- | ---------------------------------------------------------- | ----- | ------- | ---------- | ------------- |
 | `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ✅    | ☐       | ✅         | ☐             |
-| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ✅    | ☐       | ✅         | ⚠ ver 1.3     |
+| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ✅    | ☐       | ✅         | ✅            |
 | `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ✅    | ☐       | ⚠ ver nota | ☐             |
 | `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ✅    | ☐       | ✅         | ☐             |
 | `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ✅    | ☐       | ✅         | ☐             |
@@ -493,6 +493,25 @@ X11 real, sin window manager):
 - `V6`: verificado en sesión X11 real — con texto seleccionado en la preview,
   «Editar ▸ Copiar» (comando `Copy` de WebKit) escribió la selección en el
   portapapeles X11 (`xclip`).
+
+Resultados de la columna **Linux Wayland** obtenidos en sesión Wayland real
+(`cage` headless sobre wlroots en el Mac Mini remoto, portapapeles verificado
+con `wl-copy`/`wl-paste`, menú activado vía AT-SPI):
+
+- `V2`: ✅ — el mismo camino `execute_editing_command` funciona bajo Wayland.
+  «Editar ▸ Copiar» escribió la selección en el portapapeles Wayland real
+  (ofertas `text/plain`, `text/html` y `org.webkitgtk.WebKit.
+  custom-pasteboard-data`, leídas con `wl-paste`), y «Editar ▸ Pegar» insertó
+  el texto que `wl-copy` había depositado. «Seleccionar todo» también activa
+  vía AT-SPI (selecciona el documento webview completo, semántica nativa de
+  WebKit).
+- Limitaciones del entorno headless (no de la app): wl-clipboard exige un seat
+  con teclado — se resolvió creando uno virtual (`wtype`, protocolo
+  `virtual-keyboard-v1`); las teclas sintéticas no llegan a la ventana en cage
+  sin dispositivos físicos, así que V1/D1 por teclado real quedan para una
+  sesión Wayland con hardware. La nota de la §1.3 («el menú no es el camino
+  fiable en Wayland») queda obsoleta: era cierta para los `PredefinedMenuItem`
+  de libxdo, pero los ítems propios usan el camino nativo de WebKit.
 
 Resultados de la columna **macOS** obtenidos en sesión real (macOS ARM64,
 bundle `.app` release, portapapeles del sistema verificado con el pasteboard
