@@ -501,7 +501,7 @@ con `wl-copy`/`wl-paste`, menú activado vía AT-SPI):
 - `V2`: ✅ — el mismo camino `execute_editing_command` funciona bajo Wayland.
   «Editar ▸ Copiar» escribió la selección en el portapapeles Wayland real
   (ofertas `text/plain`, `text/html` y `org.webkitgtk.WebKit.
-  custom-pasteboard-data`, leídas con `wl-paste`), y «Editar ▸ Pegar» insertó
+custom-pasteboard-data`, leídas con `wl-paste`), y «Editar ▸ Pegar» insertó
   el texto que `wl-copy` había depositado. «Seleccionar todo» también activa
   vía AT-SPI (selecciona el documento webview completo, semántica nativa de
   WebKit).
