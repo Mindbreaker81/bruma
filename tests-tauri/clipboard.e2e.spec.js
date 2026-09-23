@@ -5,7 +5,12 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { expect } from 'chai';
 import { By, Key, until } from 'selenium-webdriver';
 
-import { ensureSession, shutdownSession, repoRoot } from './session.js';
+import {
+  ensureSession,
+  shutdownSession,
+  ensureEditorView,
+  repoRoot,
+} from './session.js';
 import {
   clipboardAvailable,
   getClipboardFormats,
@@ -49,6 +54,7 @@ before(async function () {
     'return window.brumaE2E.openFileFromPath(arguments[0]);',
     docPath
   );
+  await ensureEditorView(driver);
   await driver.wait(until.elementLocated(By.css('.cm-content')), 30000);
 });
 

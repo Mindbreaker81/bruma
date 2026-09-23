@@ -3,7 +3,7 @@ import path from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 
-import { Builder, Capabilities } from 'selenium-webdriver';
+import { Builder, By, Capabilities } from 'selenium-webdriver';
 
 export const repoRoot = path.resolve(process.cwd());
 
@@ -89,6 +89,31 @@ function dumpWindowsDiagnostics() {
   );
 }
 
+// Persisted settings may restore `viewMode: 'preview'` (Radix tabs leave the
+// CodeMirror DOM unmounted when inactive). Force the editor tab when needed.
+// Radix activates triggers on mousedown, so a bare el.click() via JS is not
+// enough — prefer the trusted WebDriver click, fall back to a full sequence.
+export async function ensureEditorView(driver) {
+  const hasEditor = await driver.executeScript(
+    'return Boolean(document.querySelector(".cm-content"));'
+  );
+  if (hasEditor) return;
+  const tabs = await driver.findElements(
+    By.css('button[role="tab"][id$="trigger-editor"]')
+  );
+  if (tabs.length === 0) return;
+  try {
+    await tabs[0].click();
+  } catch {
+    await driver.executeScript(
+      `for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+        arguments[0].dispatchEvent(new MouseEvent(type, { bubbles: true }));
+      }`,
+      tabs[0]
+    );
+  }
+}
+
 let sessionPromise = null;
 let tauriDriver = null;
 let driver = null;
@@ -120,9 +145,19 @@ export function ensureSession() {
         throw new Error(`tauri build failed with status ${build.status}`);
       }
 
+      const driverEnv = { ...process.env };
+      // GTK3 probes XDG_RUNTIME_DIR/wayland-0 even without WAYLAND_DISPLAY and
+      // would send the app to a foreign Wayland session. The harness uses
+      // xclip + a real X display, so pin the app to the X11 backend.
+      if (process.platform === 'linux' && driverEnv.DISPLAY) {
+        driverEnv.GDK_BACKEND = 'x11';
+        delete driverEnv.WAYLAND_DISPLAY;
+      }
+
       tauriDriver = spawn(getTauriDriverPath(), [], {
         stdio: [null, process.stdout, process.stderr],
         shell: false,
+        env: driverEnv,
       });
 
       tauriDriver.on('error', (error) => {
