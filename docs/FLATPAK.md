@@ -30,8 +30,22 @@ flatpak-builder --force-clean --user --install-deps-from=flathub \
 - La app se instala (`flatpak list --user`) y arranca con
   `flatpak run com.mindbreaker81.bruma` bajo `xvfb-run` (headless): solo
   warnings benignos de AT-SPI/DRI3.
-- Pendiente de verificar: flujo de abrir/guardar vía portal de documentos,
-  menú nativo dentro del sandbox y comportamiento del updater.
+
+Verificado en sesión X11 headless (Xvfb + `dbus-run-session` + AT-SPI +
+`xclip`, 2026-09-23, build reconstruido con el fix del menú `b15fa38`):
+
+- **Menú nativo dentro del sandbox**: el árbol AT-SPI expone todos los ítems
+  (Archivo/Editar/Ver/Idioma/Ayuda). `Seleccionar todo` + `Copiar` escribieron
+  el contenido en el portapapeles X11 del host — el camino
+  `execute_editing_command` funciona dentro del sandbox.
+- **Portal de documentos (abrir)**: `Abrir…` lanza el `FileChooser` de
+  `xdg-desktop-portal-gtk`; al elegir `/tmp/test-portal-doc.md` el portal lo
+  concede a la app en `/run/user/1000/doc/<id>/test-portal-doc.md` con
+  permisos `read write grant-permissions` (`flatpak documents`).
+- **Observación**: el menú incluye `Buscar actualizaciones` — el updater sigue
+  activo en el build Flatpak (ver decisión 1).
+- Pendiente de verificar: guardado vía portal (rutas `/run/user/$UID/doc/` no
+  persisten entre sesiones salvo bookmarks), matriz por distro y publicación.
 
 ## Contexto
 
@@ -100,9 +114,12 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
 
 ## Siguientes pasos propuestos
 
-1. [~] Prototipo local: manifest en `flatpak/` compilado e instalado con
-   `flatpak-builder` (2026-09-16); la app arranca en el sandbox. Falta
-   comprobar abrir/guardar vía portal y el menú nativo.
+1. [x] Prototipo local: manifest en `flatpak/` compilado e instalado con
+   `flatpak-builder` (2026-09-16); la app arranca en el sandbox.
+   Verificado 2026-09-23: menú nativo funcional en el sandbox (copiar al
+   portapapeles X11 del host) y apertura de archivo vía portal de documentos
+   (`xdg-desktop-portal-gtk` → grant `read write` en
+   `/run/user/1000/doc/<id>/`). Falta guardado vía portal.
 2. Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente (instalando
    el `.flatpak` resultante).
 3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de
