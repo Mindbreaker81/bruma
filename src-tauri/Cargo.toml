@@ -25,5 +25,11 @@ tauri-plugin-process = "2"
 [lints]
 rust = { warnings = "warn" }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# Same version as tauri-runtime-wry to access WebView::execute_editing_command
+# for the Edit menu clipboard items (GTK predefined items are no-ops on the
+# WebKitWebView without libxdo).
+webkit2gtk = "=2.0.2"
+
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2.10.1"

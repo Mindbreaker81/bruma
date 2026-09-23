@@ -12,6 +12,10 @@ const RECENT_ITEM_ID_PREFIX: &str = "file_recent_open_";
 const RECENT_EMPTY_ID: &str = "file_recent_empty";
 const EDIT_UNDO_ID: &str = "edit_undo";
 const EDIT_REDO_ID: &str = "edit_redo";
+const EDIT_CUT_ID: &str = "edit_cut";
+const EDIT_COPY_ID: &str = "edit_copy";
+const EDIT_PASTE_ID: &str = "edit_paste";
+const EDIT_SELECT_ALL_ID: &str = "edit_select_all";
 const EDIT_COPY_DOCUMENT_ID: &str = "edit_copy_document";
 const EDIT_COPY_AS_HTML_ID: &str = "edit_copy_as_html";
 const EDIT_FIND_ID: &str = "edit_find";
@@ -200,7 +204,35 @@ pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &MenuId) {
         }
     }
 
+    // On Linux the clipboard items are custom items (see build_edit_menu), so
+    // they are executed here through the WebKit editing commands — the same
+    // engine path the keyboard shortcuts use, which works on both X11 and
+    // Wayland without libxdo.
+    #[cfg(target_os = "linux")]
+    if let Some(command) = linux_editing_command(id.as_ref()) {
+        use webkit2gtk::WebViewExt;
+
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.with_webview(move |webview| {
+                webview.inner().execute_editing_command(command);
+            });
+        }
+        return;
+    }
+
     let _ = app.emit(MENU_ACTION_EVENT, id.as_ref());
+}
+
+/// WebKit editing command for a clipboard menu item, or `None` for the rest.
+#[cfg(target_os = "linux")]
+fn linux_editing_command(id: &str) -> Option<&'static str> {
+    match id {
+        EDIT_CUT_ID => Some("Cut"),
+        EDIT_COPY_ID => Some("Copy"),
+        EDIT_PASTE_ID => Some("Paste"),
+        EDIT_SELECT_ALL_ID => Some("SelectAll"),
+        _ => None,
+    }
 }
 
 fn refresh_menu<R: Runtime>(
@@ -382,13 +414,16 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
     )
 }
 
-/// Custom item IDs of the Edit submenu, in display order. Predefined items
-/// (cut/copy/paste/select all and separators) get system-generated IDs and are
+/// Custom item IDs of the Edit submenu, in display order. Separators are
 /// resolved natively, so they are not listed here.
-fn edit_menu_item_ids() -> &'static [&'static str; 6] {
+fn edit_menu_item_ids() -> &'static [&'static str; 10] {
     &[
         EDIT_UNDO_ID,
         EDIT_REDO_ID,
+        EDIT_CUT_ID,
+        EDIT_COPY_ID,
+        EDIT_PASTE_ID,
+        EDIT_SELECT_ALL_ID,
         EDIT_COPY_DOCUMENT_ID,
         EDIT_COPY_AS_HTML_ID,
         EDIT_FIND_ID,
@@ -400,7 +435,7 @@ fn build_edit_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     labels: &MenuLabels,
 ) -> tauri::Result<Submenu<R>> {
-    let &[undo_id, redo_id, copy_document_id, copy_as_html_id, find_id, replace_id] =
+    let &[undo_id, redo_id, cut_id, copy_id, paste_id, select_all_id, copy_document_id, copy_as_html_id, find_id, replace_id] =
         edit_menu_item_ids();
 
     let edit_undo = MenuItem::with_id(app, undo_id, &labels.undo, true, Some("CmdOrCtrl+Z"))?;
@@ -417,10 +452,54 @@ fn build_edit_menu<R: Runtime, M: Manager<R>>(
         }),
     )?;
     let edit_separator_history = PredefinedMenuItem::separator(app)?;
-    let edit_cut = PredefinedMenuItem::cut(app, Some(labels.cut.as_str()))?;
-    let edit_copy = PredefinedMenuItem::copy(app, Some(labels.copy.as_str()))?;
-    let edit_paste = PredefinedMenuItem::paste(app, Some(labels.paste.as_str()))?;
-    let edit_select_all = PredefinedMenuItem::select_all(app, Some(labels.select_all.as_str()))?;
+    // On Linux (GTK) the predefined actions only reach GtkEditable widgets and
+    // are no-ops on the WebKitWebView, so cut/copy/paste/select all are custom
+    // items executed via WebKit editing commands in handle_event. On macOS
+    // (responder chain) and Windows (SendInput) the predefined items already
+    // work natively, so they are kept there.
+    let [edit_cut, edit_copy, edit_paste, edit_select_all]: [Box<dyn IsMenuItem<R>>; 4] =
+        if cfg!(target_os = "linux") {
+            [
+                Box::new(MenuItem::with_id(
+                    app,
+                    cut_id,
+                    &labels.cut,
+                    true,
+                    Some("CmdOrCtrl+X"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    copy_id,
+                    &labels.copy,
+                    true,
+                    Some("CmdOrCtrl+C"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    paste_id,
+                    &labels.paste,
+                    true,
+                    Some("CmdOrCtrl+V"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    select_all_id,
+                    &labels.select_all,
+                    true,
+                    Some("CmdOrCtrl+A"),
+                )?),
+            ]
+        } else {
+            [
+                Box::new(PredefinedMenuItem::cut(app, Some(labels.cut.as_str()))?),
+                Box::new(PredefinedMenuItem::copy(app, Some(labels.copy.as_str()))?),
+                Box::new(PredefinedMenuItem::paste(app, Some(labels.paste.as_str()))?),
+                Box::new(PredefinedMenuItem::select_all(
+                    app,
+                    Some(labels.select_all.as_str()),
+                )?),
+            ]
+        };
     let edit_separator_clipboard = PredefinedMenuItem::separator(app)?;
     let edit_copy_document = MenuItem::with_id(
         app,
@@ -454,10 +533,10 @@ fn build_edit_menu<R: Runtime, M: Manager<R>>(
             &edit_undo,
             &edit_redo,
             &edit_separator_history,
-            &edit_cut,
-            &edit_copy,
-            &edit_paste,
-            &edit_select_all,
+            &*edit_cut,
+            &*edit_copy,
+            &*edit_paste,
+            &*edit_select_all,
             &edit_separator_clipboard,
             &edit_copy_document,
             &edit_copy_as_html,
@@ -604,6 +683,10 @@ mod tests {
             &[
                 "edit_undo",
                 "edit_redo",
+                "edit_cut",
+                "edit_copy",
+                "edit_paste",
+                "edit_select_all",
                 "edit_copy_document",
                 "edit_copy_as_html",
                 "edit_find",
