@@ -469,7 +469,7 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 | `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ✅    | ☐       | ⚠ ver nota | ☐             |
 | `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ✅    | ☐       | ✅         | ☐             |
 | `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ✅    | ☐       | ✅         | ☐             |
-| `V6` | Copiar desde la vista previa (selección de texto)          | ✅    | ☐       | ⚠ ver nota | ☐             |
+| `V6` | Copiar desde la vista previa (selección de texto)          | ✅    | ☐       | ✅         | ☐             |
 | `V7` | Menú contextual propio en editor y preview                 | ✅    | ☐       | ✅         | ☐             |
 | `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ✅    | ☐       | ✅         | ☐             |
 | `V9` | Copiar como HTML pega con formato en un editor enriquecido | ✅    | ☐       | ✅         | ☐             |
@@ -490,8 +490,9 @@ X11 real, sin window manager):
   `R4` (`canReadClipboard()` devuelve false en este entorno headless y el botón
   se autodeshabilita). Verificar en sesión real antes de decidir el escape
   hatch.
-- `V6`: el contenido de la vista previa no se localizó en el árbol AT-SPI;
-  verificar selección manual en sesión real.
+- `V6`: verificado en sesión X11 real — con texto seleccionado en la preview,
+  «Editar ▸ Copiar» (comando `Copy` de WebKit) escribió la selección en el
+  portapapeles X11 (`xclip`).
 
 Resultados de la columna **macOS** obtenidos en sesión real (macOS ARM64,
 bundle `.app` release, portapapeles del sistema verificado con el pasteboard
