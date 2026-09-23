@@ -547,6 +547,26 @@ nativo y conducción de la app por el árbol de accesibilidad):
 - `V9`: «Copiar como HTML» escribe `text/html` con el marcado renderizado
   (verificado en el pasteboard) además del texto plano.
 
+Re-verificación de la columna **macOS** sobre la `.app` release compilada
+desde la rama actual (M2 Max, `edmundorosalesmayor@192.168.1.91`, conducción
+por System Events con Accesibilidad y pasteboard real con `pbcopy`/`pbpaste`):
+
+- `V1`: `⌘A`/`⌘C` copiaron el contenido del editor al pasteboard y `⌘V`
+  insertó un centinela depositado con `pbcopy` (33→50 caracteres).
+- `V2`: «Editar ▸ Copiar» escribió la selección al pasteboard y «Editar ▸
+  Pegar» insertó el centinela del pasteboard reemplazando la selección.
+- `V3`: el botón «Pegar» de la toolbar insertó el centinela del pasteboard —
+  `navigator.clipboard.readText()` funciona en WKWebView.
+- `V4`: «Editar ▸ Deshacer/Rehacer» revirtió y reaplicó el pegado (50→33→50).
+- `V5`: «Editar ▸ Deshacer» vació el campo de búsqueda sin tocar el documento.
+- `V6`: en modo Vista previa, `⌘A`/`⌘C` copiaron el contenido renderizado.
+- `V7`: clic derecho real (CGEvent) en el editor abrió el menú contextual
+  propio (`Cortar/Copiar/Pegar/Seleccionar todo/formato/Copiar como HTML`).
+- `V8`: al elegir «Language ▸ Spanish» la barra pasó a
+  `Archivo/Editar/Ver/Idioma/Ayuda` con los ítems localizados en caliente.
+- `V9`: «Copiar como HTML» escribió el flavor `«class HTML»` (662 bytes de
+  marcado renderizado) junto al texto plano.
+
 `V3` es el punto de decisión del escape hatch de la sección 2.1: si falla en alguna plataforma, documentarlo y proponer el plugin aparte.
 
 ---
