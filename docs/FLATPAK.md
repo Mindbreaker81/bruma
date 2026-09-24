@@ -133,8 +133,13 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
    Observación: el log GTK muestra warnings «no accelerator installed in
    accel group» — **benignos**: verificado que `Ctrl+S` dispara el diálogo
    de guardado vía portal aunque GTK lo registre como warning.
-   El AppImage no se probó: el bundler falla en `linuxdeploy` en este
-   entorno (sin red de descarga de herramientas externas).
+   El AppImage se probó después (2026-09-24): el fallo de `linuxdeploy`
+   era una dependencia de build (`librsvg-2.0.pc` → `librsvg2-dev`);
+   `Bruma_1.8.0_amd64.AppImage` (81 MB) se genera y arranca bajo Xvfb en
+   un Ubuntu 24.04 mínimo tras instalar el stack de escritorio estándar
+   (`libgtk-3-0` — las libs `libfribidi`/`libfontconfig`/`libharfbuzz`/
+   `libEGL` están en la excludelist habitual de linuxdeploy y existen en
+   cualquier desktop real). Warnings DRI3/GTK benignos en headless.
 3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de
    publicación a `flathub/flathub` con metainfo completo.
 4. Documentar en `README.md` la vía Flatpak junto a AppImage/.deb/.rpm.

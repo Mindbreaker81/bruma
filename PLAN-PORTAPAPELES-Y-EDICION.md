@@ -475,10 +475,18 @@ Verificación:
   simulado, un pegado con `image/*` en documento sin guardar muestra el
   aviso localizado, y en documento guardado inserta `![](imagen-…)` tras
   `save_pasted_image`.
-- Pendiente: validación manual del pegado real desde el portapapeles del
-  sistema en una app nativa (en macOS la automatización remota por AX no
-  pudo conducir los paneles de archivo ni el webview del build de
-  desarrollo; no es un fallo de la app).
+- Validación manual en Windows 11 real (build release 1.8.0,
+  `edmundo@192.168.1.92`): ambos caminos verificados con una imagen PNG
+  real depositada en el portapapeles del sistema (`Clipboard.SetImage`):
+  - Documento **sin guardar** → toast «Guarda el documento antes de
+    pegar imágenes del portapapeles.» y no se inserta nada.
+  - Documento **guardado** (`f9doc.md`) → el evento `paste` expone
+    `files: [image/png]`, se crea `imagen-<timestamp>.png` junto al
+    documento, se inserta `![](imagen-…)` en el cursor y el
+    autoguardado persiste el documento en disco.
+    En macOS la automatización remota por AX no pudo conducir los paneles
+    de archivo ni el webview del build de desarrollo; no es un fallo de la
+    app — la misma cadena quedó cubierta por los tests y por Windows.
 
 ---
 
@@ -639,10 +647,35 @@ PowerShell y del DOM vía DevTools:
   inglés también — verificado enumerando el `HMENU` real.
 - `V9`: el harness verifica que «Copiar como HTML» deja formato HTML en el
   portapapeles del sistema.
-- `F9` (camino negativo): con una imagen real en el portapapeles
-  (`SetImage`) y documento sin guardar, «Pegar» dispara el toast «Guarda el
-  documento antes de pegar imágenes del portapapeles.» sin insertar texto —
-  el hook de pegado de imagen funciona con el portapapeles nativo.
+- `F9` (ambos caminos, ver sección F9): el camino negativo mostró el toast
+  correcto sin insertar, y el positivo —ya sobre el **build release**—
+  creó `imagen-<timestamp>.png` junto al documento e insertó la referencia
+  Markdown.
+
+Re-verificación sobre el **build release** de Windows (`bruma.exe` 1.8.0,
+`src-tauri/target/release`, conducido por `WM_COMMAND` + DevTools
+`--remote-debugging-port`):
+
+- Arranque en frío hasta ventana: ~142 ms.
+- Tamaños: `bruma.exe` 13,6 MB · MSI `Bruma_1.8.0_x64_en-US.msi` 5,1 MB ·
+  NSIS `Bruma_1.8.0_x64-setup.exe` 3,7 MB (todos < 30 MB).
+- Abrir documento por el diálogo nativo «Abrir» (`f9doc.md`): OK; el menú
+  «Abrir recientes» lo lista como `f9doc.md — C:\Users\Edmundo` (sin
+  prefijo `\\?\`).
+- Editar → autoguardado: texto insertado en el editor persiste a disco y
+  la barra de estado pasa a «Guardado». El flujo edición → dirty →
+  autoguardado → `save_file` funciona en release.
+- «Editar ▸ Pegar» con imagen PNG real: crea `imagen-1790244615344.png`
+  junto al documento e inserta `![](imagen-…)` (camino positivo de F9).
+- «Editar ▸ Copiar como HTML» escribe el flavor `HTML Format` real en el
+  portapapeles (marcado renderizado + `text/plain`).
+- «Buscar» abre el panel y acepta entrada; «Preferencias» abre el diálogo
+  (Autoguardado/Tema); la protección de cambios sin guardar muestra el
+  diálogo «Cancelar/Descartar» al hacer «Nuevo» con el doc dirty.
+- Nota de automatización: los IDs de menú Win32 cambian al reconstruirse
+  el menú (recientes/idioma) y un modal de «Recuperar sesión» bloquea el
+  input real — ambos fueron artefactos del scripting, no defectos de la
+  app.
 
 Notas de entorno Windows (no de la app): los tests nativos deben ejecutarse
 en la sesión de consola interactiva — en la sesión 0 (SSH) el WebView2 no
