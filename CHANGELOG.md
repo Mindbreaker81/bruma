@@ -6,6 +6,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-24
+
 ### Added
 
 - Menú nativo «Editar» completo: Deshacer, Rehacer, Cortar, Copiar, Pegar, Seleccionar todo, Copiar documento, Copiar como HTML, Buscar y Reemplazar, con aceleradores y traducción dinámica es/en. En macOS restaura los atajos de portapapeles (⌘C/⌘V/⌘X/⌘A), que dependían de los ítems predefinidos del menú.

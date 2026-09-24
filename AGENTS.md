@@ -5,14 +5,14 @@ Idioma del proyecto y de los commits: **español**.
 
 ## Empieza aquí (handoff)
 
-> Continúa el trabajo en la rama
-> `claude/markdown-editor-clipboard-w9ddrq` (PR abierta). Lee este archivo,
-> `PLAN-PORTAPAPELES-Y-EDICION.md` y `docs/TODO.md`. El seguimiento vive en
-> YouTrack (proyecto **BRU**, vía MCP `youtrack`; base de conocimiento en los
-> artículos `BRU-A-1` a `BRU-A-6`). Lo pendiente: validación manual V1–V9/D1
-> en Windows/macOS (BRU-1, BRU-9), decisión de producto para F9 (BRU-10) y las
-> tareas BRU-11/12/14/15. Las fases F1–F8 del plan de portapapeles ya están
-> implementadas y en `Done`.
+> El plan de portapapeles y menú Editar (`PLAN-PORTAPAPELES-Y-EDICION.md`,
+> fases F1–F9) está implementado, validado en máquinas reales de las tres
+> plataformas y publicado como `v1.9.0`. El seguimiento vive en YouTrack
+> (proyecto **BRU**, vía MCP `youtrack`; base de conocimiento en los
+> artículos `BRU-A-1` a `BRU-A-6`). Lo pendiente requiere humano o hardware:
+> verificación del updater post-release (BRU-12), sesión con lectores de
+> pantalla Narrator/VoiceOver/Orca (BRU-15), smoke GUI por distro y decisión
+> sobre Flathub (BRU-14).
 
 ## Comandos de validación
 

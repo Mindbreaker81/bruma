@@ -4,10 +4,9 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 
 ## Estado actual
 
-- Versión actual: **1.8.0**. Se define en `package.json` y se sincroniza con Tauri/Rust mediante `npm run sync:version`.
+- Versión actual: **1.9.0**. Se define en `package.json` y se sincroniza con Tauri/Rust mediante `npm run sync:version`.
 - Plataformas objetivo MVP: macOS, Windows y Linux
-- Estado de entrega: plan de mejoras F1–F8 implementado y validado en la matriz
-  de release para macOS ARM64, Linux x64, Windows x64 y Windows ARM64
+- Estado de entrega: plan de portapapeles y menú Editar (F1–F9) implementado y validado en máquinas reales — matriz V1–V9 completa en macOS ARM64 y Windows 11, y en Linux X11/Wayland
 - Estado de seguridad: fix de path traversal aplicado en comandos Tauri de filesystem y validado con tests Rust
 
 ## Que incluye la version actual
@@ -20,6 +19,7 @@ Editor Markdown de escritorio, local-first, enfocado en lo esencial.
 - **Diálogo de atajos de teclado** (solo lectura) accesible desde toolbar, menú Ayuda y tecla `?`
 - **Auto-continuación de listas** al pulsar Enter (con incremento de numeradas y salida en marcador vacío)
 - **Pegar URL como enlace**: al pegar una URL sobre una selección no vacía se envuelve como `[selección](url)`
+- **Pegar imagen del portapapeles**: si el portapapeles trae una imagen, se guarda junto al documento como `imagen-<timestamp>.<ext>` y se inserta `![](nombre)` en el cursor (requiere documento guardado)
 - Preview en tiempo real (markdown-it + sanitizacion con DOMPurify)
 - Modos de vista: editor, preview, dividido; en dividido, scroll **sincronizado por línea** entre editor y preview (preferencia persistida)
 - Barra de estado mejorada con métricas, estado de guardado y **posición de cursor** (`Ln`, `Col`) en editor/dividido
@@ -312,6 +312,7 @@ El detalle operativo de firma y QA esta en `docs/RELEASE.md`.
 ## Roadmap
 
 - `v1.6` (entregado): diálogo de atajos, tooltips con shortcuts en toolbar, barra de estado interactiva (idioma/tema + línea/columna), drag&drop nativo por ruta en Tauri, fix de consola extra en Windows.
+- `v1.9` (entregado): menú Editar nativo completo con portapapeles, botones de portapapeles en la toolbar, menú contextual propio, «Copiar como HTML», pegar imagen del portapapeles, fix de drag&drop en Windows/WebView2, AppImage/deb/rpm en releases.
 - Siguiente:
   - Firma Authenticode para Windows (.msi / .exe).
   - Builds nativas oficiales para Linux (deb/rpm/AppImage) ya disponibles; Flatpak como futuro.

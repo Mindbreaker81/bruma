@@ -1,7 +1,7 @@
 # TODO — Bruma
 
-- **Estado:** `v1.8.0` (plan de mejoras de la auditoría 2026-07 completado; updater firmado y clave rotada).
-- **Último release:** `v1.8.0` (2026-07-26).
+- **Estado:** `v1.9.0` (plan de portapapeles y menú Editar F1–F9 completado y validado en macOS/Windows/Linux; fix de drag & drop en Windows/WebView2).
+- **Último release:** `v1.9.0` (2026-09-24).
 - **Convención:** `[ ]` pendiente · `[~]` en curso · `[x]` hecho.
 - **Referencias:** `PRDv2.md`, `ARCHITECTURE.md`.
 
