@@ -37,6 +37,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - `baseUrl` deprecado eliminado de `tsconfig.app.json` (deja de funcionar en TypeScript 7.0); el alias `@/*` sigue resolviendo vía `paths` relativo al tsconfig.
 - `pnpm dev` ya no aborta con `ELOOP` cuando existen los artefactos locales de flatpak-builder (`build-dir/`, `.flatpak-builder/`): el watcher de Vite los ignora junto al resto de artefactos de empaquetado.
 - En Linux los ítems «Cortar», «Copiar», «Pegar» y «Seleccionar todo» del menú Editar no hacían nada: los `PredefinedMenuItem` de GTK dependen de libxdo (feature que la build no activa) y no alcanzan al WebKitWebView. Ahora son ítems propios que ejecutan el comando de edición nativo de WebKit, el mismo camino que el teclado, válido en X11 y Wayland.
+- En Windows el arrastre de archivos `.md`/`.markdown` sobre la ventana no producía ningún evento: wry solo registra su `IDropTarget` en HWNDs hijos que ya tienen uno registrado, y con `SetAllowExternalDrop(false)` + la creación asíncrona de `Chrome_RenderWidgetHostHWND` ningún hijo cumple la condición en los runtimes WebView2 recientes. Bruma registra ahora su propio `IDropTarget` en los hijos del WebView2 (`src-tauri/src/drag_drop.rs`), emitiendo los mismos eventos `tauri://drag-*` con el mismo payload y concediendo las rutas en `AllowedPaths`; verificado con arrastre real Explorer→ventana (BRU-11).
 
 ### CI
 

@@ -1,4 +1,6 @@
 mod commands;
+#[cfg(target_os = "windows")]
+mod drag_drop;
 pub mod linux;
 mod menu;
 
@@ -74,6 +76,14 @@ pub fn run() {
             }
 
             menu::install(app)?;
+
+            // wry only registers its OLE drop target on WebView2 child HWNDs
+            // that already have one, which leaves file drag & drop dead on
+            // recent WebView2 runtimes — install our own target so the
+            // `tauri://drag-*` events actually reach the frontend.
+            #[cfg(target_os = "windows")]
+            drag_drop::install(app.handle());
+
             Ok(())
         })
         .on_menu_event(|app, event| {

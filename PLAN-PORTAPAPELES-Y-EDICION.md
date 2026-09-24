@@ -688,6 +688,28 @@ conecta y pasa íntegro. Defecto real encontrado y corregido: las rutas
 canonizadas de Windows se filtraban a la UI con prefijo verbatim `\\?\`
 (p. ej. en el menú de recientes) — `path_to_string` ahora lo normaliza.
 
+Defecto real nº 2 — **drag & drop de archivos no llegaba a la app**: un
+arrastre OLE real desde el Explorador (probado como fuente válida moviendo
+el archivo al Escritorio) no generaba ningún evento `tauri://drag-*`.
+Causa: wry 0.54.4 sólo registra su `IDropTarget` en HWNDs hijos que ya
+tienen uno registrado (`RevokeDragDrop != DRAGDROP_E_INVALIDHWND`), pero
+`SetAllowExternalDrop(false)` y la creación asíncrona de
+`Chrome_RenderWidgetHostHWND` dejan a todos los hijos sin target en el
+runtime 153 — el mismo fallo que el PR upstream no mergeado
+`tauri-apps/wry#1638`. Fix propio en `src-tauri/src/drag_drop.rs`: un
+`IDropTarget` registrado incondicionalmente en cada HWND descendiente
+(reintentos hasta que aparece el render widget, que se crea de forma
+asíncrona, y re-registro en `Resized`/`Moved`/`ScaleFactorChanged` porque
+WebView2 puede recrearlo), que emite los mismos eventos
+`tauri://drag-enter|over|drop|leave` con el payload idéntico de Tauri
+(`emit_filter` sobre `Window|WebviewWindow`, como `emit_to_window`) y
+concede las rutas en `AllowedPaths` — el mismo efecto del handler
+`WindowEvent::DragDrop` de `lib.rs`, que este camino personalizado
+bypasea. Verificado con arrastre real Explorador→ventana: `enter`/`over`/
+`drop` llegaron una vez cada uno y `drop-test.md` abrió en pestaña
+nueva. (Nota: el handler del frontend ya funcionaba — emitir el evento
+sintético abría el archivo; el hueco era la registración OLE.)
+
 `V3` es el punto de decisión del escape hatch de la sección 2.1: si falla en alguna plataforma, documentarlo y proponer el plugin aparte.
 
 ---

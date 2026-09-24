@@ -374,6 +374,8 @@ dependencies = [
  "tauri-plugin-store",
  "tauri-plugin-updater",
  "webkit2gtk",
+ "windows",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
