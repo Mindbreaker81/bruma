@@ -501,15 +501,15 @@ Registrar los resultados en el PR. Si 1-4 funcionan, el problema en Windows era 
 
 | ID   | Comprobación                                               | macOS | Windows | Linux X11  | Linux Wayland |
 | ---- | ---------------------------------------------------------- | ----- | ------- | ---------- | ------------- |
-| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ✅    | ☐       | ✅         | ☐             |
-| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ✅    | ☐       | ✅         | ✅            |
-| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ✅    | ☐       | ⚠ ver nota | ☐             |
-| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ✅    | ☐       | ✅         | ☐             |
-| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ✅    | ☐       | ✅         | ☐             |
-| `V6` | Copiar desde la vista previa (selección de texto)          | ✅    | ☐       | ✅         | ☐             |
-| `V7` | Menú contextual propio en editor y preview                 | ✅    | ☐       | ✅         | ☐             |
-| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ✅    | ☐       | ✅         | ☐             |
-| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ✅    | ☐       | ✅         | ☐             |
+| `V1` | `⌘/Ctrl+C` y `+V` en el editor                             | ✅    | ✅      | ✅         | ☐             |
+| `V2` | Menú Editar ▸ Copiar/Pegar con el editor enfocado          | ✅    | ✅      | ✅         | ✅            |
+| `V3` | Botón Pegar de la barra (`navigator.clipboard.readText`)   | ✅    | ✅      | ⚠ ver nota | ☐             |
+| `V4` | `⌘/Ctrl+Z` y rehacer, dentro del editor                    | ✅    | ✅      | ✅         | ☐             |
+| `V5` | `Ctrl+Z` en el campo de búsqueda deshace **ahí**           | ✅    | ✅      | ✅         | ☐             |
+| `V6` | Copiar desde la vista previa (selección de texto)          | ✅    | ✅      | ✅         | ☐             |
+| `V7` | Menú contextual propio en editor y preview                 | ✅    | ✅      | ✅         | ☐             |
+| `V8` | Etiquetas del menú nativo cambian al conmutar idioma       | ✅    | ✅      | ✅         | ☐             |
+| `V9` | Copiar como HTML pega con formato en un editor enriquecido | ✅    | ✅      | ✅         | ☐             |
 
 Resultados de la columna **Linux X11** obtenidos con el harness
 `tests-tauri/v-matrix-linux.sh` (Xvfb + AT-SPI + `xdotool`/`xclip`, portapapeles
@@ -603,6 +603,57 @@ por System Events con Accesibilidad y pasteboard real con `pbcopy`/`pbpaste`):
   `Archivo/Editar/Ver/Idioma/Ayuda` con los ítems localizados en caliente.
 - `V9`: «Copiar como HTML» escribió el flavor `«class HTML»` (662 bytes de
   marcado renderizado) junto al texto plano.
+
+Resultados de la columna **Windows** obtenidos en Windows 11 real
+(`edmundo@192.168.1.92`, build 26200, WebView2 runtime 153.0.4234.48 +
+`msedgedriver` emparejado, `tauri-driver` 2.0.6). Dos caminos de evidencia:
+el harness E2E nativo (`pnpm test:e2e:tauri`, **10 passing** sobre
+`bruma.exe` debug en la sesión interactiva de consola) y conducción del menú
+nativo Win32 vía `WM_COMMAND` + verificación del portapapeles real con
+PowerShell y del DOM vía DevTools:
+
+- `V1`/`D1`: cubierto por el harness (Ctrl+C/V/Z/Y reales por WebDriver,
+  portapapeles del sistema verificado en ambos sentidos). D1-1…D1-5 ✅.
+- `V2`/`D1-3`: verificado de forma nativa — «Editar ▸ Pegar» (ídem.
+  `Paste` predefinido de muda → `SendInput(Ctrl+V)`) insertó un centinela
+  depositado con `Set-Clipboard` en el editor enfocado, y «Seleccionar
+  todo» + «Copiar» escribieron el contenido del documento en el
+  portapapeles real (canary previo descartado). Confirma además `R3`: un
+  solo «Pegar» pega una sola vez.
+- `V3`: el botón «Pegar» de la toolbar inserta el texto del portapapeles.
+  Primera llamada muestra el infobar de permiso de WebView2 («quiere ver el
+  Portapapeles / Bloquear / Permitir») — el harness lo acepta
+  (`fluent-button#allow-button`) y el permiso persiste en el perfil.
+  **`navigator.clipboard.readText()` funciona en WebView2 — no hace falta el
+  escape hatch `R4` en Windows.**
+- `V4`/`V5`: cubiertos por el harness (Ctrl+Z/Y reales; undo en el campo de
+  búsqueda vacía el campo — granularidad por carácter de Chromium en inputs
+  controlados, ajustado el spec).
+- `V6`: en Vista previa, «Seleccionar todo» + «Copiar» del menú escribieron
+  el contenido renderizado en el portapapeles real.
+- `V7`: el harness abre el menú contextual propio con `contextClick` real
+  (el check de cierre usa `data-state` — `isDisplayed()` de Selenium no es
+  fiable sobre el portal Radix).
+- `V8`: «Language ▸ Spanish» re-etiquetó la barra Win32 en caliente
+  (`Archivo/Editar/Ver/Idioma/Ayuda`, ítems localizados) y el inverso a
+  inglés también — verificado enumerando el `HMENU` real.
+- `V9`: el harness verifica que «Copiar como HTML» deja formato HTML en el
+  portapapeles del sistema.
+- `F9` (camino negativo): con una imagen real en el portapapeles
+  (`SetImage`) y documento sin guardar, «Pegar» dispara el toast «Guarda el
+  documento antes de pegar imágenes del portapapeles.» sin insertar texto —
+  el hook de pegado de imagen funciona con el portapapeles nativo.
+
+Notas de entorno Windows (no de la app): los tests nativos deben ejecutarse
+en la sesión de consola interactiva — en la sesión 0 (SSH) el WebView2 no
+inicializa su UI. La sesión se auto-bloqueó durante la validación
+(`Mystify.scr`/`LockApp`); con el escritorio bloqueado `OpenClipboard` falla
+para todos los procesos, invalidando los tests de portapapeles. El fallo del
+job `windows` de CI (`DevToolsActivePort`) es la regresión conocida del
+runtime 152 del runner; con el runtime 153 de una máquina real el harness
+conecta y pasa íntegro. Defecto real encontrado y corregido: las rutas
+canonizadas de Windows se filtraban a la UI con prefijo verbatim `\\?\`
+(p. ej. en el menú de recientes) — `path_to_string` ahora lo normaliza.
 
 `V3` es el punto de decisión del escape hatch de la sección 2.1: si falla en alguna plataforma, documentarlo y proponer el plugin aparte.
 
