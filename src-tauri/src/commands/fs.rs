@@ -515,7 +515,20 @@ fn ensure_markdown_extension(path: PathBuf) -> PathBuf {
 }
 
 fn path_to_string(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
+    let value = path.to_string_lossy().into_owned();
+    // Windows canonicalize() produces verbatim paths (\\?\C:\...). Strip the
+    // prefix so UI-facing strings (recent files menu, tab titles, document
+    // paths echoed back to the frontend) stay human-readable.
+    #[cfg(windows)]
+    {
+        if let Some(rest) = value.strip_prefix(r"\\?\") {
+            if let Some(unc) = rest.strip_prefix(r"UNC\") {
+                return format!(r"\\{unc}");
+            }
+            return rest.to_string();
+        }
+    }
+    value
 }
 
 fn now_millis() -> u128 {
@@ -527,6 +540,8 @@ fn now_millis() -> u128 {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(windows)]
+    use super::path_to_string;
     use super::{
         ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
         normalize_eol, read_file_in_scope, read_image_in_scope, read_markdown_file,
@@ -544,6 +559,23 @@ mod tests {
     fn normalizes_line_endings_for_writes() {
         assert_eq!(normalize_eol("a\r\nb\rc", DocumentEol::Lf), "a\nb\nc");
         assert_eq!(normalize_eol("a\nb", DocumentEol::Crlf), "a\r\nb");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn strips_verbatim_prefix_from_returned_paths() {
+        assert_eq!(
+            path_to_string(Path::new(r"\\?\C:\Users\test\doc.md")),
+            r"C:\Users\test\doc.md"
+        );
+        assert_eq!(
+            path_to_string(Path::new(r"\\?\UNC\server\share\doc.md")),
+            r"\\server\share\doc.md"
+        );
+        assert_eq!(
+            path_to_string(Path::new(r"C:\Users\test\doc.md")),
+            r"C:\Users\test\doc.md"
+        );
     }
 
     #[test]
