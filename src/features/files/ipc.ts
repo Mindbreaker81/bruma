@@ -115,6 +115,22 @@ export async function readImageAsDataUrl(
   }
 }
 
+export type SavedImage = {
+  path: string;
+  fileName: string;
+};
+
+export async function savePastedImage(args: {
+  docPath: string;
+  content: string;
+  extension: string;
+}): Promise<SavedImage> {
+  if (!isTauriRuntime()) {
+    throw new Error('fileSaveUnavailable');
+  }
+  return invoke<SavedImage>('save_pasted_image', args);
+}
+
 export async function saveBinaryExportDialog(args: {
   content: string;
   suggested?: string;

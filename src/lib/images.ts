@@ -1,5 +1,35 @@
 import { readImageAsDataUrl } from '../features/files/ipc';
 
+const IMAGE_MIME_EXTENSIONS: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+};
+
+export function imageExtensionForFile(file: File): string {
+  const fromType = IMAGE_MIME_EXTENSIONS[file.type];
+  if (fromType) return fromType;
+
+  const fromName = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return Object.values(IMAGE_MIME_EXTENSIONS).includes(fromName)
+    ? fromName
+    : 'png';
+}
+
+export function fileToBase64(file: File): Promise<string> {
+  return file.arrayBuffer().then((buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return window.btoa(binary);
+  });
+}
+
 type ImageResolver = (
   basePath: string,
   relativeSrc: string

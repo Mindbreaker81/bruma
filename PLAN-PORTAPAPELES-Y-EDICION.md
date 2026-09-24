@@ -437,11 +437,33 @@ Nuevo `tests/clipboard.spec.ts`, siguiendo el estilo de `tests/format-toolbar.sp
 
 ---
 
-### F9 · Opcional / backlog — pegar imagen del portapapeles
+### F9 · Pegar imagen del portapapeles — implementado
 
-No implementar sin decisión explícita del propietario del repo.
+Decisión tomada (opción A de BRU-10): guardar la imagen **junto al
+documento** con nombre `imagen-<timestamp>.<ext>` e insertar
+`![](imagen-…)` en el cursor.
 
-Idea: en el handler `paste` del editor, si `event.clipboardData.files` trae una imagen, guardarla junto al documento y insertar `![](./assets/imagen-N.png)`. La infraestructura existe (`src-tauri/src/commands/fs.rs` ya tiene `save_binary_export_dialog` y validación de rutas contra _path traversal_), pero implica decidir dónde se guardan los adjuntos y cómo se resuelven en `resolveLocalImages` (`src/lib/images.ts`). Es un cambio de producto, no una corrección.
+Implementación:
+
+- `src-tauri/src/commands/fs.rs`: comando `save_pasted_image` — valida la
+  extensión contra la lista blanca de imágenes, limita el binario a 25 MB,
+  resuelve el destino con `resolve_allowed_write_path` (misma protección
+  anti _path traversal_ del resto de comandos) y devuelve el nombre de
+  archivo generado.
+- `src/features/editor/MarkdownEditor.tsx`: prop `onPasteImage`; el
+  `onPaste` del contenedor detecta `clipboardData.files` con tipo
+  `image/*`, hace `preventDefault` y delega en la app.
+- `src/App.tsx`: `handlePasteImage` exige documento guardado (sin
+  `document.path` avisa con un toast), codifica el `File` en base64 e
+  inserta la sintaxis de imagen al guardar.
+- `src/lib/images.ts`: helpers `imageExtensionForFile` (mime → extensión)
+  y `fileToBase64`.
+
+Limitación conocida en Flatpak: el portal de documentos concede acceso
+**por archivo**, así que escribir un archivo hermano junto al documento
+falla dentro del sandbox salvo `--filesystem=home` o que el usuario abra
+la carpeta completa. El error se muestra como toast; el pegado por texto
+sigue funcionando.
 
 ---
 

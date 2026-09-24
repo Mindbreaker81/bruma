@@ -181,6 +181,77 @@ fn read_image_in_scope(
     Ok(format!("data:{mime};base64,{encoded}"))
 }
 
+const MAX_PASTED_IMAGE_BYTES: usize = 25 * 1024 * 1024;
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedImage {
+    path: String,
+    file_name: String,
+}
+
+#[tauri::command]
+pub fn save_pasted_image(
+    doc_path: String,
+    content: String,
+    extension: String,
+    allowed_paths: State<'_, AllowedPaths>,
+) -> Result<SavedImage, String> {
+    save_pasted_image_in_scope(doc_path, content, extension, &allowed_paths)
+}
+
+fn save_pasted_image_in_scope(
+    doc_path: String,
+    content: String,
+    extension: String,
+    allowed_paths: &AllowedPaths,
+) -> Result<SavedImage, String> {
+    let extension = extension
+        .trim()
+        .trim_start_matches('.')
+        .to_ascii_lowercase();
+    let probe = PathBuf::from(format!("image.{extension}"));
+    if !is_allowed_image_path(&probe) {
+        return Err("unsupported_file_type".to_string());
+    }
+
+    let bytes = BASE64
+        .decode(content.as_bytes())
+        .map_err(|error| format!("base64_decode_failed: {error}"))?;
+    if bytes.len() > MAX_PASTED_IMAGE_BYTES {
+        return Err("file_too_large".to_string());
+    }
+
+    let doc = resolve_allowed_write_path(Path::new(&doc_path), allowed_paths)?;
+    let dir = doc
+        .parent()
+        .ok_or_else(|| "parent_directory_not_found".to_string())?;
+    let file_name = unique_image_file_name(dir, &extension);
+    let target = resolve_allowed_write_path(&dir.join(&file_name), allowed_paths)?;
+
+    fs::write(&target, &bytes).map_err(|error| format!("write_failed: {error}"))?;
+
+    Ok(SavedImage {
+        path: path_to_string(&target),
+        file_name,
+    })
+}
+
+fn unique_image_file_name(dir: &Path, extension: &str) -> String {
+    let stamp = now_millis();
+    for attempt in 0..100u32 {
+        let name = if attempt == 0 {
+            format!("imagen-{stamp}.{extension}")
+        } else {
+            format!("imagen-{stamp}-{attempt}.{extension}")
+        };
+        if !dir.join(&name).exists() {
+            return name;
+        }
+    }
+    format!("imagen-{stamp}-{}.{}", std::process::id(), extension)
+}
+
 #[tauri::command]
 pub fn save_binary_export_dialog(
     content: String,
@@ -459,8 +530,10 @@ mod tests {
     use super::{
         ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
         normalize_eol, read_file_in_scope, read_image_in_scope, read_markdown_file,
-        save_file_in_scope, user_home_dir, AllowedPaths, DocumentEol, MAX_MARKDOWN_BYTES,
+        save_file_in_scope, save_pasted_image_in_scope, user_home_dir, AllowedPaths, DocumentEol,
+        MAX_MARKDOWN_BYTES,
     };
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
     use std::{
         fs,
         path::{Path, PathBuf},
@@ -626,6 +699,63 @@ mod tests {
             }
             _ => base.with_file_name(format!("{stem}-{millis}")),
         }
+    }
+
+    #[test]
+    fn saves_pasted_image_next_to_document() {
+        let home = user_home_dir().expect("home directory should exist");
+        let dir = create_test_path(home.join(".bruma-security-tests").join("img-paste"));
+        fs::create_dir_all(&dir).unwrap();
+        let doc = dir.join("note.md");
+        fs::write(&doc, "# Bruma").unwrap();
+
+        let saved = save_pasted_image_in_scope(
+            doc.to_string_lossy().into_owned(),
+            BASE64.encode(b"png-bytes"),
+            "png".to_string(),
+            &AllowedPaths::default(),
+        )
+        .unwrap();
+
+        assert_eq!(Path::new(&saved.path).parent(), Some(dir.as_path()));
+        assert!(saved.file_name.starts_with("imagen-"));
+        assert!(saved.file_name.ends_with(".png"));
+        assert_eq!(fs::read(dir.join(&saved.file_name)).unwrap(), b"png-bytes");
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn rejects_pasted_image_with_unsupported_extension() {
+        let home = user_home_dir().expect("home directory should exist");
+        let dir = create_test_path(home.join(".bruma-security-tests").join("img-ext"));
+        fs::create_dir_all(&dir).unwrap();
+        let doc = dir.join("note.md");
+        fs::write(&doc, "# Bruma").unwrap();
+
+        let result = save_pasted_image_in_scope(
+            doc.to_string_lossy().into_owned(),
+            BASE64.encode(b"bytes"),
+            "exe".to_string(),
+            &AllowedPaths::default(),
+        );
+
+        assert_eq!(result.unwrap_err(), "unsupported_file_type");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn rejects_pasted_image_outside_allowed_scope() {
+        let doc = forbidden_system_path().with_extension("md");
+
+        let result = save_pasted_image_in_scope(
+            doc.to_string_lossy().into_owned(),
+            BASE64.encode(b"png-bytes"),
+            "png".to_string(),
+            &AllowedPaths::default(),
+        );
+
+        assert!(result.is_err());
     }
 
     #[test]

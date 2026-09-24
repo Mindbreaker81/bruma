@@ -19,6 +19,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Cobertura del flujo de portapapeles: tests del handle del editor (`undo`, `redo`, `selectAll`, `cut`, `copy`, `paste`, selección) y E2E `tests/clipboard.spec.ts` (botones, copiar/pegar con permisos, menú contextual). Los E2E corren en Chromium y no validan los menús nativos.
 - Harness E2E nativo operativo (`pnpm test:e2e:tauri`): mocha + `tauri-driver` + WebKitWebDriver cubren apertura de archivo vía `read_file`, guardado vía `save_file` y apertura de recientes por el evento del menú nativo. El puente `window.brumaE2E` se instala solo en builds dev o con `VITE_E2E=1`.
 - Manifest Flatpak de prototipo en `flatpak/` (manifest, `.desktop` real y metainfo AppStream mínimo), compilado e instalado con `flatpak-builder` sobre el runtime GNOME 49; la app arranca en el sandbox.
+- Pegar imagen del portapapeles (F9, BRU-10): si el portapapeles trae un `image/*`, la imagen se guarda junto al documento como `imagen-<timestamp>.<ext>` y se inserta `![](nombre)` en el cursor. Requiere documento guardado; en Flatpak puede fallar si el portal solo concedió acceso al archivo (limitación documentada).
 
 ### Changed
 

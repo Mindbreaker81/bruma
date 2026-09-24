@@ -97,6 +97,8 @@
   },
   "errors": {
     "exportFailed": "The document could not be exported.",
+    "imagePasteNeedsSave": "Save the document before pasting images from the clipboard.",
+    "imageSaveFailed": "The image could not be saved next to the document.",
     "fileTooLarge": "The file exceeds the 10 MB limit.",
     "openFailed": "The file could not be opened.",
     "pathNotAllowed": "Choose this file again from Open to grant access to its folder.",

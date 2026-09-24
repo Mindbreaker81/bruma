@@ -47,6 +47,7 @@ import {
   saveExportDialog,
   saveFile,
   saveFileDialog,
+  savePastedImage,
   setMenuLabels,
   syncRecentFilesMenu,
 } from './features/files/ipc';
@@ -63,6 +64,7 @@ import { getAllTemplates } from './features/templates/templates';
 import { isDirty as isDocumentDirty } from './features/files/document';
 import { clearSession } from './lib/session';
 import { writeClipboardHtml, writeClipboardText } from './lib/clipboard';
+import { fileToBase64, imageExtensionForFile } from './lib/images';
 import { stripFrontmatter } from './lib/frontmatter';
 import {
   findSearchMatches,
@@ -692,6 +694,36 @@ export default function App() {
     editorRef.current?.focus();
   }, [closeSearch]);
 
+  const handlePasteImage = useCallback(
+    (file: File) => {
+      const docPath = document.path;
+      if (!docPath) {
+        showError(t('errors.imagePasteNeedsSave'));
+        return;
+      }
+
+      void fileToBase64(file)
+        .then((content) =>
+          savePastedImage({
+            docPath,
+            content,
+            extension: imageExtensionForFile(file),
+          })
+        )
+        .then((saved) => {
+          editorRef.current?.paste(`![](${saved.fileName})`);
+        })
+        .catch((error: unknown) => {
+          showError(
+            isPathNotAllowedError(error)
+              ? t('errors.pathNotAllowed')
+              : t('errors.imageSaveFailed')
+          );
+        });
+    },
+    [document.path, showError, t]
+  );
+
   const handleOpen = useCallback(async () => {
     try {
       const openedFile = await openFileDialog();
@@ -1294,6 +1326,7 @@ export default function App() {
                             showGutter={editorShowGutter}
                             onActiveFormatsChange={setActiveFormats}
                             onSelectionChange={setCursorPosition}
+                            onPasteImage={handlePasteImage}
                           />
                         </EditorContextMenu>
                       </Suspense>

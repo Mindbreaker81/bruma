@@ -94,6 +94,10 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
    flujo de "abrir carpeta/recientes". Revisar `resolveLocalImages` y el
    guardado junto al documento con rutas del portal (rutas
    `/run/user/$UID/doc/...` no persisten entre sesiones salvo bookmarks).
+   Afecta directamente a F9 (pegar imagen del portapapeles): el comando
+   `save_pasted_image` escribe un archivo **hermano** del documento y el
+   portal solo concede acceso por archivo — en el sandbox fallará salvo
+   `--filesystem=home` o que el usuario abra la carpeta completa.
 3. **App ID**: conviene renombrar a un ID RDNN (`eu.mindbreaker81.bruma`) antes
    de publicar; hoy el identificador de `tauri.conf.json` habría que revisarlo.
 4. **Metainfo**: Flathub exige `metainfo.xml` con descripción, capturas,

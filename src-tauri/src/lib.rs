@@ -47,6 +47,7 @@ pub fn run() {
             commands::fs::save_export_dialog,
             commands::fs::save_file,
             commands::fs::save_file_dialog,
+            commands::fs::save_pasted_image,
             commands::app_menu::set_update_available_menu_state,
             commands::app_menu::set_menu_labels,
             commands::fs::list_custom_templates,

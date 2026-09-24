@@ -67,6 +67,7 @@ type MarkdownEditorProps = {
   showGutter?: boolean;
   onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
   onSelectionChange?: (position: CursorPosition) => void;
+  onPasteImage?: (file: File) => void;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -143,6 +144,7 @@ export const MarkdownEditor = forwardRef<
     showGutter = false,
     onActiveFormatsChange,
     onSelectionChange,
+    onPasteImage,
   },
   ref
 ) {
@@ -495,6 +497,14 @@ export const MarkdownEditor = forwardRef<
       ref={containerRef}
       className="bruma-editor h-full min-h-0 bg-background"
       style={fontStyle}
+      onPaste={(event) => {
+        const file = Array.from(event.clipboardData?.files ?? []).find((item) =>
+          item.type.startsWith('image/')
+        );
+        if (!file || !onPasteImage) return;
+        event.preventDefault();
+        onPasteImage(file);
+      }}
     />
   );
 });
