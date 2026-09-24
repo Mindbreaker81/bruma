@@ -1,7 +1,26 @@
+import { createRef } from 'react';
 import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { MarkdownEditor } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor';
+
+function renderEditor(value = '# Hola\nMundo') {
+  const ref = createRef<MarkdownEditorHandle>();
+  const { container } = render(
+    <MarkdownEditor
+      ref={ref}
+      value={value}
+      onChange={() => {}}
+      ariaLabel="editor"
+      placeholder="escribe..."
+    />
+  );
+  return { ref, container };
+}
+
+function editorText(container: HTMLElement): string {
+  return container.querySelector('.cm-content')?.textContent ?? '';
+}
 
 describe('MarkdownEditor gutter', () => {
   it('renders line numbers when showGutter is true', () => {
@@ -30,5 +49,94 @@ describe('MarkdownEditor gutter', () => {
     );
 
     expect(container.querySelector('.cm-lineNumbers')).toBeNull();
+  });
+});
+
+describe('MarkdownEditor handle', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('selectAll selects the whole document', () => {
+    const { ref } = renderEditor();
+
+    expect(ref.current?.hasSelection()).toBe(false);
+    ref.current?.selectAll();
+
+    expect(ref.current?.hasSelection()).toBe(true);
+    expect(ref.current?.getSelectedText()).toBe('# Hola\nMundo');
+  });
+
+  it('paste inserts text at the cursor', () => {
+    const { ref, container } = renderEditor();
+
+    ref.current?.paste('pega ');
+
+    // CodeMirror renders each line as its own element: no literal '\n'.
+    expect(editorText(container)).toBe('pega # HolaMundo');
+  });
+
+  it('undo and redo revert and reapply a paste', () => {
+    const { ref, container } = renderEditor();
+
+    ref.current?.paste('xyz');
+    expect(editorText(container)).toContain('xyz');
+
+    expect(ref.current?.undo()).toBe(true);
+    expect(editorText(container)).not.toContain('xyz');
+
+    expect(ref.current?.redo()).toBe(true);
+    expect(editorText(container)).toContain('xyz');
+  });
+
+  it('cut and copy go through execCommand with the editor focused', () => {
+    const { ref, container } = renderEditor();
+    const execCommand = vi.fn().mockReturnValue(true);
+    // jsdom does not implement execCommand; define it for this test.
+    Object.defineProperty(window.document, 'execCommand', {
+      value: execCommand,
+      configurable: true,
+      writable: true,
+    });
+
+    ref.current?.copy();
+    expect(execCommand).toHaveBeenCalledWith('copy');
+    ref.current?.cut();
+    expect(execCommand).toHaveBeenCalledWith('cut');
+    expect(container.querySelector('.cm-content')).toBe(
+      window.document.activeElement
+    );
+  });
+});
+
+describe('MarkdownEditor fontFamily', () => {
+  function renderWithFamily(fontFamily: string) {
+    return render(
+      <MarkdownEditor
+        value="# Hola"
+        onChange={() => {}}
+        ariaLabel="editor"
+        placeholder="escribe..."
+        fontFamily={fontFamily}
+      />
+    );
+  }
+
+  it('applies the sans stack on the wrapper when fontFamily is sans', () => {
+    const { container } = renderWithFamily('sans');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toContain('Inter');
+  });
+
+  it('applies the serif stack when fontFamily is serif', () => {
+    const { container } = renderWithFamily('serif');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toContain('ui-serif');
+  });
+
+  it('leaves the wrapper font unset for mono (CSS default)', () => {
+    const { container } = renderWithFamily('mono');
+    const wrapper = container.querySelector('.bruma-editor') as HTMLElement;
+    expect(wrapper.style.fontFamily).toBe('');
   });
 });

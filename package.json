@@ -1,6 +1,6 @@
 {
   "name": "bruma",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Editor Markdown de escritorio: ligero, local y simple.",
   "type": "module",
   "private": true,
@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:tauri": "node tests-tauri/run.js",
     "prepare": "husky"
   },
   "dependencies": {
@@ -80,6 +81,7 @@
     "@typescript-eslint/parser": "^8.48.0",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
+    "chai": "^6.2.2",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^4.6.2",
@@ -89,9 +91,11 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "jsdom": "27.2.0",
     "lint-staged": "^16.2.7",
+    "mocha": "^11.8.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "rollup-plugin-visualizer": "^6.0.11",
+    "selenium-webdriver": "^4.49.0",
     "tailwindcss": "^3.4.18",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",

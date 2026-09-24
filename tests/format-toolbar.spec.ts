@@ -13,8 +13,11 @@ test('format toolbar inserts and toggles markdown syntax', async ({ page }) => {
   });
   await expect(editor).toBeVisible();
 
-  // Bold via toolbar wraps the selected text.
+  // Bold via toolbar wraps the selected text. Wait for real focus: the
+  // textbox can be visible before CodeMirror's contenteditable takes DOM
+  // focus, and keystrokes sent earlier are lost (seen in CI as `****`).
   await editor.click();
+  await expect(editor).toBeFocused();
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.type('hola mundo');
   await page.keyboard.press('ControlOrMeta+a');
@@ -58,6 +61,7 @@ test('Enter on a list item continues the list, Enter on empty exits', async ({
     name: /Editor Markdown|Markdown editor/i,
   });
   await editor.click();
+  await expect(editor).toBeFocused();
   await page.keyboard.press('ControlOrMeta+a');
 
   await page.keyboard.type('- alpha');

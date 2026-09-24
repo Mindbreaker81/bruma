@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, windows-latest]
+        platform: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,6 +81,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -104,6 +110,10 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: pnpm exec tauri build --bundles nsis
 
+      - name: Tauri build (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: pnpm exec tauri build --bundles deb,rpm,appimage
+
       - name: Archive macOS .app
         if: matrix.platform == 'macos-latest'
         shell: bash
@@ -118,9 +128,95 @@ jobs:
             src-tauri/target/release/bundle/**/*.app.tar.gz
             src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.rpm
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.sig
           name: 'bruma-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}'
           tag_name: 'draft-v${{ steps.app_version.outputs.value }}-${{ github.run_id }}-${{ matrix.platform }}'
           body: 'Draft release from CI run [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
           draft: true
           prerelease: true
           generate_release_notes: false
+
+  # No bloquea el pipeline: WebView2 Runtime 152 en windows-latest ignora todos
+  # los mecanismos de habilitar el puerto DevTools (env var, msedgedriver
+  # webviewOptions y LoaderOverride de registro), igual que en el ejemplo
+  # oficial tauri-apps/webdriver-example, roto desde ~2026-09-05. El job se
+  # mantiene para auto-recuperarse cuando upstream lo resuelva (BRU-20).
+  e2e-windows:
+    name: E2E nativo (windows-latest)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+
+      - name: Install tauri-driver
+        run: cargo install tauri-driver --version "^2" --locked
+
+      - name: Install Edge WebDriver matching WebView2
+        shell: pwsh
+        run: |
+          $pv = (Get-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv
+          if (-not $pv) {
+            $pv = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv
+          }
+          if (-not $pv) {
+            $dir = Get-ChildItem 'C:\Program Files (x86)\Microsoft\EdgeWebView\Application' -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+            $pv = $dir.Name
+          }
+          if (-not $pv) { throw 'WebView2 Runtime not found on the runner' }
+          Write-Host "WebView2 Runtime version: $pv"
+          $zip = Join-Path $env:RUNNER_TEMP 'edgedriver.zip'
+          $dest = Join-Path $env:RUNNER_TEMP 'edgedriver'
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$pv/edgedriver_win64.zip" -OutFile $zip
+          } catch {
+            $major = $pv.Split('.')[0]
+            $latest = (Invoke-WebRequest "https://msedgedriver.microsoft.com/LATEST_RELEASE_${major}_WINDOWS" -UseBasicParsing).Content.Trim()
+            Write-Host "Exact driver $pv unavailable; falling back to $latest"
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$latest/edgedriver_win64.zip" -OutFile $zip
+          }
+          Expand-Archive $zip -DestinationPath $dest -Force
+          Add-Content $env:GITHUB_PATH $dest
+          & (Join-Path $dest 'msedgedriver.exe') --version
+
+      # Runner steps run elevated; elevated host apps ignore
+      # WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so enable the DevTools port via
+      # the WebView2 loader registry override instead.
+      - name: Enable WebView2 remote debugging for bruma.exe
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\Policies\Microsoft\EmbeddedBrowserWebView\LoaderOverride\bruma.exe'
+          New-Item -Path $key -Force | Out-Null
+          New-ItemProperty -Path $key -Name 'additionalBrowserArguments' -Value '--remote-debugging-port=0' -PropertyType String -Force | Out-Null
+          Get-ItemProperty $key | Select-Object -ExpandProperty additionalBrowserArguments
+
+      - name: Run native E2E (clipboard D1 + V-matrix subset)
+        run: pnpm test:e2e:tauri
+        env:
+          TAURI_E2E_REQUIRED: '1'

@@ -75,6 +75,7 @@ test('shows the Bruma shell', async ({ page }) => {
   await expect(page.getByRole('search')).toBeHidden();
 
   await editor.click();
+  await expect(editor).toBeFocused();
   await page.keyboard.press('Meta+a');
   await page.keyboard.type('# Cambio sin guardar');
   await expect(page.getByText(/^(Sin guardar|Unsaved)$/i)).toBeVisible();

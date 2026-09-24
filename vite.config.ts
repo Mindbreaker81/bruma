@@ -62,6 +62,19 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    watch: {
+      // Local build artifacts (flatpak-builder trees, release bundles) contain
+      // symlink loops that crash the watcher with ELOOP; they are gitignored
+      // and irrelevant to HMR.
+      ignored: [
+        '**/build-dir/**',
+        '**/.flatpak-builder/**',
+        '**/release-assets/**',
+        '**/release-assets-local/**',
+        '**/portable-full*/**',
+        '**/webview2pkg/**',
+      ],
+    },
   },
   envPrefix: ['VITE_', 'TAURI_'],
   test: {

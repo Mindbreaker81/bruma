@@ -10,6 +10,16 @@ pub const RECENT_OPEN_EVENT: &str = "menu://recent-open";
 const RECENT_MENU_ID: &str = "file_recent";
 const RECENT_ITEM_ID_PREFIX: &str = "file_recent_open_";
 const RECENT_EMPTY_ID: &str = "file_recent_empty";
+const EDIT_UNDO_ID: &str = "edit_undo";
+const EDIT_REDO_ID: &str = "edit_redo";
+const EDIT_CUT_ID: &str = "edit_cut";
+const EDIT_COPY_ID: &str = "edit_copy";
+const EDIT_PASTE_ID: &str = "edit_paste";
+const EDIT_SELECT_ALL_ID: &str = "edit_select_all";
+const EDIT_COPY_DOCUMENT_ID: &str = "edit_copy_document";
+const EDIT_COPY_AS_HTML_ID: &str = "edit_copy_as_html";
+const EDIT_FIND_ID: &str = "edit_find";
+const EDIT_REPLACE_ID: &str = "edit_replace";
 
 #[derive(Default)]
 pub struct RecentFilesMenuState(pub Mutex<Vec<String>>);
@@ -29,6 +39,15 @@ pub struct MenuLabels {
     save_as: String,
     print: String,
     edit: String,
+    undo: String,
+    redo: String,
+    cut: String,
+    copy: String,
+    paste: String,
+    select_all: String,
+    replace: String,
+    copy_as_html: String,
+    copy_document: String,
     find: String,
     view: String,
     toggle_view: String,
@@ -58,6 +77,15 @@ impl Default for MenuLabels {
             save_as: "Guardar como…".into(),
             print: "Imprimir…".into(),
             edit: "Editar".into(),
+            undo: "Deshacer".into(),
+            redo: "Rehacer".into(),
+            cut: "Cortar".into(),
+            copy: "Copiar".into(),
+            paste: "Pegar".into(),
+            select_all: "Seleccionar todo".into(),
+            replace: "Reemplazar".into(),
+            copy_as_html: "Copiar como HTML".into(),
+            copy_document: "Copiar documento".into(),
             find: "Buscar".into(),
             view: "Ver".into(),
             toggle_view: "Cambiar vista".into(),
@@ -176,7 +204,35 @@ pub fn handle_event<R: Runtime>(app: &AppHandle<R>, id: &MenuId) {
         }
     }
 
+    // On Linux the clipboard items are custom items (see build_edit_menu), so
+    // they are executed here through the WebKit editing commands — the same
+    // engine path the keyboard shortcuts use, which works on both X11 and
+    // Wayland without libxdo.
+    #[cfg(target_os = "linux")]
+    if let Some(command) = linux_editing_command(id.as_ref()) {
+        use webkit2gtk::WebViewExt;
+
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.with_webview(move |webview| {
+                webview.inner().execute_editing_command(command);
+            });
+        }
+        return;
+    }
+
     let _ = app.emit(MENU_ACTION_EVENT, id.as_ref());
+}
+
+/// WebKit editing command for a clipboard menu item, or `None` for the rest.
+#[cfg(target_os = "linux")]
+fn linux_editing_command(id: &str) -> Option<&'static str> {
+    match id {
+        EDIT_CUT_ID => Some("Cut"),
+        EDIT_COPY_ID => Some("Copy"),
+        EDIT_PASTE_ID => Some("Paste"),
+        EDIT_SELECT_ALL_ID => Some("SelectAll"),
+        _ => None,
+    }
 }
 
 fn refresh_menu<R: Runtime>(
@@ -199,8 +255,7 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     let app_menu = build_app_menu(app)?;
     let file_menu = build_file_menu(app, recent_files, labels)?;
 
-    let edit_find = MenuItem::with_id(app, "edit_find", &labels.find, true, Some("CmdOrCtrl+F"))?;
-    let edit_menu = Submenu::with_items(app, &labels.edit, true, &[&edit_find])?;
+    let edit_menu = build_edit_menu(app, labels)?;
 
     let view_toggle_mode = MenuItem::with_id(
         app,
@@ -259,18 +314,13 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     )?;
     let help_separator = PredefinedMenuItem::separator(app)?;
     let help_about = MenuItem::with_id(app, "help_about", &labels.about, true, None::<&str>)?;
-    let help_menu = Submenu::with_items(
-        app,
-        &labels.help,
-        true,
-        &[
-            &help_preferences,
-            &help_shortcuts,
-            &help_check_updates,
-            &help_separator,
-            &help_about,
-        ],
-    )?;
+    let mut help_items: Vec<&dyn IsMenuItem<R>> = vec![&help_preferences, &help_shortcuts];
+    if !crate::is_flatpak_runtime() {
+        help_items.push(&help_check_updates);
+    }
+    help_items.push(&help_separator);
+    help_items.push(&help_about);
+    let help_menu = Submenu::with_items(app, &labels.help, true, &help_items)?;
 
     Menu::with_items(
         app,
@@ -359,6 +409,139 @@ fn build_file_menu<R: Runtime, M: Manager<R>>(
     )
 }
 
+/// Custom item IDs of the Edit submenu, in display order. Separators are
+/// resolved natively, so they are not listed here.
+fn edit_menu_item_ids() -> &'static [&'static str; 10] {
+    &[
+        EDIT_UNDO_ID,
+        EDIT_REDO_ID,
+        EDIT_CUT_ID,
+        EDIT_COPY_ID,
+        EDIT_PASTE_ID,
+        EDIT_SELECT_ALL_ID,
+        EDIT_COPY_DOCUMENT_ID,
+        EDIT_COPY_AS_HTML_ID,
+        EDIT_FIND_ID,
+        EDIT_REPLACE_ID,
+    ]
+}
+
+fn build_edit_menu<R: Runtime, M: Manager<R>>(
+    app: &M,
+    labels: &MenuLabels,
+) -> tauri::Result<Submenu<R>> {
+    let &[undo_id, redo_id, cut_id, copy_id, paste_id, select_all_id, copy_document_id, copy_as_html_id, find_id, replace_id] =
+        edit_menu_item_ids();
+
+    let edit_undo = MenuItem::with_id(app, undo_id, &labels.undo, true, Some("CmdOrCtrl+Z"))?;
+    let edit_redo = MenuItem::with_id(
+        app,
+        redo_id,
+        &labels.redo,
+        true,
+        // Windows/Linux use Ctrl+Y (@codemirror/commands); macOS uses ⇧⌘Z.
+        Some(if cfg!(target_os = "macos") {
+            "CmdOrCtrl+Shift+Z"
+        } else {
+            "CmdOrCtrl+Y"
+        }),
+    )?;
+    let edit_separator_history = PredefinedMenuItem::separator(app)?;
+    // On Linux (GTK) the predefined actions only reach GtkEditable widgets and
+    // are no-ops on the WebKitWebView, so cut/copy/paste/select all are custom
+    // items executed via WebKit editing commands in handle_event. On macOS
+    // (responder chain) and Windows (SendInput) the predefined items already
+    // work natively, so they are kept there.
+    let [edit_cut, edit_copy, edit_paste, edit_select_all]: [Box<dyn IsMenuItem<R>>; 4] =
+        if cfg!(target_os = "linux") {
+            [
+                Box::new(MenuItem::with_id(
+                    app,
+                    cut_id,
+                    &labels.cut,
+                    true,
+                    Some("CmdOrCtrl+X"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    copy_id,
+                    &labels.copy,
+                    true,
+                    Some("CmdOrCtrl+C"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    paste_id,
+                    &labels.paste,
+                    true,
+                    Some("CmdOrCtrl+V"),
+                )?),
+                Box::new(MenuItem::with_id(
+                    app,
+                    select_all_id,
+                    &labels.select_all,
+                    true,
+                    Some("CmdOrCtrl+A"),
+                )?),
+            ]
+        } else {
+            [
+                Box::new(PredefinedMenuItem::cut(app, Some(labels.cut.as_str()))?),
+                Box::new(PredefinedMenuItem::copy(app, Some(labels.copy.as_str()))?),
+                Box::new(PredefinedMenuItem::paste(app, Some(labels.paste.as_str()))?),
+                Box::new(PredefinedMenuItem::select_all(
+                    app,
+                    Some(labels.select_all.as_str()),
+                )?),
+            ]
+        };
+    let edit_separator_clipboard = PredefinedMenuItem::separator(app)?;
+    let edit_copy_document = MenuItem::with_id(
+        app,
+        copy_document_id,
+        &labels.copy_document,
+        true,
+        None::<&str>,
+    )?;
+    let edit_copy_as_html = MenuItem::with_id(
+        app,
+        copy_as_html_id,
+        &labels.copy_as_html,
+        true,
+        None::<&str>,
+    )?;
+    let edit_separator_find = PredefinedMenuItem::separator(app)?;
+    let edit_find = MenuItem::with_id(app, find_id, &labels.find, true, Some("CmdOrCtrl+F"))?;
+    let edit_replace = MenuItem::with_id(
+        app,
+        replace_id,
+        &labels.replace,
+        true,
+        Some("CmdOrCtrl+Shift+F"),
+    )?;
+
+    Submenu::with_items(
+        app,
+        &labels.edit,
+        true,
+        &[
+            &edit_undo,
+            &edit_redo,
+            &edit_separator_history,
+            &*edit_cut,
+            &*edit_copy,
+            &*edit_paste,
+            &*edit_select_all,
+            &edit_separator_clipboard,
+            &edit_copy_document,
+            &edit_copy_as_html,
+            &edit_separator_find,
+            &edit_find,
+            &edit_replace,
+        ],
+    )
+}
+
 fn build_recent_menu<R: Runtime, M: Manager<R>>(
     app: &M,
     recent_files: &[String],
@@ -443,7 +626,7 @@ fn update_menu_item_label(label: &str, update_available: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_recent_menu_index, recent_menu_item_id, recent_menu_item_label,
+        edit_menu_item_ids, parse_recent_menu_index, recent_menu_item_id, recent_menu_item_label,
         update_menu_item_label, MenuLabels,
     };
 
@@ -486,6 +669,40 @@ mod tests {
             update_menu_item_label("Check for updates", true),
             "* Check for updates"
         );
+    }
+
+    #[test]
+    fn edit_menu_exposes_the_expected_custom_item_ids() {
+        assert_eq!(
+            edit_menu_item_ids(),
+            &[
+                "edit_undo",
+                "edit_redo",
+                "edit_cut",
+                "edit_copy",
+                "edit_paste",
+                "edit_select_all",
+                "edit_copy_document",
+                "edit_copy_as_html",
+                "edit_find",
+                "edit_replace",
+            ]
+        );
+    }
+
+    #[test]
+    fn edit_menu_labels_have_spanish_defaults() {
+        let labels = MenuLabels::default();
+
+        assert_eq!(labels.undo, "Deshacer");
+        assert_eq!(labels.redo, "Rehacer");
+        assert_eq!(labels.cut, "Cortar");
+        assert_eq!(labels.copy, "Copiar");
+        assert_eq!(labels.paste, "Pegar");
+        assert_eq!(labels.select_all, "Seleccionar todo");
+        assert_eq!(labels.replace, "Reemplazar");
+        assert_eq!(labels.copy_as_html, "Copiar como HTML");
+        assert_eq!(labels.copy_document, "Copiar documento");
     }
 
     #[test]

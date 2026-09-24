@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "bruma"
-version = "1.8.0"
+version = "1.9.0"
 dependencies = [
  "base64 0.22.1",
  "rfd",
@@ -373,6 +373,9 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "webkit2gtk",
+ "windows",
+ "windows-core 0.61.2",
 ]
 
 [[package]]

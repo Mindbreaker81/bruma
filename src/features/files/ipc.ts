@@ -24,6 +24,15 @@ export type MenuLabels = {
   saveAs: string;
   print: string;
   edit: string;
+  undo: string;
+  redo: string;
+  cut: string;
+  copy: string;
+  paste: string;
+  selectAll: string;
+  replace: string;
+  copyAsHtml: string;
+  copyDocument: string;
   find: string;
   view: string;
   toggleView: string;
@@ -104,6 +113,22 @@ export async function readImageAsDataUrl(
   } catch {
     return null;
   }
+}
+
+export type SavedImage = {
+  path: string;
+  fileName: string;
+};
+
+export async function savePastedImage(args: {
+  docPath: string;
+  content: string;
+  extension: string;
+}): Promise<SavedImage> {
+  if (!isTauriRuntime()) {
+    throw new Error('fileSaveUnavailable');
+  }
+  return invoke<SavedImage>('save_pasted_image', args);
 }
 
 export async function saveBinaryExportDialog(args: {

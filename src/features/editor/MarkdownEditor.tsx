@@ -1,4 +1,11 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  redo,
+  selectAll as selectAllCommand,
+  undo,
+} from '@codemirror/commands';
 import {
   markdown,
   markdownLanguage,
@@ -31,6 +38,7 @@ import {
   applyFormat as applyFormatToView,
   type FormatAction,
   insertSnippet as insertSnippetToView,
+  pasteText,
 } from './format';
 import { FORMAT_COMMANDS, type FormatCommandId } from './formatCommands';
 import { getCursorPosition, type CursorPosition } from './cursorPosition';
@@ -59,6 +67,7 @@ type MarkdownEditorProps = {
   showGutter?: boolean;
   onActiveFormatsChange?: (active: ReadonlySet<FormatCommandId>) => void;
   onSelectionChange?: (position: CursorPosition) => void;
+  onPasteImage?: (file: File) => void;
 };
 
 const CHANGE_DEBOUNCE_MS = 120;
@@ -76,6 +85,15 @@ export type MarkdownEditorHandle = {
   getScrollDOM: () => HTMLElement | null;
   applyFormat: (action: FormatAction) => void;
   insertSnippet: (text: string) => void;
+  undo: () => boolean;
+  redo: () => boolean;
+  selectAll: () => void;
+  /** Copy/cut go through `execCommand` so CodeMirror keeps line-level copy. */
+  cut: () => void;
+  copy: () => void;
+  paste: (text: string) => void;
+  getSelectedText: () => string;
+  hasSelection: () => boolean;
 };
 
 function buildSearchDecorations(
@@ -122,10 +140,11 @@ export const MarkdownEditor = forwardRef<
     searchMatches = [],
     tabSize = 4,
     lineWrapping = true,
-    fontFamily = 'sans',
+    fontFamily = 'mono',
     showGutter = false,
     onActiveFormatsChange,
     onSelectionChange,
+    onPasteImage,
   },
   ref
 ) {
@@ -176,6 +195,46 @@ export const MarkdownEditor = forwardRef<
       const editor = editorRef.current;
       if (!editor) return;
       insertSnippetToView(editor, text);
+    },
+    undo: () => {
+      const editor = editorRef.current;
+      return editor ? undo(editor) : false;
+    },
+    redo: () => {
+      const editor = editorRef.current;
+      return editor ? redo(editor) : false;
+    },
+    selectAll: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      selectAllCommand(editor);
+    },
+    cut: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      window.document.execCommand('cut');
+    },
+    copy: () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      window.document.execCommand('copy');
+    },
+    paste: (text: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      pasteText(editor, text);
+    },
+    getSelectedText: () => {
+      const editor = editorRef.current;
+      if (!editor) return '';
+      const { from, to } = editor.state.selection.main;
+      return editor.state.sliceDoc(from, to);
+    },
+    hasSelection: () => {
+      const editor = editorRef.current;
+      return editor ? !editor.state.selection.main.empty : false;
     },
     scrollToLineTop: (line: number) => {
       const editor = editorRef.current;
@@ -287,6 +346,9 @@ export const MarkdownEditor = forwardRef<
     return () => {
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);
+        // Flush the pending change: unmounting (e.g. switching to Preview or
+        // Split right after typing) must not drop the last edits.
+        onChangeRef.current(latestValueRef.current);
       }
 
       editor.destroy();
@@ -423,10 +485,10 @@ export const MarkdownEditor = forwardRef<
   const fontStyle =
     fontFamily === 'serif'
       ? { fontFamily: 'ui-serif, Georgia, Cambria, serif' }
-      : fontFamily === 'mono'
+      : fontFamily === 'sans'
         ? {
             fontFamily:
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              "'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
           }
         : undefined;
 
@@ -435,6 +497,14 @@ export const MarkdownEditor = forwardRef<
       ref={containerRef}
       className="bruma-editor h-full min-h-0 bg-background"
       style={fontStyle}
+      onPaste={(event) => {
+        const file = Array.from(event.clipboardData?.files ?? []).find((item) =>
+          item.type.startsWith('image/')
+        );
+        if (!file || !onPasteImage) return;
+        event.preventDefault();
+        onPasteImage(file);
+      }}
     />
   );
 });
