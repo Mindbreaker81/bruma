@@ -130,9 +130,9 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
    instala y la app arranca bajo Xvfb en **Ubuntu 24.04** y **Debian stable**;
    el `.rpm` instala y arranca en **Fedora** (última). Limitación: arranque
    verificado, sin GUI interactiva — falta el smoke humano en cada distro.
-   Observación: el log GTK muestra warnings benignos de aceleradores de menú
-   («no accelerator installed in accel group») — los ítems funcionan por
-   AT-SPI pero conviene revisar si el atajo dispara desde el menú GTK.
+   Observación: el log GTK muestra warnings «no accelerator installed in
+   accel group» — **benignos**: verificado que `Ctrl+S` dispara el diálogo
+   de guardado vía portal aunque GTK lo registre como warning.
    El AppImage no se probó: el bundler falla en `linuxdeploy` en este
    entorno (sin red de descarga de herramientas externas).
 3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de
