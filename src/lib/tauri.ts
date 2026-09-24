@@ -6,6 +6,17 @@ export function isLinuxTauri(): boolean {
   return isTauriRuntime() && /Linux/i.test(navigator.userAgent);
 }
 
+/** Flatpak cannot self-update — the sandbox install is read-only. */
+export async function isFlatpakRuntime(): Promise<boolean> {
+  if (!isTauriRuntime()) {
+    return false;
+  }
+
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  return invoke<boolean>('is_flatpak');
+}
+
 /** WebKitGTK needs simpler surfaces than macOS/Windows (no backdrop-filter). */
 export function bootstrapLinuxWebviewCompat(): void {
   if (!isLinuxTauri()) {

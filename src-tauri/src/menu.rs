@@ -314,18 +314,13 @@ fn build_menu<R: Runtime, M: Manager<R>>(
     )?;
     let help_separator = PredefinedMenuItem::separator(app)?;
     let help_about = MenuItem::with_id(app, "help_about", &labels.about, true, None::<&str>)?;
-    let help_menu = Submenu::with_items(
-        app,
-        &labels.help,
-        true,
-        &[
-            &help_preferences,
-            &help_shortcuts,
-            &help_check_updates,
-            &help_separator,
-            &help_about,
-        ],
-    )?;
+    let mut help_items: Vec<&dyn IsMenuItem<R>> = vec![&help_preferences, &help_shortcuts];
+    if !crate::is_flatpak_runtime() {
+        help_items.push(&help_check_updates);
+    }
+    help_items.push(&help_separator);
+    help_items.push(&help_about);
+    let help_menu = Submenu::with_items(app, &labels.help, true, &help_items)?;
 
     Menu::with_items(
         app,

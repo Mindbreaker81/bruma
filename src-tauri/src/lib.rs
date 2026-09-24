@@ -29,6 +29,12 @@ fn configure_fixed_webview2_runtime_if_present() {
 #[cfg(not(target_os = "windows"))]
 fn configure_fixed_webview2_runtime_if_present() {}
 
+/// `/.flatpak-info` only exists inside a Flatpak sandbox, so this is the
+/// standard runtime check for Flatpak packaging.
+pub(crate) fn is_flatpak_runtime() -> bool {
+    cfg!(target_os = "linux") && std::path::Path::new("/.flatpak-info").exists()
+}
+
 pub fn run() {
     configure_fixed_webview2_runtime_if_present();
 
@@ -49,6 +55,7 @@ pub fn run() {
             commands::fs::save_file_dialog,
             commands::fs::save_pasted_image,
             commands::app_menu::set_update_available_menu_state,
+            commands::env::is_flatpak,
             commands::app_menu::set_menu_labels,
             commands::fs::list_custom_templates,
             commands::fs::read_custom_template,
@@ -58,9 +65,13 @@ pub fn run() {
             commands::recent::sync_recent_files_menu
         ])
         .setup(|app| {
+            // Self-update is impossible inside the Flatpak sandbox (read-only
+            // install, updates come from the repo) — don't even register it.
             #[cfg(desktop)]
-            app.handle()
-                .plugin(tauri_plugin_updater::Builder::new().build())?;
+            if !is_flatpak_runtime() {
+                app.handle()
+                    .plugin(tauri_plugin_updater::Builder::new().build())?;
+            }
 
             menu::install(app)?;
             Ok(())

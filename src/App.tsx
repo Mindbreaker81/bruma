@@ -90,6 +90,7 @@ import { getTextStats } from './lib/textStats';
 import type { Template } from './features/templates/templates';
 import { X } from 'lucide-react';
 import {
+  isFlatpakRuntime,
   isTauriRuntime,
   listenToFileDrop,
   printCurrentWindow,
@@ -1049,13 +1050,24 @@ export default function App() {
     normalizeActiveIndex(searchMatchCount);
   }, [normalizeActiveIndex, searchMatchCount]);
 
+  const [isFlatpak, setIsFlatpak] = useState<boolean | null>(null);
+
   useEffect(() => {
     if (!isTauriRuntime()) {
+      setIsFlatpak(false);
+      return;
+    }
+
+    void isFlatpakRuntime().then(setIsFlatpak);
+  }, []);
+
+  useEffect(() => {
+    if (!isTauriRuntime() || isFlatpak !== false) {
       return;
     }
 
     void handleCheckUpdates(false);
-  }, [handleCheckUpdates]);
+  }, [handleCheckUpdates, isFlatpak]);
 
   useEffect(() => {
     if (!isTauriRuntime()) {
@@ -1244,7 +1256,9 @@ export default function App() {
                   onOpenGuide={() => setIsMarkdownGuideOpen(true)}
                   onOpenShortcuts={() => setIsShortcutsOpen(true)}
                   updateAvailable={hasUpdateAvailable}
-                  onOpenUpdates={() => void handleCheckUpdates(true)}
+                  onOpenUpdates={
+                    isFlatpak ? undefined : () => void handleCheckUpdates(true)
+                  }
                 />
               ) : null}
 

@@ -42,8 +42,9 @@ Verificado en sesión X11 headless (Xvfb + `dbus-run-session` + AT-SPI +
   `xdg-desktop-portal-gtk`; al elegir `/tmp/test-portal-doc.md` el portal lo
   concede a la app en `/run/user/1000/doc/<id>/test-portal-doc.md` con
   permisos `read write grant-permissions` (`flatpak documents`).
-- **Observación**: el menú incluye `Buscar actualizaciones` — el updater sigue
-  activo en el build Flatpak (ver decisión 1).
+- **Updater**: en la validación de 2026-09-23 el menú aún incluía «Buscar
+  actualizaciones»; desde entonces el updater se desactiva en runtime dentro
+  del sandbox (ver decisión 1).
 - Pendiente de verificar: guardado vía portal (rutas `/run/user/$UID/doc/` no
   persisten entre sesiones salvo bookmarks), matriz por distro y publicación.
 
@@ -82,11 +83,12 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
 
 ## Decisiones de producto pendientes
 
-1. **Updater**: el updater firmado de Tauri **choca** con Flatpak — la
-   actualización la gestiona el sistema (`flatpak update`). Habría que
-   desactivar el updater para el build Flatpak (flag de build o feature) o
-   aceptar un indicador que solo informe. Recomendación: desactivar el updater
-   en Flatpak y apoyarse en el store.
+1. **Updater**: ~~el updater firmado de Tauri **choca** con Flatpak~~ —
+   **resuelto**: la app detecta el sandbox en runtime (`/.flatpak-info`,
+   `is_flatpak_runtime` en `src-tauri/src/lib.rs`) y entonces **no registra
+   el plugin updater**, **oculta «Buscar actualizaciones»** del menú Ayuda y
+   **omite la auto-comprobación** y el botón de la barra de formato. La
+   actualización la gestiona el sistema (`flatpak update`).
 2. **Acceso a archivos**: hoy Bruma abre Markdown desde `~/` y directorios
    concedidos explícitamente (diálogo nativo + scope). En Flatpak la opción
    limpia es el portal de documentos (apertura puntual por archivo concedido);
