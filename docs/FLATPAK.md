@@ -126,8 +126,15 @@ solo lo instala con `.desktop`, iconos y `appdata.xml`/`metainfo.xml`.
    portapapeles X11 del host) y apertura de archivo vía portal de documentos
    (`xdg-desktop-portal-gtk` → grant `read write` en
    `/run/user/1000/doc/<id>/`). Falta guardado vía portal.
-2. Pruebas manuales en Ubuntu LTS, Debian estable y Fedora reciente (instalando
-   el `.flatpak` resultante).
+2. [x] Pruebas por distro en contenedores Docker (2026-09-24): el `.deb` se
+   instala y la app arranca bajo Xvfb en **Ubuntu 24.04** y **Debian stable**;
+   el `.rpm` instala y arranca en **Fedora** (última). Limitación: arranque
+   verificado, sin GUI interactiva — falta el smoke humano en cada distro.
+   Observación: el log GTK muestra warnings benignos de aceleradores de menú
+   («no accelerator installed in accel group») — los ítems funcionan por
+   AT-SPI pero conviene revisar si el atajo dispara desde el menú GTK.
+   El AppImage no se probó: el bundler falla en `linuxdeploy` en este
+   entorno (sin red de descarga de herramientas externas).
 3. Si el prototipo pasa: generar fuentes offline (node/cargo) y PR de
    publicación a `flathub/flathub` con metainfo completo.
 4. Documentar en `README.md` la vía Flatpak junto a AppImage/.deb/.rpm.
