@@ -540,11 +540,9 @@ fn now_millis() -> u128 {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(windows)]
-    use super::path_to_string;
     use super::{
         ensure_extension, image_mime_for_path, is_markdown_path, is_safe_template_id,
-        normalize_eol, read_file_in_scope, read_image_in_scope, read_markdown_file,
+        normalize_eol, path_to_string, read_file_in_scope, read_image_in_scope, read_markdown_file,
         save_file_in_scope, save_pasted_image_in_scope, user_home_dir, AllowedPaths, DocumentEol,
         MAX_MARKDOWN_BYTES,
     };
@@ -611,13 +609,11 @@ mod tests {
         )
         .unwrap();
 
+        // path_to_string strips the verbatim prefix (\\?\) that canonicalize()
+        // produces on Windows, so the expectation must normalize the same way.
         assert_eq!(
             result.path,
-            file_path
-                .canonicalize()
-                .unwrap()
-                .to_string_lossy()
-                .into_owned()
+            path_to_string(&file_path.canonicalize().unwrap())
         );
 
         fs::remove_dir_all(&dir).unwrap();
