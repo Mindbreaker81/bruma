@@ -465,6 +465,21 @@ falla dentro del sandbox salvo `--filesystem=home` o que el usuario abra
 la carpeta completa. El error se muestra como toast; el pegado por texto
 sigue funcionando.
 
+Verificación:
+
+- Tests Rust (`fs.rs`): guardado junto al documento, rechazo de extensión
+  no permitida y rechazo de ruta fuera del scope permitido.
+- Tests unitarios (`src/lib/images.test.ts`): mapeo mime → extensión,
+  _fallback_ por nombre de archivo y codificación base64.
+- Tests E2E (`tests/image-paste.spec.ts`): con `__TAURI_INTERNALS__`
+  simulado, un pegado con `image/*` en documento sin guardar muestra el
+  aviso localizado, y en documento guardado inserta `![](imagen-…)` tras
+  `save_pasted_image`.
+- Pendiente: validación manual del pegado real desde el portapapeles del
+  sistema en una app nativa (en macOS la automatización remota por AX no
+  pudo conducir los paneles de archivo ni el webview del build de
+  desarrollo; no es un fallo de la app).
+
 ---
 
 ## 4. Verificación
